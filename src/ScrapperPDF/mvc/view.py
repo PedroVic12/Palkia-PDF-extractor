@@ -68,13 +68,10 @@ import camelot
 import google.generativeai as genai
 from langchain_community.document_loaders import PyMuPDFLoader # Langchain ainda é útil para carregar o PDF
 
-#from ..models.ChatbotGemini import ChatbotGeminiApp
-
 
 # Carrega a chave da API do Gemini
 load_dotenv()
 
-#st.set_page_config(layout="wide", page_icon="📄", page_title="Dashboard ONS", initial_sidebar_state="expanded")
 
 # --- Funções Auxiliares e de Abas ---
 
@@ -170,18 +167,71 @@ def get_gemini_response(prompt: str, pdf_context: str) -> str:
     except Exception as e:
         return f"Ocorreu um erro ao comunicar com a IA: {e}"
 
+
+
+# CSS Aprimorado:
+# - .chat-container: Removido height fixo, adicionado max-height e flex-end para alinhar o conteúdo embaixo.
+# - Removido display: flex e flex-direction: column-reverse para um fluxo de chat natural (de cima para baixo).
+st.markdown("""
+<style>
+    .main-header {
+        text-align: center; padding: 2rem 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px; margin-bottom: 2rem; color: white;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .chat-container {
+        background: #ffffff; border: 1px solid #e0e0e0;
+        border-radius: 15px; padding: 1rem; margin: 1rem 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        max-height: 65vh; /* Altura máxima para evitar que o chat ocupe a tela inteira */
+        overflow-y: auto; /* Adiciona scroll quando o conteúdo excede a altura máxima */
+        display: flex;
+        flex-direction: column;
+    }
+    .role-card {
+        background: linear-gradient(45deg, #4CAF50, #45a049);
+        color: white; padding: 0.8rem; border-radius: 8px; margin: 0.5rem 0;
+        font-weight: 500; font-size: 0.9em; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .system-message {
+        background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
+        color: white; padding: 0.8rem; border-radius: 8px; margin: 0.5rem 0;
+        font-weight: 500; font-size: 0.9em;
+    }
+    .stButton > button {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white; border: none; border-radius: 25px; padding: 0.5rem 1.5rem;
+        font-weight: 600; transition: all 0.3s ease;
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
 def ChatbotWithRAG(uploaded_file_name: str):
+
     """Renderiza a interface e a lógica do chatbot."""
     with st.container():
-        st.header("Converse com o Documento")
+        st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+
+        st.header("Converse com o Documento PDF da sua Empresa.")
+
         if st.session_state.pdf_context is None:
             st.info("⬅️ Clique em 'Preparar Chatbot com Conteúdo do PDF' na barra lateral para começar.")
         else:
             st.success(f"Assistente pronto para responder sobre: **{uploaded_file_name}**")
             
+            # Ordem cronológica normal (de cima para baixo)
             for message in st.session_state.messages:
                 with st.chat_message(message["role"]):
                     st.markdown(message["content"])
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+
             
             if prompt := st.chat_input("Faça sua pergunta sobre o PDF..."):
                 st.session_state.messages.append({"role": "user", "content": prompt})
@@ -189,7 +239,7 @@ def ChatbotWithRAG(uploaded_file_name: str):
                     st.markdown(prompt)
 
                 with st.chat_message("assistant"):
-                    with st.spinner("Analisando o documento e a pensar..."):
+                    with st.spinner("🤔 Pensando e analisando o documento..."):
                         response = get_gemini_response(prompt, st.session_state.pdf_context)
                         st.markdown(response)
                 

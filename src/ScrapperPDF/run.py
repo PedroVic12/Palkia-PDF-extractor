@@ -6,8 +6,7 @@ import os
 def run_extract_PDF_tables(intervalos_paginas,mode = "folder" ):
  
     
-    print("\nIniciando extração de tabelas de PDFs...")
-
+    print("\nIniciando extração de tabelas de PDFs...\n")
    
     output_folder = os.path.join(input_folder, "tabelas_extraidas")
     os.makedirs(output_folder, exist_ok=True)
@@ -36,7 +35,7 @@ def run_extract_PDF_tables(intervalos_paginas,mode = "folder" ):
 
 def extract_text_from_must_tables(mode = "folder"):
 
-    print("\nIniciando extração de texto dos PDFs MUST...")
+    print("\nIniciando extração de texto dos PDFs MUST...\n")
 
     # Pasta para salvar os resultados
     output_folder = os.path.join(input_folder, "anotacoes_extraidas")
@@ -61,8 +60,6 @@ def extract_text_from_must_tables(mode = "folder"):
 # Caminho da pasta contendo os PDFs
 #! windows
 input_folder = r"C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\AUTOMACÕES ONS\arquivos"
-
-#input_folder = r"C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\GitHub\Electrical-System-Simulator\ONS_SIMULATOR_SYSTEM\arquivos"
 
 #!Linux
 #input_folder = r"/home/pedrov12/Documentos/GitHub/Electrical-System-Simulator/ONS_SIMULATOR_SYSTEM/arquivos"

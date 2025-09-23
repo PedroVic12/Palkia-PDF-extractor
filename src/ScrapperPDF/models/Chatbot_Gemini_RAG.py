@@ -35,12 +35,12 @@ ROLES_CONFIG = {
     ]
 }
 
-st.set_page_config(
-    page_title="🤖 Gemini Pro com RAG",
-    page_icon="🤖",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# st.set_page_config(
+#     page_title="Gemini Pro com RAG",
+#     page_icon="🤖",
+#     layout="wide",
+#     initial_sidebar_state="expanded"
+# )
 
 # CSS Aprimorado:
 # - .chat-container: Removido height fixo, adicionado max-height e flex-end para alinhar o conteúdo embaixo.

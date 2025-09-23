@@ -60,7 +60,7 @@ def SideBar(temp_pdf_path):
 # --- Interface Principal ---
 def Dashboard_MUST_PDF_RAG():
     
-    st.title("📄 Dashboard ONS")
+    st.title("📄 Dashboard MUST 2025 -  ONS")
 
     if "pdf_context" not in st.session_state:
         st.session_state.pdf_context = None
