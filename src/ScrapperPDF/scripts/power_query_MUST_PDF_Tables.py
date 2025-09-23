@@ -9,13 +9,19 @@ from rich.theme import Theme
 class Logger:
     """Classe para fornecer logs coloridos e formatados no console."""
     def __init__(self):
-        self.console = Console(theme=Theme({
+        self.console = Console(
+        force_terminal=True,
+
+        
+        theme=Theme({
             "success": "bold green",
             "warning": "yellow",
             "error": "bold red",
             "info": "cyan",
             "step": "bold magenta"
-        }))
+        })
+        
+        )
 
     def log(self, message, level="info"):
         """Registra uma mensagem com o nível e a cor especificados."""

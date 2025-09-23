@@ -9,107 +9,66 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QThread, QObject, Signal, QAbstractTableModel, Qt
 from PySide6.QtGui import QFont
+import pandas as pd
 
-# Tenta importar pandas. Se falhar, o programa pode rodar, mas a visualização da tabela não funcionará.
+
 try:
-    import pandas as pd
+    from ansi2html import Ansi2HTMLConverter
+    ansi_converter = Ansi2HTMLConverter(dark_bg=True, scheme="xterm")
 except ImportError:
-    pd = None
-    print("AVISO: A biblioteca 'pandas' não está instalada. A visualização de tabelas estará desativada.")
+    ansi_converter = None
+    print("AVISO: 'ansi2html' não está instalado. Os logs não serão coloridos.")
 
-# Tenta importar o script run.py. Se falhar, mostra um erro claro.
+# Tenta importar o script run.py.
 try:
     import run as run_script
 except ImportError as e:
-    print(f"ERRO CRÍTICO: Não foi possível importar o arquivo 'run.py'. Verifique se ele está na mesma pasta. Detalhes: {e}")
+    print(f"ERRO CRÍTICO: Não foi possível importar 'run.py'. Verifique se ele está na mesma pasta. Detalhes: {e}")
     sys.exit(1)
 
+# ... (APP_STYLES e classes PandasModel, Worker permanecem os mesmos) ...
 APP_STYLES = """
 QWidget {
-    background-color: #2b2b2b;
-    color: #f0f0f0;
-    font-family: "Segoe UI", sans-serif;
-    font-size: 10pt;
+    background-color: #2b2b2b; color: #f0f0f0; font-family: "Segoe UI", sans-serif; font-size: 10pt;
 }
-QMainWindow {
-    background-color: #212121;
-}
+QMainWindow { background-color: #212121; }
 QGroupBox {
-    font-weight: bold;
-    border: 1px solid #444;
-    border-radius: 8px;
-    margin-top: 10px;
-    padding: 15px;
+    font-weight: bold; border: 1px solid #444; border-radius: 8px; margin-top: 10px; padding: 15px;
 }
 QGroupBox::title {
-    subcontrol-origin: margin;
-    subcontrol-position: top center;
-    padding: 0 10px;
-    color: #f0f0f0;
+    subcontrol-origin: margin; subcontrol-position: top center; padding: 0 10px; color: #f0f0f0;
 }
 QPushButton {
-    background-color: #3c3f41;
-    color: #f0f0f0;
-    border: 1px solid #555;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-weight: bold;
+    background-color: #3c3f41; color: #f0f0f0; border: 1px solid #555;
+    padding: 8px 16px; border-radius: 4px; font-weight: bold;
 }
-QPushButton:hover {
-    background-color: #4f5355;
-}
-QPushButton:pressed {
-    background-color: #2a2d2f;
-}
-QPushButton#run_button {
-    background-color: #007acc; /* Azul */
-}
-QPushButton#run_button:hover {
-    background-color: #008ae6;
-}
+QPushButton:hover { background-color: #4f5355; }
+QPushButton:pressed { background-color: #2a2d2f; }
+QPushButton#run_button { background-color: #007acc; }
+QPushButton#run_button:hover { background-color: #008ae6; }
+QPushButton#export_excel { background-color: #9CCC65; }
+
 QLineEdit, QTextEdit {
-    background-color: #3c3f41;
-    border: 1px solid #555;
-    border-radius: 4px;
-    padding: 5px;
-    color: #f0f0f0;
+    background-color: #3c3f41; border: 1px solid #555; border-radius: 4px;
+    padding: 5px; color: #f0f0f0;
 }
-QLabel {
-    font-weight: bold;
-}
-QTabWidget::pane {
-    border: 1px solid #444;
-    border-top: 0px;
-}
+QLabel { font-weight: bold; }
+QTabWidget::pane { border: 1px solid #444; border-top: 0px; }
 QTabBar::tab {
-    background: #3c3f41;
-    border: 1px solid #444;
-    border-bottom: none;
-    padding: 8px 16px;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
+    background: #3c3f41; border: 1px solid #444; border-bottom: none;
+    padding: 8px 16px; border-top-left-radius: 4px; border-top-right-radius: 4px;
 }
-QTabBar::tab:selected {
-    background: #2b2b2b;
-    margin-bottom: 0px;
-}
-QTableView {
-    gridline-color: #444;
-}
+QTabBar::tab:selected { background: #2b2b2b; margin-bottom: 0px; }
+QTableView { gridline-color: #444; }
 QHeaderView::section {
-    background-color: #3c3f41;
-    padding: 4px;
-    border: 1px solid #555;
-    font-weight: bold;
+    background-color: #3c3f41; padding: 4px; border: 1px solid #555; font-weight: bold;
 }
 """
 
 class PandasModel(QAbstractTableModel):
-    """Modelo para exibir um DataFrame do pandas em uma QTableView."""
     def __init__(self, data):
         super().__init__()
         self._data = data
-
     def rowCount(self, parent=None): return self._data.shape[0]
     def columnCount(self, parent=None): return self._data.shape[1]
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
@@ -123,12 +82,9 @@ class PandasModel(QAbstractTableModel):
         return None
 
 class Worker(QObject):
-    """
-    Worker para executar tarefas em uma thread separada.
-    """
-    progress = Signal(str)  # Sinal para enviar mensagens de log
-    finished = Signal()     # Sinal emitido quando a tarefa termina com sucesso
-    error = Signal(str)     # Sinal emitido em caso de erro
+    progress = Signal(str)
+    finished = Signal()
+    error = Signal(str)
 
     def __init__(self, task_function, *args, **kwargs):
         super().__init__()
@@ -137,60 +93,37 @@ class Worker(QObject):
         self.kwargs = kwargs
 
     def run(self):
-        """Executa a função alvo e captura sua saída de 'print'."""
         old_stdout = sys.stdout
         redirected_output = sys.stdout = StringIO()
-
         try:
             self.progress.emit(f"▶️ Executando a função: {self.task_function.__name__}\n")
-            
-            # Chama a função importada (ex: run_extract_PDF_tables)
             self.task_function(*self.args, **self.kwargs)
-            
-            # Restaura a saída padrão
             sys.stdout = old_stdout
-            
-            # Captura tudo que foi "printado"
             output = redirected_output.getvalue()
             for line in output.splitlines():
                 self.progress.emit(line)
-            
             self.finished.emit()
-            
         except Exception as e:
-            # Garante que a saída padrão seja restaurada mesmo em caso de erro
             sys.stdout = old_stdout
-            # Captura qualquer saída que tenha sido gerada antes do erro
             output = redirected_output.getvalue()
-            for line in output.splitlines():
-                self.progress.emit(line)
-            
-            # Emite o sinal de erro
+            for line in output.splitlines(): self.progress.emit(line)
             import traceback
-            error_details = f"❌ Erro na execução da tarefa: {e}\n"
-            error_details += "------------------\n"
-            error_details += traceback.format_exc()
-            error_details += "------------------"
+            error_details = f"❌ Erro na execução da tarefa: {e}\n{traceback.format_exc()}"
             self.error.emit(error_details)
-
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Palkia - Extrator de PDF")
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(100, 100, 900, 700) # Aumentei um pouco o tamanho
         self.setStyleSheet(APP_STYLES)
 
-        # Widget Central e Layout
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
         main_layout = QVBoxLayout(main_widget)
 
-        # --- Grupo de Configuração ---
         config_group = QGroupBox("Configuração de Entrada")
         config_layout = QVBoxLayout(config_group)
-
-        # Seleção de Pasta
         folder_layout = QHBoxLayout()
         self.folder_label = QLabel("Pasta de Entrada: (Nenhuma selecionada)")
         self.folder_button = QPushButton("Selecionar Pasta")
@@ -198,8 +131,6 @@ class MainWindow(QMainWindow):
         folder_layout.addWidget(self.folder_label, 1)
         folder_layout.addWidget(self.folder_button)
         config_layout.addLayout(folder_layout)
-
-        # Input de Intervalos
         intervals_layout = QVBoxLayout()
         intervals_label = QLabel("Intervalos de Páginas (separados por vírgula):")
         self.intervals_input = QLineEdit()
@@ -207,27 +138,26 @@ class MainWindow(QMainWindow):
         intervals_layout.addWidget(intervals_label)
         intervals_layout.addWidget(self.intervals_input)
         config_layout.addLayout(intervals_layout)
-
         main_layout.addWidget(config_group)
 
-        # --- Grupo de Ações ---
-        actions_group = QGroupBox("Ações de Extração")
+        actions_group = QGroupBox("Ações de Extração e Pós-Processamento")
         actions_layout = QHBoxLayout(actions_group)
-        self.run_tables_button = QPushButton("Extrair Tabelas")
+        self.run_tables_button = QPushButton("1) Extrair Tabelas MUST")
         self.run_tables_button.setObjectName("run_button")
-        self.run_text_button = QPushButton("Extrair Anotações (Texto)")
+        self.run_text_button = QPushButton("2) Extrair Anotações ")
         self.run_text_button.setObjectName("run_button")
+        self.run_consolidate_button = QPushButton("3) Consolidar Resultados")
+        self.run_consolidate_button.setObjectName("run_button")
         self.run_tables_button.clicked.connect(lambda: self.run_task("extract_tables"))
         self.run_text_button.clicked.connect(lambda: self.run_task("extract_text"))
+        self.run_consolidate_button.clicked.connect(lambda: self.run_task("consolidate"))
         actions_layout.addWidget(self.run_tables_button)
         actions_layout.addWidget(self.run_text_button)
+        actions_layout.addWidget(self.run_consolidate_button)
         main_layout.addWidget(actions_group)
 
-        # --- Abas de Resultados (Log e Tabela) ---
         results_tabs = QTabWidget()
         main_layout.addWidget(results_tabs)
-
-        # Tab de Log
         log_widget = QWidget()
         log_layout = QVBoxLayout(log_widget)
         self.log_output = QTextEdit()
@@ -235,15 +165,17 @@ class MainWindow(QMainWindow):
         self.log_output.setFont(QFont("Courier New", 9))
         log_layout.addWidget(self.log_output)
         results_tabs.addTab(log_widget, "📝 Log de Execução")
-
-        # Tab de Tabela
         table_widget = QWidget()
         table_layout = QVBoxLayout(table_widget)
         self.table_view = QTableView()
+        self.export_button = QPushButton("📤 Exportar Tabela para .xlsx")
+        self.export_button.setObjectName("export_excel")
+        self.export_button.clicked.connect(self.export_table)
+        self.export_button.setEnabled(False)
         table_layout.addWidget(self.table_view)
+        table_layout.addWidget(self.export_button)
         results_tabs.addTab(table_widget, "📊 Resultado da Tabela")
         self.results_tabs = results_tabs
-
         self.input_folder = None
         self.current_task_info = {}
         self.thread = None
@@ -254,42 +186,41 @@ class MainWindow(QMainWindow):
         if folder:
             self.input_folder = folder
             self.folder_label.setText(f"Pasta de Entrada: ...{os.path.basename(folder)}")
+            self.log_output.clear()
+            self.append_log(f"Pasta selecionada: {folder}\n")
+            try:
+                pdf_files = sorted([f for f in os.listdir(folder) if f.lower().endswith('.pdf')])
+                if pdf_files:
+                    self.log_output.append('<font color="#26A69A"><b>Arquivos PDF encontrados:</b></font>')
+                    for pdf_file in pdf_files:
+                        self.log_output.append(f'<font color="#9CCC65">  - {pdf_file}</font>')
+                else:
+                    self.log_output.append('<font color="#FFCA28"><b>AVISO:</b> Nenhum arquivo PDF foi encontrado.</font>')
+            except Exception as e:
+                self.log_output.append(f'<font color="#EF5350"><b>ERRO:</b> Não foi possível ler a pasta: {e}</font>')
 
     def run_task(self, task_name):
         if not self.input_folder:
             QMessageBox.warning(self, "Aviso", "Por favor, selecione uma pasta de entrada primeiro.")
             return
-
         intervals = self.intervals_input.text()
         if task_name == "extract_tables" and not intervals:
             QMessageBox.warning(self, "Aviso", "Por favor, forneça os intervalos de páginas para extrair tabelas.")
             return
-
         self.log_output.clear()
         self.set_buttons_enabled(False)
-        self.table_view.setModel(None) # Limpa a visualização da tabela anterior
-
-        # Armazena informações sobre a tarefa atual para uso posterior
-        self.current_task_info = {
-            "name": task_name,
-            "input_folder": self.input_folder,
-        }
-
-        # --- INJEÇÃO DA VARIÁVEL GLOBAL ---
-        # Modificamos a variável 'input_folder' dentro do módulo 'run' importado
-        # Isso permite que as funções usem o caminho selecionado na GUI
+        self.table_view.setModel(None)
+        self.export_button.setEnabled(False)
+        self.current_task_info = {"name": task_name, "input_folder": self.input_folder}
         try:
             run_script.input_folder = self.input_folder
-            self.log_output.append(f"INFO: Pasta de entrada definida para: {self.input_folder}")
+            self.append_log(f"INFO: Pasta de entrada definida para: {self.input_folder}")
         except Exception as e:
-            QMessageBox.critical(self, "Erro Crítico", f"Não foi possível definir a pasta de entrada no script 'run.py'. Erro: {e}")
+            QMessageBox.critical(self, "Erro Crítico", f"Não foi possível definir a pasta no script 'run.py'. Erro: {e}")
             self.set_buttons_enabled(True)
             return
-
-        # Prepara a função e os argumentos para a thread
         if task_name == "extract_tables":
             try:
-                # Converte a string de intervalos ' "8-16", "8-24" ' em uma lista ['8-16', '8-24']
                 intervals_list = [interval.strip().strip('"\'') for interval in intervals.split(',')]
                 target_function = run_script.run_extract_PDF_tables
                 args = (intervals_list, "folder")
@@ -300,27 +231,36 @@ class MainWindow(QMainWindow):
         elif task_name == "extract_text":
             target_function = run_script.extract_text_from_must_tables
             args = ("folder",)
+        elif task_name == "consolidate":
+            if hasattr(run_script, 'consolidate_and_merge_results'):
+                target_function = run_script.consolidate_and_merge_results
+                args = ()
+            else:
+                QMessageBox.critical(self, "Erro", "A função 'consolidate_and_merge_results' não foi encontrada em 'run.py'.")
+                self.set_buttons_enabled(True)
+                return
         else:
             self.set_buttons_enabled(True)
             return
-
-        # Configura e inicia a thread
         self.thread = QThread()
         self.worker = Worker(target_function, *args)
         self.worker.moveToThread(self.thread)
-
         self.thread.started.connect(self.worker.run)
         self.worker.finished.connect(self.on_task_finished)
         self.worker.progress.connect(self.append_log)
         self.worker.error.connect(self.on_task_error)
-
         self.thread.start()
 
     def append_log(self, text):
-        """Adiciona texto ao log, removendo códigos de cor ANSI."""
-        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-        clean_text = ansi_escape.sub('', text)
-        self.log_output.append(clean_text)
+        if text.startswith('<font'):
+            self.log_output.append(text)
+            return
+        if ansi_converter:
+            html_text = ansi_converter.convert(text, full=False)
+            self.log_output.append(html_text)
+        else:
+            clean_text = re.sub(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])', '', text)
+            self.log_output.append(clean_text)
 
     def on_task_finished(self):
         self.append_log("\n✅ Tarefa concluída com sucesso!")
@@ -332,54 +272,89 @@ class MainWindow(QMainWindow):
         self.cleanup_thread()
 
     def display_results(self):
-        """Verifica se há resultados (tabelas) para exibir."""
         task_name = self.current_task_info.get("name")
-        if task_name != "extract_tables" or not pd:
-            return
-
         input_folder = self.current_task_info.get("input_folder")
-        output_folder = os.path.join(input_folder, "tabelas_extraidas")
-
-        if not os.path.isdir(output_folder):
-            self.append_log("AVISO: Pasta de resultados 'tabelas_extraidas' não encontrada.")
-            return
-
-        try:
-            # Encontra o arquivo .xlsx mais recente na pasta de saída
-            excel_files = [f for f in os.listdir(output_folder) if f.lower().endswith('.xlsx')]
-            if not excel_files:
-                self.append_log("AVISO: Nenhum arquivo Excel encontrado na pasta de resultados.")
-                return
-
-            latest_file = max(excel_files, key=lambda f: os.path.getmtime(os.path.join(output_folder, f)))
-            file_path = os.path.join(output_folder, latest_file)
-            
-            self.append_log(f"\nCarregando resultado de: {latest_file}...")
-            df = pd.read_excel(file_path)
-            
-            model = PandasModel(df)
+        if not pd: return
+        df_to_display = None
+        if task_name == "extract_tables":
+            df_to_display = self.load_latest_excel(os.path.join(input_folder, "tabelas_extraidas"))
+        elif task_name == "extract_text":
+            df_to_display = self.consolidate_and_load_excel(os.path.join(input_folder, "anotacoes_extraidas"))
+        elif task_name == "consolidate":
+            final_excel_path = os.path.join(input_folder, "database", "must_tables_PDF_notes_merged.xlsx")
+            if os.path.exists(final_excel_path):
+                df_to_display = pd.read_excel(final_excel_path)
+        if df_to_display is not None and not df_to_display.empty:
+            model = PandasModel(df_to_display)
             self.table_view.setModel(model)
-            self.results_tabs.setCurrentIndex(1) # Muda para a aba da tabela
+            self.results_tabs.setCurrentIndex(1)
+            self.export_button.setEnabled(True)
             self.append_log("✅ Tabela carregada com sucesso!")
+        else:
+            self.append_log("ℹ️ Nenhuma tabela para exibir.")
+
+    def load_latest_excel(self, output_folder):
+        latest_file_path = self.find_latest_file(output_folder, '.xlsx')
+        if not latest_file_path: return None
+        try:
+            self.append_log(f"\nCarregando resultado de: {os.path.basename(latest_file_path)}...")
+            return pd.read_excel(latest_file_path)
         except Exception as e:
-            self.append_log(f"❌ Erro ao carregar e exibir o arquivo Excel: {e}")
+            self.append_log(f"❌ Erro ao carregar o arquivo Excel: {e}")
+            return None
+
+    def consolidate_and_load_excel(self, output_folder):
+        self.append_log("\nIniciando consolidação...")
+        if not os.path.isdir(output_folder): return None
+        try:
+            all_files = [os.path.join(output_folder, f) for f in os.listdir(output_folder) if f.lower().endswith('.xlsx')]
+            if not all_files:
+                self.append_log("AVISO: Nenhum arquivo de anotações (.xlsx) encontrado para consolidar.")
+                return None
+            df_list = [pd.read_excel(f) for f in all_files]
+            consolidated_df = pd.concat(df_list, ignore_index=True)
+            self.append_log(f"✅ Consolidação concluída. Total de {consolidated_df.shape[0]} registros.")
+            return consolidated_df
+        except Exception as e:
+            self.append_log(f"❌ Erro durante a consolidação: {e}")
+            return None
+
+    def find_latest_file(self, folder, extension):
+        if not os.path.isdir(folder): return None
+        files = [os.path.join(folder, f) for f in os.listdir(folder) if f.lower().endswith(extension)]
+        if not files: return None
+        return max(files, key=os.path.getmtime)
+
+    def export_table(self):
+        model = self.table_view.model()
+        if not model or not isinstance(model, PandasModel):
+            QMessageBox.warning(self, "Aviso", "Nenhuma tabela para exportar.")
+            return
+        filePath, _ = QFileDialog.getSaveFileName(self, "Salvar Tabela", "", "Excel Files (*.xlsx)")
+        if filePath:
+            try:
+                model._data.to_excel(filePath, index=False)
+                QMessageBox.information(self, "Sucesso", f"Tabela salva com sucesso em: {filePath}")
+            except Exception as e:
+                QMessageBox.critical(self, "Erro", f"Não foi possível salvar o arquivo: {e}")
 
     def cleanup_thread(self):
         self.set_buttons_enabled(True)
-        self.thread.quit()
-        self.worker.deleteLater()
-        self.thread.deleteLater()
-        self.thread = None
+        if self.thread:
+            self.thread.quit()
+            self.thread.wait()
         self.worker = None
+        self.thread = None
 
     def set_buttons_enabled(self, enabled):
         self.run_tables_button.setEnabled(enabled)
         self.run_text_button.setEnabled(enabled)
+        self.run_consolidate_button.setEnabled(enabled)
         self.folder_button.setEnabled(enabled)
 
     def closeEvent(self, event):
         if self.thread and self.thread.isRunning():
-            QMessageBox.warning(self, "Aviso", "Uma tarefa está em execução. Por favor, aguarde a conclusão.")
+            QMessageBox.warning(self, "Aviso", "Uma tarefa está em execução.")
             event.ignore()
         else:
             event.accept()
