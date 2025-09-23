@@ -5,9 +5,6 @@ from gtts import gTTS
 import io
 
 
-
-
-
 from .config import API_KEY, DEFAULT_MODEL, historico_c3po_inicial, CSS
 
 

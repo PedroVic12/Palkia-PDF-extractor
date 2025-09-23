@@ -68,6 +68,9 @@ import camelot
 import google.generativeai as genai
 from langchain_community.document_loaders import PyMuPDFLoader # Langchain ainda é útil para carregar o PDF
 
+#from ..models.ChatbotGemini import ChatbotGeminiApp
+
+
 # Carrega a chave da API do Gemini
 load_dotenv()
 
@@ -167,7 +170,7 @@ def get_gemini_response(prompt: str, pdf_context: str) -> str:
     except Exception as e:
         return f"Ocorreu um erro ao comunicar com a IA: {e}"
 
-def render_chatbot_tab(uploaded_file_name: str):
+def ChatbotWithRAG(uploaded_file_name: str):
     """Renderiza a interface e a lógica do chatbot."""
     with st.container():
         st.header("Converse com o Documento")
@@ -192,79 +195,7 @@ def render_chatbot_tab(uploaded_file_name: str):
                 
                 st.session_state.messages.append({"role": "assistant", "content": response})
 
-# --- Sua Interface Principal ---
-def Dashboard_MUST_PDF_RAG():
-    
-    st.title("📄 Dashboard ONS")
 
-    if "pdf_context" not in st.session_state:
-        st.session_state.pdf_context = None
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
 
-    uploaded_file = st.sidebar.file_uploader("Escolha um arquivo PDF", type="pdf")
 
-    if uploaded_file:
-        # Define o caminho do script para garantir que o arquivo seja salvo no lugar certo.
-        script_dir = Path(__file__).parent
-        temp_pdf_path = script_dir / "temp_uploaded_file.pdf"
-        with open(temp_pdf_path, "wb") as f:
-            f.write(uploaded_file.getvalue())
-
-        # --- Sidebar ---
-        with st.sidebar:
-            with st.spinner("A analisar documento..."):
-                try:
-                    reader = PdfReader(temp_pdf_path)
-                    num_pages = len(reader.pages)
-                    st.info(f"Total de páginas: {num_pages}")
-                    # Analisa só a primeira página para uma verificação rápida na sidebar
-                    tables = camelot.read_pdf(str(temp_pdf_path), pages='1', flavor='lattice') 
-                    st.info(f"Tabelas encontradas (amostra): {len(tables)}")
-                except Exception as e:
-                    st.error(f"Erro na análise rápida: {e}")
-                    num_pages = 0
-            
-            # Botão para extrair o texto completo para o chatbot
-            if st.button("Preparar Chatbot com Conteúdo do PDF"):
-                st.session_state.messages = [] 
-                with st.spinner("A extrair texto completo para a IA..."):
-                    try:
-                        loader = PyMuPDFLoader(str(temp_pdf_path))
-                        docs = loader.load()
-                        st.session_state.pdf_context = "\n\n".join([doc.page_content for doc in docs])
-                        st.success("Chatbot preparado!")
-                    except Exception as e:
-                        st.session_state.pdf_context = None
-                        st.error(f"Erro ao extrair texto: {e}")
-
-            # Renderiza as páginas do PDF
-            if num_pages > 0:
-                st.subheader("Visualização do PDF")
-                with st.spinner("A renderizar páginas..."):
-                    try:
-                        images = convert_from_path(str(temp_pdf_path))
-                        for i, image in enumerate(images):
-                            st.image(image, caption=f"Página {i + 1}", use_column_width=True)
-                    except Exception:
-                        st.warning("Não foi possível renderizar o PDF. Verifique se o Poppler está instalado e no PATH do sistema.")
-
-        # --- Abas de Funcionalidades ---
-        tab_texto, tab_tabelas, tab_chatbot = st.tabs([
-            "📄 Extrair Texto", 
-            "📊 Extrair Tabelas",
-            "🤖 Chatbot"
-        ])
-
-        with tab_texto:
-            render_texto_tab(PdfReader(temp_pdf_path))
-
-        with tab_tabelas:
-            render_tabelas_tab(str(temp_pdf_path))
-
-        with tab_chatbot:
-            # Passa o nome original do arquivo para exibição
-            render_chatbot_tab(uploaded_file.name)
-
-Dashboard_MUST_PDF_RAG()
 
