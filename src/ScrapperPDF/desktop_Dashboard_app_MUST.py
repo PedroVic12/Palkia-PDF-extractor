@@ -175,7 +175,7 @@ class DashboardDB:
 # --- PARTE 2: VIEW / CONTROLLER (LÓGICA DA INTERFACE GRÁFICA) ---
 
 STYLESHEET = """
-QWidget { font-family: Inter, sans-serif; color: #E0E0E0; background-color: #111827; }
+QWidget { font-family: Arial, sans-serif; color: #E0E0E0; background-color: #111827; }
 QMainWindow { background-color: #111827; }
 QLabel { background-color: transparent; }
 QLabel#headerTitle { font-size: 28px; font-weight: bold; }
