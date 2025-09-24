@@ -15,6 +15,9 @@ from mvc.controller import PDFController
 from langchain_community.document_loaders import PyMuPDFLoader # Langchain ainda é útil para carregar o PDF
 
 
+#st.set_page_config(layout="wide", page_icon="📄", page_title="Dashboard ONS", initial_sidebar_state="expanded")
+
+
 def SideBar(temp_pdf_path):
     # --- Sidebar ---
     with st.sidebar:
@@ -60,6 +63,7 @@ def SideBar(temp_pdf_path):
 # --- Interface Principal ---
 def Dashboard_MUST_PDF_RAG():
     
+
     st.title("📄 Dashboard MUST 2025 -  ONS")
 
     if "pdf_context" not in st.session_state:

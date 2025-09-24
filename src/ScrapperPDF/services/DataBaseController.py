@@ -100,6 +100,7 @@ class SQLiteController(DataBaseController):
         print("3. Conectando ao banco de dados SQLite...")
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
+
     def close(self):
         if self.conn: self.conn.close(); print("Conexão SQLite fechada.")
     def _create_tables(self):
@@ -115,9 +116,25 @@ class SQLiteController(DataBaseController):
         self.df_valores_must.to_sql('valores_must', self.conn, if_exists='replace', index=False)
         self.conn.commit()
 
+    def list_tables(self):
+        """Lista todas as tabelas no banco de dados SQLite."""
+        if not self.conn:
+            self.connect()
+
+        self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        return [table[0] for table in self.cursor.fetchall()]
+
+    def select_from_table(self, table_name):
+
+        if not self.conn:
+            self.connect()
+
+        self.cursor.execute(f"SELECT * FROM {table_name};")
+        columns = [description[0] for description in self.cursor.description]
+        return [dict(zip(columns, row)) for row in self.cursor.fetchall()]
+
 
 class AccessController(DataBaseController):
-    # ... (O código desta classe também permanece o mesmo) ...
     def connect(self):
         print("3. Conectando ao banco de dados MS Access...")
         if not self.db_path.exists():
@@ -125,17 +142,28 @@ class AccessController(DataBaseController):
         conn_str = (r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};" fr"DBQ={self.db_path};")
         self.conn = pyodbc.connect(conn_str)
         self.cursor = self.conn.cursor()
+
     def close(self):
         if self.conn: self.conn.close(); print("Conexão Access fechada.")
+
     def _create_tables(self):
-        print("4. Recriando tabelas no Access...")
-        for table in ['valores_must', 'equipamentos', 'empresas']:
-            try: self.cursor.execute(f"DROP TABLE {table}")
-            except pyodbc.ProgrammingError: pass
-        self.cursor.execute("CREATE TABLE empresas (id_empresa COUNTER PRIMARY KEY, nome_empresa TEXT(255) UNIQUE)")
-        self.cursor.execute("CREATE TABLE equipamentos (id_equipamento COUNTER PRIMARY KEY, cod_ons TEXT(100) UNIQUE, tensao_kv INTEGER, ponto_de TEXT(255), ponto_ate TEXT(255), anotacao_geral MEMO, id_empresa_fk INTEGER)")
-        self.cursor.execute("CREATE TABLE valores_must (id_valor COUNTER PRIMARY KEY, id_equipamento_fk INTEGER, ano INTEGER, periodo TEXT(50), valor DOUBLE)")
+        print("4. Verificando tabelas existentes no Access (não serão recriadas)...")
+        # Como as tabelas foram criadas manualmente, este método não precisa fazer nada.
+        # No máximo, podemos verificar se elas existem.
+        required_tables = ['empresas', 'anotacoes', 'valores_must']
+        existing_tables = [table.table_name for table in self.cursor.tables(tableType='TABLE')]
+        
+        for table in required_tables:
+            if table not in existing_tables:
+                raise ValueError(f"Tabela '{table}' não encontrada no banco de dados Access! Crie-a manualmente primeiro.")
+        
+        # É uma boa prática limpar as tabelas antes de inserir novos dados
+        print("   -> Limpando tabelas para nova carga...")
+        self.cursor.execute("DELETE FROM valores_must")
+        self.cursor.execute("DELETE FROM anotacoes")
+        self.cursor.execute("DELETE FROM empresas")
         self.conn.commit()
+
     def _insert_data(self):
         print("5. Inserindo dados no Access...")
         # (A lógica de inserção complexa para o Access, com @@IDENTITY, permanece aqui)
@@ -183,12 +211,24 @@ if __name__ == '__main__':
         # --- Processar para SQLite ---
         print("\n" + "="*50 + "\nPROCESSANDO PARA SQLITE\n" + "="*50)
         sqlite_controller = SQLiteController(SQLITE_DB_PATH, df_empresas, df_equipamentos, df_valores_must)
+        
+        tabelas = sqlite_controller.list_tables()
+        print("\nTabelas no Banco: ", tabelas)
+
+        data_json = sqlite_controller.select_from_table(tabelas[0])
+        print(f"\nDados da Tabela {tabelas[0]}:\n{data_json}")
+        
+        print("\nInserindo os dados das tabelas MUST no banco de dados SQLite...")
         sqlite_controller.load_data()
+
+
+
         
         # --- Processar para MS Access ---
-        print("\n" + "="*50 + "\nPROCESSANDO PARA MS ACCESS\n" + "="*50)
         # Descomente para executar
         try:
+            print("\n" + "="*50 + "\nPROCESSANDO PARA MS ACCESS\n" + "="*50)
+
             access_controller = AccessController(ACCESS_DB_PATH, df_empresas, df_equipamentos, df_valores_must)
             access_controller.load_data()
         except Exception as e:
