@@ -616,7 +616,7 @@ if __name__ == '__main__':
         try:
             conn = pyodbc.connect(r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};" fr"DBQ={access_db_path};")
             conn.close()
-            print(f"Sucesso! Usando banco de dados Access: {access_db_path}")
+            print(f"\nSucesso! Usando banco de dados Access: {access_db_path}")
             db_to_use = access_db_path
         except pyodbc.Error as e:
             print(f"AVISO: Arquivo Access encontrado, mas falha ao conectar. Erro: {e}")
@@ -627,7 +627,7 @@ if __name__ == '__main__':
     if not db_to_use:
         print("\nTentando conectar ao banco de dados SQLite...")
         if sqlite_db_path.exists():
-            print(f"Sucesso! Usando banco de dados SQLite: {sqlite_db_path}")
+            print(f"\nSucesso! Usando banco de dados SQLite: {sqlite_db_path}")
             db_to_use = sqlite_db_path
         else:
             print(f"ERRO CRÍTICO: Nenhum banco de dados funcional (Access ou SQLite) encontrado na pasta: {db_folder}")
@@ -648,6 +648,5 @@ if __name__ == '__main__':
         layout.addWidget(label); error_dialog.setLayout(layout)
         error_dialog.exec()
         sys.exit(1)
-    finally:
-        if conn: conn.close()
+ 
         
