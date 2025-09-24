@@ -109,8 +109,9 @@ if __name__ == "__main__":
     corretora = 'jornada'
     path = os.path.abspath(f"src/files/pdf/{corretora}/")
     path_windows = r"C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\GitHub\Palkia-PDF-extractor\src\files\pdf\jornada"
-    files = list_files(path_windows)
+    files = list_files(path)
     
     for file in files:
+        #print(file)
         extractor = PDFTableExtractor(file, configs=rules_dict[corretora]).start()
     logging.info("Todos os arquivos foram processados")
