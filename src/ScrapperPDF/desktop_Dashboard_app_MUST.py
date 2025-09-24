@@ -1,49 +1,58 @@
+# seu_arquivo_de_frontend.py
+
 import sys
 import sqlite3
+import pyodbc
 import webbrowser
 from pathlib import Path
 from datetime import datetime
+import tempfile
+import os
+
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QComboBox, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
     QHeaderView, QScrollArea, QFrame, QDialog, QTextBrowser, QTabWidget,
     QProgressBar, QStackedWidget,
 )
-from PySide6.QtCore import Qt
-import pyodbc
+from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QFont
 
-# Adiciona dependência para gráficos.
 try:
-    import matplotlib
-    from matplotlib.figure import Figure
-    from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-    matplotlib.use('QtAgg')
     import pandas as pd
     import plotly.express as px
     import plotly.graph_objects as go
     from PySide6.QtWebEngineWidgets import QWebEngineView
 except ImportError:
-    print("Dependências não encontradas. Gráficos/Tabelas podem não funcionar.")
-    print("Instale com: pip install pandas plotly PySide6-WebEngine")
+    print("Dependências críticas (pandas, plotly, PySide6-WebEngine) não encontradas.")
     pd = px = go = QWebEngineView = None
-    FigureCanvas = None
 
-
-# --- PARTE 1: MODELO DE DADOS (LÓGICA DO BANCO DE DADOS) ---
+# ==============================================================================
+# --- PARTE 1: MODELO DE DADOS (CLASSE DashboardDB CORRIGIDA) ---
+# ==============================================================================
 
 class DashboardDB:
-    """
-    Model (Parte do MVC): Manipula todas as interações de LEITURA e ESCRITA com o banco de dados.
-    """
     def __init__(self, db_path):
         self.db_path = Path(db_path)
         if not self.db_path.exists():
-            raise FileNotFoundError(
-                f"O arquivo de banco de dados não foi encontrado: {self.db_path}\n"
-                "Certifique-se de que o caminho está correto e o banco de dados já foi criado."
-            )
-        self._ensure_approval_columns_exist()
-        
+            raise FileNotFoundError(f"Arquivo de banco de dados não encontrado: {self.db_path}")
+
+        self.db_type = 'access' if self.db_path.suffix.lower() == '.accdb' else 'sqlite'
+        print(f"Tipo de banco de dados detectado: {self.db_type.upper()}")
+
+        # CORREÇÃO: Nomes de tabela específicos para cada dialeto
+        if self.db_type == 'sqlite':
+            self.tbl_empresas = 'empresas'
+            self.tbl_anotacao = 'anotacao'
+            self.tbl_valores = 'valores_must'
+        else: # Access
+            self.tbl_empresas = 'tb_empresas'
+            self.tbl_anotacao = 'tb_anotacao'
+            self.tbl_valores = 'tb_valores_must'
+
+        if self.db_type == 'sqlite':
+            self._ensure_approval_columns_exist_sqlite()
+
         self.company_links = {
             'SUL SUDESTE': 'https://onsbr-my.sharepoint.com/:b:/g/personal/pedrovictor_veras_ons_org_br/EbWWq1r7MnxPvOejycbr82cB5a_rN_PCsDMDjp9r3bF3Ng?e=C7dxKN',
             'ELETROPAULO': 'https://onsbr-my.sharepoint.com/:b:/g/personal/pedrovictor_veras_ons_org_br/EXzdo_ClziVDrnOHTiGzoysBdqgci92tpuKYN2xKIjPQvw?e=kzrFho',
@@ -53,49 +62,56 @@ class DashboardDB:
             'CPFL PAULISTA': 'https://onsbr-my.sharepoint.com/:b:/g/personal/pedrovictor_veras_ons_org_br/EbWWq1r7MnxPvOejycbr82cB5a_rN_PCsDMDjp9r3bF3Ng?e=C7dxKN'
         }
 
+    def _get_connection(self):
+        if self.db_type == 'sqlite':
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+            return conn
+        else:
+            conn_str = (r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};" fr"DBQ={self.db_path};")
+            return pyodbc.connect(conn_str)
+
     def _execute_query(self, query, params=(), fetch_one=False):
         try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.row_factory = sqlite3.Row
+            with self._get_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(query, params)
+                
+                columns = [column[0] for column in cursor.description]
                 if fetch_one:
                     result = cursor.fetchone()
-                    return dict(result) if result else None
-                results = cursor.fetchall()
-                return [dict(row) for row in results]
-        except sqlite3.Error as e:
+                    return dict(zip(columns, result)) if result else None
+                return [dict(zip(columns, row)) for row in cursor.fetchall()]
+        except (sqlite3.Error, pyodbc.Error) as e:
             print(f"Erro de banco de dados (leitura): {e}")
             return [] if not fetch_one else None
 
     def _execute_write_query(self, query, params=()):
         try:
-            with sqlite3.connect(self.db_path) as conn:
+            with self._get_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(query, params)
                 conn.commit()
             return True
-        except sqlite3.Error as e:
+        except (sqlite3.Error, pyodbc.Error) as e:
             print(f"Erro de banco de dados (escrita): {e}")
             return False
 
-    def _ensure_approval_columns_exist(self):
+    def _ensure_approval_columns_exist_sqlite(self):
         try:
-            table_info = self._execute_query("PRAGMA table_info(anotacao)")
+            table_info = self._execute_query(f"PRAGMA table_info({self.tbl_anotacao})")
             column_names = [col['name'] for col in table_info]
             if 'aprovado_por' not in column_names:
-                print("Adicionando coluna 'aprovado_por'...")
-                self._execute_write_query("ALTER TABLE anotacao ADD COLUMN aprovado_por TEXT;")
+                self._execute_write_query(f"ALTER TABLE {self.tbl_anotacao} ADD COLUMN aprovado_por TEXT;")
             if 'data_aprovacao' not in column_names:
-                print("Adicionando coluna 'data_aprovacao'...")
-                self._execute_write_query("ALTER TABLE anotacao ADD COLUMN data_aprovacao TEXT;")
+                self._execute_write_query(f"ALTER TABLE {self.tbl_anotacao} ADD COLUMN data_aprovacao TEXT;")
         except Exception as e:
-            print(f"Não foi possível verificar/modificar a tabela 'anotacao': {e}")
+            print(f"Não foi possível verificar/modificar a tabela '{self.tbl_anotacao}': {e}")
             
     def get_kpi_summary(self):
-        query_companies = "SELECT COUNT(DISTINCT id_empresa) as count FROM empresas;"
-        query_points = "SELECT COUNT(*) as count FROM anotacao;"
-        query_remarks = "SELECT COUNT(*) as count FROM anotacao WHERE anotacao_geral IS NOT NULL AND anotacao_geral != '' AND anotacao_geral != 'nan';"
+        query_companies = f"SELECT COUNT(*) as count FROM {self.tbl_empresas};"
+        query_points = f"SELECT COUNT(*) as count FROM {self.tbl_anotacao};"
+        query_remarks = f"SELECT COUNT(*) as count FROM {self.tbl_anotacao} WHERE anotacao_geral IS NOT NULL AND anotacao_geral <> '' AND anotacao_geral <> 'nan';"
         try:
             total_companies = self._execute_query(query_companies, fetch_one=True)['count']
             total_points = self._execute_query(query_points, fetch_one=True)['count']
@@ -107,39 +123,38 @@ class DashboardDB:
             return {'unique_companies': 0, 'total_points': 0, 'points_with_remarks': 0, 'percentage_with_remarks': '0.0%'}
 
     def get_company_analysis(self):
-        query = """
+        query = f"""
             SELECT e.nome_empresa, COUNT(a.id_conexao) as total,
-                   SUM(CASE WHEN a.anotacao_geral IS NOT NULL AND a.anotacao_geral != '' AND a.anotacao_geral != 'nan' THEN 1 ELSE 0 END) as with_remarks
-            FROM empresas e JOIN anotacao a ON e.id_empresa = a.id_empresa
+                   SUM(IIF(a.anotacao_geral IS NOT NULL AND a.anotacao_geral <> '' AND a.anotacao_geral <> 'nan', 1, 0)) as with_remarks
+            FROM {self.tbl_empresas} AS e INNER JOIN {self.tbl_anotacao} AS a ON e.id_empresa = a.id_empresa
             GROUP BY e.nome_empresa ORDER BY e.nome_empresa;
         """
         return self._execute_query(query)
         
     def get_yearly_must_stats(self):
-        query = "SELECT ano, periodo, SUM(valor) as total_valor FROM valores_must GROUP BY ano, periodo ORDER BY ano, periodo;"
+        query = f"SELECT ano, periodo, SUM(valor) as total_valor FROM {self.tbl_valores} GROUP BY ano, periodo ORDER BY ano, periodo;"
         return self._execute_query(query)
 
     def get_unique_companies(self):
-        query = "SELECT nome_empresa FROM empresas ORDER BY nome_empresa;"
+        query = f"SELECT nome_empresa FROM {self.tbl_empresas} ORDER BY nome_empresa;"
         return [row['nome_empresa'] for row in self._execute_query(query)]
 
     def get_unique_tensions(self):
-        query = "SELECT DISTINCT tensao_kv FROM anotacao WHERE tensao_kv IS NOT NULL ORDER BY tensao_kv;"
+        query = f"SELECT DISTINCT tensao_kv FROM {self.tbl_anotacao} WHERE tensao_kv IS NOT NULL ORDER BY tensao_kv;"
         return [str(row['tensao_kv']) for row in self._execute_query(query)]
 
     def get_all_connection_points(self, filters=None):
-        query = """
+        query = f"""
             SELECT emp.nome_empresa, a.cod_ons, a.tensao_kv, a.anotacao_geral, a.aprovado_por, a.data_aprovacao
-            FROM anotacao a JOIN empresas emp ON a.id_empresa = emp.id_empresa
+            FROM ({self.tbl_empresas} AS emp
+            INNER JOIN {self.tbl_anotacao} AS a ON emp.id_empresa = a.id_empresa)
         """
         conditions, params = [], []
-        
-        year_filter = filters.get("year") if filters else None
-        if year_filter and year_filter != "Todos":
-            conditions.append("EXISTS (SELECT 1 FROM valores_must vm WHERE vm.id_conexao = a.id_conexao AND vm.ano = ?)")
-            params.append(int(year_filter))
-            
         if filters:
+            year_filter = filters.get("year")
+            if year_filter and year_filter != "Todos":
+                conditions.append(f"a.id_conexao IN (SELECT vm.id_conexao FROM {self.tbl_valores} vm WHERE vm.ano = ?)")
+                params.append(int(year_filter))
             if filters.get("company") and filters["company"] != "Todas":
                 conditions.append("emp.nome_empresa = ?"); params.append(filters["company"])
             if filters.get("search"):
@@ -147,12 +162,12 @@ class DashboardDB:
             if filters.get("tension") and filters["tension"] != "Todas":
                 conditions.append("a.tensao_kv = ?"); params.append(int(filters["tension"]))
             if filters.get("status") == "Com Ressalva":
-                conditions.append("(a.anotacao_geral IS NOT NULL AND a.anotacao_geral != '' AND a.anotacao_geral != 'nan')")
+                conditions.append("(a.anotacao_geral IS NOT NULL AND a.anotacao_geral <> '' AND a.anotacao_geral <> 'nan')")
             elif filters.get("status") == "Aprovado":
-                 conditions.append("(a.anotacao_geral IS NULL OR a.anotacao_geral = '' OR a.anotacao_geral = 'nan')")
+                 conditions.append("(a.aprovado_por IS NOT NULL AND a.aprovado_por <> '')")
         
         if conditions: query += " WHERE " + " AND ".join(conditions)
-        query += " GROUP BY a.id_conexao ORDER BY emp.nome_empresa, a.cod_ons;"
+        query += " ORDER BY emp.nome_empresa, a.cod_ons;"
         
         results = self._execute_query(query, tuple(params))
         for row in results:
@@ -161,34 +176,35 @@ class DashboardDB:
         return results
 
     def get_must_history_for_point(self, cod_ons):
-        query = "SELECT vm.ano, vm.periodo, vm.valor FROM valores_must vm JOIN anotacao a ON vm.id_conexao = a.id_conexao WHERE a.cod_ons = ? ORDER BY vm.ano, vm.periodo;"
+        query = f"""
+            SELECT vm.ano, vm.periodo, vm.valor
+            FROM {self.tbl_valores} AS vm
+            INNER JOIN {self.tbl_anotacao} AS a ON vm.id_conexao = a.id_conexao
+            WHERE a.cod_ons = ? ORDER BY vm.ano, vm.periodo;
+        """
         return self._execute_query(query, (cod_ons,))
 
     def approve_point(self, cod_ons, approver_name):
-        query = "UPDATE anotacao SET aprovado_por = ?, data_aprovacao = ? WHERE cod_ons = ?;"
+        query = f"UPDATE {self.tbl_anotacao} SET aprovado_por = ?, data_aprovacao = ? WHERE cod_ons = ?;"
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         return self._execute_write_query(query, (approver_name, timestamp, cod_ons))
         
     def get_data_for_charts(self):
-        points_per_company = self._execute_query("SELECT e.nome_empresa, COUNT(a.id_conexao) as count FROM empresas e JOIN anotacao a ON e.id_empresa = a.id_empresa GROUP BY e.nome_empresa")
-        remarks_summary = self._execute_query("SELECT SUM(CASE WHEN anotacao_geral IS NOT NULL AND anotacao_geral != '' AND anotacao_geral != 'nan' THEN 1 ELSE 0 END) as with_remarks, COUNT(id_conexao) as total FROM anotacao", fetch_one=True)
-        yearly_sum = self._execute_query("SELECT ano, SUM(valor) as total_valor FROM valores_must GROUP BY ano ORDER BY ano")
+        points_per_company_query = f"SELECT e.nome_empresa, COUNT(a.id_conexao) as count FROM {self.tbl_empresas} AS e INNER JOIN {self.tbl_anotacao} AS a ON e.id_empresa = a.id_empresa GROUP BY e.nome_empresa"
+        remarks_summary_query = f"SELECT SUM(IIF(anotacao_geral IS NOT NULL AND anotacao_geral <> '' AND anotacao_geral <> 'nan', 1, 0)) as with_remarks, COUNT(id_conexao) as total FROM {self.tbl_anotacao}"
+        yearly_sum_query = f"SELECT ano, SUM(valor) as total_valor FROM {self.tbl_valores} GROUP BY ano ORDER BY ano"
         return {
-            "points_per_company": points_per_company,
-            "remarks_summary": remarks_summary,
-            "yearly_sum": yearly_sum,
+            "points_per_company": self._execute_query(points_per_company_query),
+            "remarks_summary": self._execute_query(remarks_summary_query, fetch_one=True),
+            "yearly_sum": self._execute_query(yearly_sum_query),
         }
-
-
-
 
 # --- PARTE 2: VIEW / CONTROLLER (LÓGICA DA INTERFACE GRÁFICA) ---
 
 STYLESHEET = """
-QWidget { font-family: Arial, monospace; color: #E0E0E0; background-color: #111827; }
+QWidget { font-family: Arial, sans-serif; color: #E0E0E0; background-color: #111827; }
 QMainWindow { background-color: #111827; }
 QLabel { background-color: transparent; }
-QVBoxLayout { font-size: 20; }
 QLabel#headerTitle { font-size: 28px; font-weight: bold; }
 QLabel#headerSubtitle { color: #9CA3AF; }
 QLabel#sectionTitle { font-size: 18px; font-weight: bold; margin-bottom: 10px; margin-left: 5px;}
@@ -336,8 +352,6 @@ class DashboardApp(QMainWindow):
         main_widget = QWidget()
         self.main_layout = QVBoxLayout(main_widget)
         self.main_layout.setContentsMargins(20, 20, 20, 20); self.main_layout.setSpacing(20)
-        
-        # Estrutura com containers
         self._create_header()
         self.main_layout.addWidget(self._create_kpi_container())
         self.main_layout.addWidget(self._create_company_analysis_container())
@@ -345,12 +359,10 @@ class DashboardApp(QMainWindow):
         self.main_layout.addWidget(self._create_filters_container())
         self.main_layout.addWidget(self._create_details_table_container())
         self.main_layout.addStretch()
-
         scroll_area = QScrollArea(); scroll_area.setWidgetResizable(True)
         scroll_area.setWidget(main_widget); scroll_area.setStyleSheet("border: none;")
         return scroll_area
 
-    # Funções containerizadas
     def _create_kpi_container(self):
         container = QFrame(); container.setObjectName("container")
         layout = QVBoxLayout(container)
@@ -406,8 +418,9 @@ class DashboardApp(QMainWindow):
         layout.addWidget(QLabel("Detalhes dos Pontos de Conexão", objectName="sectionTitle"))
         self.table = QTableWidget(); self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels(["Empresa", "Cód ONS", "Tensão (kV)", "Ressalva?", "Ação/Aprovado Por", "Arquivo PDF"])
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        header.setStretchLastSection(True)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.cellClicked.connect(self._on_cell_clicked)
@@ -416,68 +429,82 @@ class DashboardApp(QMainWindow):
         return container
 
     def _create_graphics_dashboard_widget(self):
-        if not FigureCanvas: return QLabel("Matplotlib não está instalado.\nA Análise Gráfica não está disponível.")
+        if not px or not QWebEngineView:
+            return QLabel("Plotly ou PySide6-WebEngine não estão instalados.")
+        
         graphics_widget = QWidget()
         layout = QVBoxLayout(graphics_widget)
-        title = QLabel("Análise Gráfica"); title.setObjectName("headerTitle")
+        title = QLabel("Análise Gráfica Interativa"); title.setObjectName("headerTitle")
         layout.addWidget(title)
+        
         chart_data = self.db.get_data_for_charts()
-        grid_layout = QGridLayout(); grid_layout.setSpacing(20)
-        grid_layout.addWidget(self._create_points_by_company_chart(chart_data['points_per_company']), 0, 0)
-        grid_layout.addWidget(self._create_remarks_pie_chart(chart_data['remarks_summary']), 0, 1)
-        grid_layout.addWidget(self._create_yearly_sum_chart(chart_data['yearly_sum']), 1, 0, 1, 2)
+        
+        grid_layout = QGridLayout(); grid_layout.setSpacing(10)
+        
+        self.points_by_company_chart = self._create_plotly_chart(chart_data.get('points_per_company'), self._plot_points_by_company)
+        self.remarks_pie_chart = self._create_plotly_chart(chart_data.get('remarks_summary'), self._plot_remarks_pie)
+        self.yearly_sum_chart = self._create_plotly_chart(chart_data.get('yearly_sum'), self._plot_yearly_sum)
+        
+        grid_layout.addWidget(self.points_by_company_chart, 0, 0)
+        grid_layout.addWidget(self.remarks_pie_chart, 0, 1)
+        grid_layout.addWidget(self.yearly_sum_chart, 1, 0, 1, 2)
+        
         layout.addLayout(grid_layout)
+        
         scroll_area = QScrollArea(); scroll_area.setWidgetResizable(True)
         scroll_area.setWidget(graphics_widget); scroll_area.setStyleSheet("border: none;")
         return scroll_area
 
-    def _create_chart_canvas(self, fig_title, data, chart_func):
-        fig = Figure(figsize=(8, 6), dpi=100); fig.patch.set_facecolor('#1F2937')
-        ax = fig.add_subplot(111); ax.set_facecolor('#1F2937'); ax.tick_params(colors='#E0E0E0')
-        ax.spines['bottom'].set_color('#E0E0E0'); ax.spines['left'].set_color('#E0E0E0')
-        ax.spines['top'].set_color('none'); ax.spines['right'].set_color('none')
-        ax.set_title(fig_title, color='#E0E0E0', fontsize=16); chart_func(ax, data); fig.tight_layout()
-        return FigureCanvas(fig)
+    def _create_plotly_chart(self, data, plot_function):
+        browser = QWebEngineView()
+        if not data: return browser
+        fig = plot_function(data)
+        temp_file = tempfile.NamedTemporaryFile(suffix=".html", delete=False, mode='w', encoding='utf-8')
+        fig.write_html(temp_file.name, config={'displayModeBar': False})
+        temp_file.close()
+        browser.setUrl(QUrl.fromLocalFile(os.path.abspath(temp_file.name)))
+        return browser
 
-    def _create_points_by_company_chart(self, data):
-        def plot(ax, data):
-            companies = [d['nome_empresa'] for d in data]; counts = [d['count'] for d in data]
-            ax.barh(companies, counts, color='#EA580C'); ax.set_xlabel('Nº de Pontos de Conexão', color='#9CA3AF')
-        return self._create_chart_canvas("Pontos de Conexão por Empresa", data, plot)
+    def _get_plotly_layout(self, title):
+        return go.Layout(
+            title={'text': title, 'x': 0.5, 'font': {'color': 'white', 'size': 16}},
+            paper_bgcolor='#1F2937', plot_bgcolor='#1F2937', font={'color': '#E0E0E0'},
+            xaxis={'gridcolor': '#374151'}, yaxis={'gridcolor': '#374151'},
+            legend={'font': {'color': 'white'}})
 
-    def _create_remarks_pie_chart(self, data):
-        def plot(ax, data):
-            with_remarks = data.get('with_remarks', 0); approved = data.get('total', 0) - with_remarks
-            ax.pie([approved, with_remarks], labels=['Aprovados', 'Com Ressalva'], colors=['#22C55E', '#F97316'], autopct='%1.1f%%', startangle=90, textprops={'color': 'white', 'fontsize': 12})
-        return self._create_chart_canvas("Proporção de Ressalvas", data, plot)
+    def _plot_points_by_company(self, data):
+        df = pd.DataFrame(data)
+        fig = px.bar(df, y='nome_empresa', x='count', orientation='h', labels={'count': 'Nº de Pontos', 'nome_empresa': 'Empresa'}, color_discrete_sequence=['#EA580C'])
+        fig.update_layout(self._get_plotly_layout("Pontos de Conexão por Empresa"))
+        return fig
 
-    def _create_yearly_sum_chart(self, data):
-        def plot(ax, data):
-            years = [d['ano'] for d in data]; totals = [d['total_valor'] for d in data]
-            ax.bar(years, totals, color='#3B82F6'); ax.set_ylabel('Soma do Valor MUST', color='#9CA3AF'); ax.set_xticks(years)
-        return self._create_chart_canvas("Soma do Valor MUST por Ano", data, plot)
+    def _plot_remarks_pie(self, data):
+        if not data: return go.Figure()
+        with_remarks = data.get('with_remarks', 0); approved = data.get('total', 0) - with_remarks
+        labels = ['Sem Ressalva', 'Com Ressalva']; values = [approved, with_remarks] # Legenda corrigida
+        fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.4, marker_colors=['#22C55E', '#F97316'])])
+        fig.update_layout(self._get_plotly_layout("Proporção de Ressalvas"))
+        return fig
 
+    def _plot_yearly_sum(self, data):
+        df = pd.DataFrame(data)
+        fig = px.bar(df, x='ano', y='total_valor', labels={'ano': 'Ano', 'total_valor': 'Soma do Valor MUST'}, color_discrete_sequence=['#3B82F6'])
+        fig.update_layout(self._get_plotly_layout("Soma do Valor MUST por Ano"), xaxis={'type': 'category'})
+        return fig
+    
     def _create_header(self):
-        header_layout = QVBoxLayout()
-        title = QLabel("Dashboard de Análise de Pontos MUST"); title.setObjectName("headerTitle")
+        header_layout = QVBoxLayout(); title = QLabel("Dashboard de Análise de Pontos MUST"); title.setObjectName("headerTitle")
         subtitle = QLabel("Visão geral das solicitações e ressalvas por empresa e ponto de conexão."); subtitle.setObjectName("headerSubtitle")
-        header_layout.addWidget(title); header_layout.addWidget(subtitle)
-        self.main_layout.addLayout(header_layout)
+        header_layout.addWidget(title); header_layout.addWidget(subtitle); self.main_layout.addLayout(header_layout)
 
     def _create_kpi_card(self, title_text, value_text):
-        card = QFrame(); card.setObjectName("kpiCard")
-        card_layout = QVBoxLayout(card)
+        card = QFrame(); card.setObjectName("kpiCard"); card_layout = QVBoxLayout(card)
         title, value = QLabel(title_text), QLabel(value_text)
         title.setObjectName("kpiTitle"); value.setObjectName("kpiValue")
-        card_layout.addWidget(title); card_layout.addWidget(value)
-        return card
+        card_layout.addWidget(title); card_layout.addWidget(value); return card
 
     def _load_initial_data(self):
-        self._update_kpis()
-        self._populate_company_analysis()
-        self._populate_yearly_stats()
-        self._populate_filters()
-        self._apply_filters()
+        self._update_kpis(); self._populate_company_analysis(); self._populate_yearly_stats(); self._populate_filters(); self._apply_filters()
 
     def _update_kpis(self):
         kpi_data = self.db.get_kpi_summary()
@@ -491,23 +518,23 @@ class DashboardApp(QMainWindow):
         for i in reversed(range(self.company_analysis_layout.count())): self.company_analysis_layout.itemAt(i).widget().setParent(None)
         row, col, MAX_COLS = 0, 0, 3
         for stats in analysis_data:
-            card = CompanyCard(stats['nome_empresa'], stats)
-            self.company_analysis_layout.addWidget(card, row, col)
+            card = CompanyCard(stats['nome_empresa'], stats); self.company_analysis_layout.addWidget(card, row, col)
             col += 1;
             if col >= MAX_COLS: col, row = 0, row + 1
 
     def _populate_yearly_stats(self):
         stats_data = self.db.get_yearly_must_stats()
-        yearly_totals = {};
+        for i in reversed(range(self.yearly_stats_layout.count())): self.yearly_stats_layout.itemAt(i).widget().setParent(None)
+        yearly_totals = {}
         for row in stats_data:
             if row['ano'] not in yearly_totals: yearly_totals[row['ano']] = {}
-            yearly_totals[row['ano']][row['periodo']] = row['total_valor']
+            yearly_totals[row['ano']][row['periodo']] = row.get('total_valor', 0)
         row, col, MAX_COLS = 0, 0, 4
         for year in sorted(yearly_totals.keys()):
             card = QFrame(); card.setObjectName("kpiCard"); layout = QVBoxLayout(card)
             year_label = QLabel(f"Ano: {year}"); year_label.setStyleSheet("font-weight: bold; font-size: 16px;")
-            ponta_val, fora_ponta_val = yearly_totals[year].get('ponta', 0), yearly_totals[year].get('fora ponta', 0)
-            ponta_label = QLabel(f"Ponta: {ponta_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")); fora_ponta_label = QLabel(f"Fora Ponta: {fora_ponta_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+            ponta_val, fora_ponta_val = yearly_totals[year].get('ponta', 0), yearly_totals[year].get('fora_ponta', 0)
+            ponta_label = QLabel(f"Ponta: {ponta_val:,.2f}"); fora_ponta_label = QLabel(f"Fora Ponta: {fora_ponta_val:,.2f}")
             ponta_label.setObjectName("kpiTitle"); fora_ponta_label.setObjectName("kpiTitle")
             layout.addWidget(year_label); layout.addWidget(ponta_label); layout.addWidget(fora_ponta_label)
             self.yearly_stats_layout.addWidget(card, row, col)
@@ -521,36 +548,26 @@ class DashboardApp(QMainWindow):
         self.status_combo.addItems(["Todos", "Com Ressalva", "Aprovado"])
 
     def _populate_table(self, data):
-        self.table.setRowCount(0)
-        self.table.setRowCount(len(data))
+        self.table.setRowCount(0); self.table.setRowCount(len(data))
         for r, row in enumerate(data):
             annotation = row.get('anotacao_geral')
             has_remark = annotation and str(annotation).strip().lower() not in ('', 'nan')
-            
-            self.table.setItem(r, 0, QTableWidgetItem(row['nome_empresa'])); self.table.setItem(r, 1, QTableWidgetItem(row['cod_ons'])); self.table.setItem(r, 2, QTableWidgetItem(str(row['tensao_kv'])))
-            
+            self.table.setItem(r, 0, QTableWidgetItem(row['nome_empresa'])); self.table.setItem(r, 1, QTableWidgetItem(row['cod_ons'])); self.table.setItem(r, 2, QTableWidgetItem(str(row.get('tensao_kv', 'N/D'))))
             if has_remark:
-                remark_button = QPushButton("Sim")
-                remark_button.setStyleSheet("background-color: #FBBF24; color: #78350F; font-weight: bold; text-align: center;")
-                remark_button.clicked.connect(lambda checked=False, row=r: self._show_details_modal(row))
+                remark_button = QPushButton("Sim"); remark_button.setStyleSheet("background-color: #FBBF24; color: #78350F; font-weight: bold; text-align: center;")
+                remark_button.clicked.connect(lambda checked=False, r=r: self._show_details_modal(r))
                 self.table.setCellWidget(r, 3, remark_button)
             else:
-                item = QTableWidgetItem("Não")
-                item.setForeground(Qt.GlobalColor.green)
-                self.table.setItem(r, 3, item)
-            
+                item = QTableWidgetItem("Não"); item.setForeground(Qt.GlobalColor.green); self.table.setItem(r, 3, item)
             if row.get('aprovado_por'):
                 self.table.setCellWidget(r, 4, QLabel(f"{row['aprovado_por']} em {row['data_aprovacao']}"))
             else:
                 approve_button = QPushButton("Aprovar"); approve_button.setStyleSheet("font-size: 12px; padding: 5px; text-align: center; border: 1px solid #6B7280;")
-                approve_button.clicked.connect(lambda checked=False, row=r: self._open_approval_dialog(row))
+                approve_button.clicked.connect(lambda checked=False, r=r: self._open_approval_dialog(r))
                 self.table.setCellWidget(r, 4, approve_button)
-            
-            pdf_link = row.get('arquivo_referencia', '')
-            pdf_item = QTableWidgetItem("Abrir Link" if pdf_link else "N/D")
+            pdf_link = row.get('arquivo_referencia', ''); pdf_item = QTableWidgetItem("Abrir Link" if pdf_link else "N/D")
             if pdf_link: pdf_item.setForeground(Qt.GlobalColor.cyan); pdf_item.setData(Qt.ItemDataRole.UserRole, pdf_link)
             self.table.setItem(r, 5, pdf_item)
-        
         self.table.resizeRowsToContents()
 
     def _apply_filters(self):
@@ -570,16 +587,15 @@ class DashboardApp(QMainWindow):
     def _open_approval_dialog(self, row):
         cod_ons = self.table.item(row, 1).text()
         dialog = ApprovalDialog(cod_ons, self)
-        if dialog.exec() == QDialog.DialogCode.Accepted:
+        if dialog.exec():
             approver = dialog.approver_name
-            if self.db.approve_point(cod_ons, approver):
-                self._apply_filters()
+            if self.db.approve_point(cod_ons, approver): self._apply_filters()
 
     def _show_details_modal(self, row):
         cod_ons_item = self.table.item(row, 1)
         if not cod_ons_item: return
         cod_ons = cod_ons_item.text()
-        annotation_data = self.db._execute_query("SELECT anotacao_geral FROM anotacao WHERE cod_ons = ?", (cod_ons,), fetch_one=True)
+        annotation_data = self.db._execute_query(f"SELECT anotacao_geral FROM {self.db.tbl_anotacao} WHERE cod_ons = ?", (cod_ons,), fetch_one=True)
         annotation = annotation_data.get('anotacao_geral') if annotation_data else "Anotação não encontrada."
         history_data = self.db.get_must_history_for_point(cod_ons)
         dialog = DetailsDialog(str(annotation), history_data, self); dialog.exec()
@@ -588,18 +604,50 @@ class DashboardApp(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    db_path = Path(r"C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\AUTOMACÕES ONS\arquivos\database\database_consolidado.db")
+    
+    db_folder = Path(r"C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\AUTOMACÕES ONS\arquivos\database")
+    access_db_path = db_folder / "Database_MUST.accdb"
+    sqlite_db_path = db_folder / "database_consolidado.db"
+    
+    db_to_use = None
+    
+    print("Tentando conectar ao banco de dados MS Access...")
+    if access_db_path.exists():
+        try:
+            conn = pyodbc.connect(r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};" fr"DBQ={access_db_path};")
+            conn.close()
+            print(f"Sucesso! Usando banco de dados Access: {access_db_path}")
+            db_to_use = access_db_path
+        except pyodbc.Error as e:
+            print(f"AVISO: Arquivo Access encontrado, mas falha ao conectar. Erro: {e}")
+            print("Tentando fallback para SQLite...")
+    else:
+        print("Arquivo Access não encontrado.")
+
+    if not db_to_use:
+        print("\nTentando conectar ao banco de dados SQLite...")
+        if sqlite_db_path.exists():
+            print(f"Sucesso! Usando banco de dados SQLite: {sqlite_db_path}")
+            db_to_use = sqlite_db_path
+        else:
+            print(f"ERRO CRÍTICO: Nenhum banco de dados funcional (Access ou SQLite) encontrado na pasta: {db_folder}")
+            app.quit()
+            sys.exit(1)
+
     try:
-        db_model = DashboardDB(db_path)
+        db_model = DashboardDB(db_to_use)
         window = DashboardApp(db_model)
         window.show()
         sys.exit(app.exec())
-    except FileNotFoundError as e:
-        error_dialog = QDialog(); error_dialog.setWindowTitle("Erro Crítico")
-        layout = QVBoxLayout(); label = QLabel(str(e))
-        layout.addWidget(label); error_dialog.setLayout(layout)
-        error_dialog.exec(); sys.exit(1)
     except Exception as e:
-        print(f"Ocorreu um erro inesperado: {e}")
+        print(f"Ocorreu um erro inesperado ao iniciar a aplicação: {e}")
+        import traceback
+        traceback.print_exc()
+        error_dialog = QDialog(); error_dialog.setWindowTitle("Erro Crítico")
+        layout = QVBoxLayout(); label = QLabel(f"Ocorreu um erro fatal:\n{e}\n\nConsulte o terminal para mais detalhes.")
+        layout.addWidget(label); error_dialog.setLayout(layout)
+        error_dialog.exec()
         sys.exit(1)
-
+    finally:
+        if conn: conn.close()
+        

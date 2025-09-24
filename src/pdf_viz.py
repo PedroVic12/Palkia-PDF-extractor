@@ -7,7 +7,9 @@ import matplotlib.pyplot as plt
 print(matplotlib.get_backend())
 
 file_name = "Redrex - Fatura (2)"
-path = os.path.abspath(f"src/files/pdf/redrex/{file_name}.pdf")
+path = os.path.abspath(rf"src/files/pdf/redrex/{file_name}.pdf")
+
+path_windows = r"C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\GitHub\Palkia-PDF-extractor\src\files\pdf\redrex\Redrex - Fatura (2).pdf"
 
 tables = camelot.read_pdf(path,
                           flavor='stream',
@@ -19,9 +21,9 @@ tables = camelot.read_pdf(path,
                           )
 print(tables[0].parsing_report)
 
-# camelot.plot(tables[0], kind="contour")
+camelot.plot(tables[0], kind="contour")
 
-# plt.show()
+plt.show()
 
 print(tables[0].df)
 print("Waiting for work")
