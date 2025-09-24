@@ -9,18 +9,25 @@ from PySide6.QtWidgets import (
     QHeaderView, QScrollArea, QFrame, QDialog, QTextBrowser, QTabWidget,
     QProgressBar, QStackedWidget,
 )
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QFont, QIcon
+from PySide6.QtCore import Qt
+import pyodbc
 
-# Adiciona dependência para gráficos. É necessário instalar: pip install matplotlib
+# Adiciona dependência para gráficos.
 try:
     import matplotlib
     from matplotlib.figure import Figure
     from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
     matplotlib.use('QtAgg')
+    import pandas as pd
+    import plotly.express as px
+    import plotly.graph_objects as go
+    from PySide6.QtWebEngineWidgets import QWebEngineView
 except ImportError:
-    print("Matplotlib não encontrado. Gráficos não estarão disponíveis. Instale com: pip install matplotlib")
+    print("Dependências não encontradas. Gráficos/Tabelas podem não funcionar.")
+    print("Instale com: pip install pandas plotly PySide6-WebEngine")
+    pd = px = go = QWebEngineView = None
     FigureCanvas = None
+
 
 # --- PARTE 1: MODELO DE DADOS (LÓGICA DO BANCO DE DADOS) ---
 
@@ -172,12 +179,16 @@ class DashboardDB:
             "yearly_sum": yearly_sum,
         }
 
+
+
+
 # --- PARTE 2: VIEW / CONTROLLER (LÓGICA DA INTERFACE GRÁFICA) ---
 
 STYLESHEET = """
-QWidget { font-family: Arial, sans-serif; color: #E0E0E0; background-color: #111827; }
+QWidget { font-family: Arial, monospace; color: #E0E0E0; background-color: #111827; }
 QMainWindow { background-color: #111827; }
 QLabel { background-color: transparent; }
+QVBoxLayout { font-size: 20; }
 QLabel#headerTitle { font-size: 28px; font-weight: bold; }
 QLabel#headerSubtitle { color: #9CA3AF; }
 QLabel#sectionTitle { font-size: 18px; font-weight: bold; margin-bottom: 10px; margin-left: 5px;}

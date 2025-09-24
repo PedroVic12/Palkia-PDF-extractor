@@ -87,9 +87,9 @@ def prepare_and_normalize_data(df_source: pd.DataFrame):
     # ===== CORREÇÃO PARA O WARNING AQUI =====
     # Selecionamos as colunas e explicitamente criamos uma cópia.
     df_valores_must = df_final_valores[['id_conexao', 'ano', 'periodo', 'valor_must', 'anotacao_valor']].copy()
+    
     # Agora podemos renomear esta cópia com segurança.
     df_valores_must.rename(columns={'valor_must': 'valor'}, inplace=True)
-    # =======================================
 
     print(f"  -> Normalização concluída: {len(df_empresas)} empresas, {len(df_equipamentos)} equipamentos, {len(df_valores_must)} registros de valores.")
     return df_empresas, df_equipamentos, df_valores_must
@@ -252,7 +252,7 @@ class AccessController(DataBaseController):
         # ETAPA 3: Inserir Valores
         print("   -> Inserindo valores MUST...")
         df_valores_to_insert = self.df_valores_must.copy()
-        sql_cols_valores = "ano, periodo, valor, id_conexao"
+        sql_cols_valores = "id_conexao, ano, periodo, valor, anotacao_valor"
         
         valores_data = []
         for _, row in df_valores_to_insert.iterrows():
@@ -275,14 +275,15 @@ class AccessController(DataBaseController):
                         cleaned_valor = None
             
             params = (
+                int(row['id_conexao']),
                 int(row['ano']),
                 row['periodo'],
                 cleaned_valor, # Usa o valor limpo e seguro
-                int(row['id_conexao'])
+                row['anotacao_valor']
             )
             valores_data.append(params)
         
-        self.cursor.executemany(f"INSERT INTO tb_valores_must ({sql_cols_valores}) VALUES (?, ?, ?, ?)", valores_data)
+        self.cursor.executemany(f"INSERT INTO tb_valores_must ({sql_cols_valores}) VALUES (?, ?, ?, ?, ?)", valores_data)
         self.conn.commit()
 
 # --- 5. Exemplo de Execução Refatorado ---
