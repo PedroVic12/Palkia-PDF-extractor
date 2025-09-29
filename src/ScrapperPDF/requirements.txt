@@ -3,3 +3,8 @@ camelot
 pdf2image
 streamlit 
 python-poppler
+ansi2html
+pyodbc
+pandas
+plotly
+PySide6

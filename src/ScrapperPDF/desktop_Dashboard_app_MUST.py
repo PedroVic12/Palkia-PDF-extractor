@@ -1,4 +1,4 @@
-# seu_arquivo_de_frontend.py
+# dashboard_must_desktop_app.py
 
 import sys
 import sqlite3
