@@ -106,8 +106,6 @@ def consolidate_and_merge_results():
 
 # EXTL (Extract, Load, Transform): Você extrai o conteúdo bruto dos PDFs (Extract), carrega esse conteúdo bruto (por exemplo, o texto completo de cada página) em uma área de preparação (staging area) no seu banco de dados ou em um Data Lake (Load), e só então executa rotinas (com SQL, Python, etc.) para limpar e estruturar os dados em tabelas finais (Transform). Este modelo é mais moderno e flexível.
 
-
-
 #! O nome dessa variavel é crucial para o modo "single" nas 2 funções
 single_file_name = "CUST-2002-123-41 - JAGUARI - RECON 2025-2028.pdf"
 
@@ -179,3 +177,5 @@ if __name__ == "__main__":
     run_extract_PDF_tables(intervalos_paginas, mode="folder")
 
     extract_text_from_must_tables(mode ="folder")
+    
+
