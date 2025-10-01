@@ -2,6 +2,7 @@ import sys
 import os
 import re
 from io import StringIO
+
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QFileDialog, QMessageBox, QLabel, QLineEdit, QTextEdit,
@@ -19,51 +20,15 @@ except ImportError:
     ansi_converter = None
     print("AVISO: 'ansi2html' não está instalado. Os logs não serão coloridos.")
 
-# Tenta importar o script run.py.
+# Tenta importar o script run.py principal coma  automação do ETL
 try:
     import run as run_script
 except ImportError as e:
     print(f"ERRO CRÍTICO: Não foi possível importar 'run.py'. Verifique se ele está na mesma pasta. Detalhes: {e}")
     sys.exit(1)
 
-# ... (APP_STYLES e classes PandasModel, Worker permanecem os mesmos) ...
-APP_STYLES = """
-QWidget {
-    background-color: #2b2b2b; color: #f0f0f0; font-family: "Segoe UI", sans-serif; font-size: 10pt;
-}
-QMainWindow { background-color: #212121; }
-QGroupBox {
-    font-weight: bold; border: 1px solid #444; border-radius: 8px; margin-top: 10px; padding: 15px;
-}
-QGroupBox::title {
-    subcontrol-origin: margin; subcontrol-position: top center; padding: 0 10px; color: #f0f0f0;
-}
-QPushButton {
-    background-color: #3c3f41; color: #f0f0f0; border: 1px solid #555;
-    padding: 8px 16px; border-radius: 4px; font-weight: bold;
-}
-QPushButton:hover { background-color: #4f5355; }
-QPushButton:pressed { background-color: #2a2d2f; }
-QPushButton#run_button { background-color: #007acc; }
-QPushButton#run_button:hover { background-color: #008ae6; }
-QPushButton#export_excel { background-color: #9CCC65; }
-
-QLineEdit, QTextEdit {
-    background-color: #3c3f41; border: 1px solid #555; border-radius: 4px;
-    padding: 5px; color: #f0f0f0;
-}
-QLabel { font-weight: bold; }
-QTabWidget::pane { border: 1px solid #444; border-top: 0px; }
-QTabBar::tab {
-    background: #3c3f41; border: 1px solid #444; border-bottom: none;
-    padding: 8px 16px; border-top-left-radius: 4px; border-top-right-radius: 4px;
-}
-QTabBar::tab:selected { background: #2b2b2b; margin-bottom: 0px; }
-QTableView { gridline-color: #444; }
-QHeaderView::section {
-    background-color: #3c3f41; padding: 4px; border: 1px solid #555; font-weight: bold;
-}
-"""
+# Importa o CSS 
+from styles import APP_STYLES
 
 class PandasModel(QAbstractTableModel):
     def __init__(self, data):
