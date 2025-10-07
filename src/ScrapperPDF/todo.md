@@ -11,7 +11,11 @@
 - [ ] Deck Builder caso analisado com o MUST solicitado
 - [ ] Arrumar Campo de tensão corrigndo extrato em Py antes de salvar no banco
 - [ ] Agrupação de paginas por tab no menu lateral
-- [ ] App Template Windows Desktop (Bloco de notas sobre)
+- [x] App Template Windows Desktop (Bloco de notas sobre)
+- [ ] Template de Word (docx) para criação do relatorio final
+- [ ] Passar os PDFs no arquivo local e nao em links do SharePoint
+- [ ] Dashboard atividades SP / Dashboard Must / Relatórios (gráficos) / Palkia Extractor GUI / Deck Builder da solicitação de MUST
+
 
 - [ ] Ajustar componentes react para usar no astro/nextsjs futuramente
 - [x] Análise por empresa
