@@ -13,10 +13,9 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QComboBox, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
     QHeaderView, QScrollArea, QFrame, QDialog, QTextBrowser, QTabWidget,
-    QProgressBar, QStackedWidget, QFileDialog, QMessageBox, QTextEdit, QGroupBox,
-    QTableView
+    QProgressBar, QStackedWidget, QMessageBox, QFileDialog
 )
-from PySide6.QtCore import Qt, QUrl, QThread, QObject, Signal, QAbstractTableModel
+from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QFont
 
 try:
@@ -34,12 +33,9 @@ try:
 except ImportError:
     ansi_converter = None
 
-# Importação opcional do script de ETL
-try:
-    import run as run_script
-except ImportError:
-    run_script = None
-    print("AVISO: Módulo 'run.py' não encontrado. Funcionalidade de extração desabilitada.")
+#! Importação PVRV do script de ETL e Classes Criadas
+from Palkia_GUI import  PalkiaWindowGUI
+
 
 # ==============================================================================
 #! ESTILOS CSS
@@ -233,68 +229,6 @@ class DashboardDB:
             "yearly_sum": self._execute_query(yearly_sum_query),
         }
 
-# ==============================================================================
-# MODELOS AUXILIARES
-# ==============================================================================
-
-class PandasModel(QAbstractTableModel):
-    def __init__(self, data):
-        super().__init__()
-        self._data = data
-    
-    def rowCount(self, parent=None):
-        return self._data.shape[0]
-    
-    def columnCount(self, parent=None):
-        return self._data.shape[1]
-    
-    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
-        if index.isValid() and role == Qt.ItemDataRole.DisplayRole:
-            return str(self._data.iloc[index.row(), index.column()])
-        return None
-    
-    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return str(self._data.columns[section])
-            if orientation == Qt.Orientation.Vertical:
-                return str(self._data.index[section])
-        return None
-
-# ==============================================================================
-# WORKER PARA TAREFAS ASSÍNCRONAS
-# ==============================================================================
-
-class Worker(QObject):
-    progress = Signal(str)
-    finished = Signal()
-    error = Signal(str)
-
-    def __init__(self, task_function, *args, **kwargs):
-        super().__init__()
-        self.task_function = task_function
-        self.args = args
-        self.kwargs = kwargs
-
-    def run(self):
-        old_stdout = sys.stdout
-        redirected_output = sys.stdout = StringIO()
-        try:
-            self.progress.emit(f"▶️ Executando: {self.task_function.__name__}")
-            self.task_function(*self.args, **self.kwargs)
-            sys.stdout = old_stdout
-            output = redirected_output.getvalue()
-            for line in output.splitlines():
-                self.progress.emit(line)
-            self.finished.emit()
-        except Exception as e:
-            sys.stdout = old_stdout
-            output = redirected_output.getvalue()
-            for line in output.splitlines():
-                self.progress.emit(line)
-            import traceback
-            error_details = f"❌ Erro: {e}\n{traceback.format_exc()}"
-            self.error.emit(error_details)
 
 # ==============================================================================
 # DIÁLOGOS
@@ -405,290 +339,9 @@ class CompanyCard(QFrame):
         layout.addWidget(self.progress_bar)
 
 # ==============================================================================
-# TELAS DA APLICAÇÃO
+# TELAS DA APLICAÇÃO (Widgets)
 # ==============================================================================
 
-class PDFExtractionWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.input_folder = None
-        self.current_task_info = {}
-        self.thread = None
-        self.worker = None
-
-        
-        self._setup_ui()
-    
-    def _setup_ui(self):
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(20, 20, 20, 20)
-        main_layout.setSpacing(20)
-        
-        self.setStyleSheet(APP_STYLES)
-        
-        # Header
-        title = QLabel("Extração de Dados de PDF MUST")
-        title.setObjectName("headerTitle")
-        subtitle = QLabel("Automatize a extração de tabelas MUST e anotações dos documentos PDF")
-        subtitle.setObjectName("headerSubtitle")
-        main_layout.addWidget(title)
-        main_layout.addWidget(subtitle)
-        
-        # Configuração
-        config_group = QGroupBox("Configuração de Entrada")
-        config_layout = QVBoxLayout(config_group)
-        
-        folder_layout = QHBoxLayout()
-        self.folder_label = QLabel("Pasta: (Nenhuma selecionada)")
-        self.folder_button = QPushButton("Selecionar Pasta")
-        self.folder_button.clicked.connect(self._select_folder)
-        folder_layout.addWidget(self.folder_label, 1)
-        folder_layout.addWidget(self.folder_button)
-        config_layout.addLayout(folder_layout)
-        
-        intervals_label = QLabel("Intervalos de Páginas (separados por vírgula):")
-        self.intervals_input = QLineEdit()
-        self.intervals_input.setPlaceholderText('Ex: "8-16", "8-24", "7-10"')
-        config_layout.addWidget(intervals_label)
-        config_layout.addWidget(self.intervals_input)
-        
-        main_layout.addWidget(config_group)
-        
-        # Ações
-        actions_group = QGroupBox("Ações de Extração")
-        actions_layout = QHBoxLayout(actions_group)
-        
-        self.run_tables_button = QPushButton("1) Extrair Tabelas")
-        self.run_tables_button.setObjectName("run_button")
-        self.run_text_button = QPushButton("2) Extrair Anotações")
-        self.run_text_button.setObjectName("run_button")
-        self.run_consolidate_button = QPushButton("3) Consolidar")
-        self.run_consolidate_button.setObjectName("run_button")
-        
-        self.run_tables_button.clicked.connect(lambda: self._run_task("extract_tables"))
-        self.run_text_button.clicked.connect(lambda: self._run_task("extract_text"))
-        self.run_consolidate_button.clicked.connect(lambda: self._run_task("consolidate"))
-        
-        
-        actions_layout.addWidget(self.run_tables_button)
-        actions_layout.addWidget(self.run_text_button)
-        actions_layout.addWidget(self.run_consolidate_button)
-        
-        main_layout.addWidget(actions_group)
-        
-        # Resultados
-        results_tabs = QTabWidget()
-        
-        log_widget = QWidget()
-        log_layout = QVBoxLayout(log_widget)
-        self.log_output = QTextEdit()
-        self.log_output.setReadOnly(True)
-        self.log_output.setFont(QFont("Courier New", 9))
-        log_layout.addWidget(self.log_output)
-        results_tabs.addTab(log_widget, "Log de Execução")
-        
-        table_widget = QWidget()
-        table_layout = QVBoxLayout(table_widget)
-        self.table_view = QTableView()
-        self.export_button = QPushButton("Exportar para Excel")
-        self.export_button.setObjectName("export_excel")
-        self.export_button.clicked.connect(self._export_table)
-        self.export_button.setEnabled(False)
-        table_layout.addWidget(self.table_view)
-        table_layout.addWidget(self.export_button)
-        results_tabs.addTab(table_widget, "Resultado")
-        
-        main_layout.addWidget(results_tabs)
-        self.results_tabs = results_tabs
-    
-    def _select_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Selecione a pasta com os PDFs")
-        if folder:
-            self.input_folder = folder
-            self.folder_label.setText(f"Pasta: ...{os.path.basename(folder)}")
-            self.log_output.clear()
-            self._append_log(f"Pasta selecionada: {folder}")
-            
-            try:
-                pdf_files = sorted([f for f in os.listdir(folder) if f.lower().endswith('.pdf')])
-                if pdf_files:
-                    self._append_log(f"Encontrados {len(pdf_files)} arquivos PDF")
-                else:
-                    self._append_log("AVISO: Nenhum arquivo PDF encontrado")
-            except Exception as e:
-                self._append_log(f"ERRO ao ler pasta: {e}")
-    
-    def _run_task(self, task_name):
-        if not run_script:
-            QMessageBox.warning(self, "Módulo Ausente", "O módulo 'run.py' não está disponível.")
-            return
-        
-        if not self.input_folder:
-            QMessageBox.warning(self, "Aviso", "Selecione uma pasta primeiro.")
-            return
-        
-        intervals = self.intervals_input.text()
-        if task_name == "extract_tables" and not intervals:
-            QMessageBox.warning(self, "Aviso", "Forneça os intervalos de páginas.")
-            return
-        
-        self.log_output.clear()
-        self._set_buttons_enabled(False)
-        self.table_view.setModel(None)
-        self.export_button.setEnabled(False)
-        
-        self.current_task_info = {"name": task_name, "input_folder": self.input_folder}
-        
-        try:
-            run_script.input_folder = self.input_folder
-            self._append_log(f"Pasta definida: {self.input_folder}")
-        except Exception as e:
-            QMessageBox.critical(self, "Erro", f"Erro ao definir pasta: {e}")
-            self._set_buttons_enabled(True)
-            return
-        
-        if task_name == "extract_tables":
-            try:
-                intervals_list = [interval.strip().strip('"\'') for interval in intervals.split(',')]
-                target_function = run_script.run_extract_PDF_tables
-                args = (intervals_list, "folder")
-            except Exception as e:
-                QMessageBox.critical(self, "Erro", f"Formato de intervalos inválido: {e}")
-                self._set_buttons_enabled(True)
-                return
-        elif task_name == "extract_text":
-            target_function = run_script.extract_text_from_must_tables
-            args = ("folder",)
-        elif task_name == "consolidate":
-            if hasattr(run_script, 'consolidate_and_merge_results'):
-                target_function = run_script.consolidate_and_merge_results
-                args = ()
-            else:
-                QMessageBox.critical(self, "Erro", "Função 'consolidate_and_merge_results' não encontrada.")
-                self._set_buttons_enabled(True)
-                return
-        else:
-            self._set_buttons_enabled(True)
-            return
-        
-        self.thread = QThread()
-        self.worker = Worker(target_function, *args)
-        self.worker.moveToThread(self.thread)
-        
-        self.thread.started.connect(self.worker.run)
-        self.worker.finished.connect(self._on_task_finished)
-        self.worker.progress.connect(self._append_log)
-        self.worker.error.connect(self._on_task_error)
-        
-        self.thread.start()
-    
-    def _append_log(self, text):
-        if ansi_converter:
-            html_text = ansi_converter.convert(text, full=False)
-            self.log_output.append(html_text)
-        else:
-            clean_text = re.sub(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])', '', text)
-            self.log_output.append(clean_text)
-    
-    def _on_task_finished(self):
-        self._append_log("\nTarefa concluída com sucesso!")
-        self._display_results()
-        self._cleanup_thread()
-    
-    def _on_task_error(self, error_message):
-        self._append_log(f"\n{error_message}")
-        self._cleanup_thread()
-    
-    def _display_results(self):
-        if not pd:
-            return
-        
-        task_name = self.current_task_info.get("name")
-        input_folder = self.current_task_info.get("input_folder")
-        df_to_display = None
-        
-        if task_name == "extract_tables":
-            df_to_display = self._load_latest_excel(os.path.join(input_folder, "tabelas_extraidas"))
-        elif task_name == "extract_text":
-            df_to_display = self._consolidate_and_load_excel(os.path.join(input_folder, "anotacoes_extraidas"))
-        elif task_name == "consolidate":
-            final_excel_path = os.path.join(input_folder, "database", "must_tables_PDF_notes_merged.xlsx")
-            if os.path.exists(final_excel_path):
-                df_to_display = pd.read_excel(final_excel_path)
-        
-        if df_to_display is not None and not df_to_display.empty:
-            model = PandasModel(df_to_display)
-            self.table_view.setModel(model)
-            self.results_tabs.setCurrentIndex(1)
-            self.export_button.setEnabled(True)
-            self._append_log("Tabela carregada com sucesso!")
-        else:
-            self._append_log("Nenhuma tabela para exibir.")
-    
-    def _load_latest_excel(self, output_folder):
-        latest_file_path = self._find_latest_file(output_folder, '.xlsx')
-        if not latest_file_path:
-            return None
-        try:
-            self._append_log(f"Carregando: {os.path.basename(latest_file_path)}")
-            return pd.read_excel(latest_file_path)
-        except Exception as e:
-            self._append_log(f"Erro ao carregar Excel: {e}")
-            return None
-    
-    def _consolidate_and_load_excel(self, output_folder):
-        if not os.path.isdir(output_folder):
-            return None
-        try:
-            all_files = [os.path.join(output_folder, f) for f in os.listdir(output_folder) 
-                        if f.lower().endswith('.xlsx')]
-            if not all_files:
-                self._append_log("Nenhum arquivo para consolidar.")
-                return None
-            df_list = [pd.read_excel(f) for f in all_files]
-            consolidated_df = pd.concat(df_list, ignore_index=True)
-            self._append_log(f"Consolidação concluída: {consolidated_df.shape[0]} registros.")
-            return consolidated_df
-        except Exception as e:
-            self._append_log(f"Erro na consolidação: {e}")
-            return None
-    
-    def _find_latest_file(self, folder, extension):
-        if not os.path.isdir(folder):
-            return None
-        files = [os.path.join(folder, f) for f in os.listdir(folder) 
-                if f.lower().endswith(extension)]
-        if not files:
-            return None
-        return max(files, key=os.path.getmtime)
-    
-    def _export_table(self):
-        model = self.table_view.model()
-        if not model or not isinstance(model, PandasModel):
-            QMessageBox.warning(self, "Aviso", "Nenhuma tabela para exportar.")
-            return
-        
-        file_path, _ = QFileDialog.getSaveFileName(self, "Salvar Tabela", "", "Excel Files (*.xlsx)")
-        if file_path:
-            try:
-                model._data.to_excel(file_path, index=False)
-                QMessageBox.information(self, "Sucesso", f"Tabela salva em: {file_path}")
-            except Exception as e:
-                QMessageBox.critical(self, "Erro", f"Erro ao salvar: {e}")
-    
-    def _cleanup_thread(self):
-        self._set_buttons_enabled(True)
-        if self.thread:
-            self.thread.quit()
-            self.thread.wait()
-        self.worker = None
-        self.thread = None
-    
-    def _set_buttons_enabled(self, enabled):
-        self.run_tables_button.setEnabled(enabled)
-        self.run_text_button.setEnabled(enabled)
-        self.run_consolidate_button.setEnabled(enabled)
-        self.folder_button.setEnabled(enabled)
 
 class DashboardMainWidget(QWidget):
     def __init__(self, db_model, parent=None):
@@ -1140,7 +793,7 @@ class MainWindow(QMainWindow):
         
         self.dashboard_widget = self._create_scrollable_widget(DashboardMainWidget(self.db))
         self.graphics_widget = self._create_scrollable_widget(GraphicsWidget(self.db))
-        self.extraction_widget = self._create_scrollable_widget(PDFExtractionWidget())
+        self.extraction_widget = self._create_scrollable_widget(PalkiaWindowGUI())
         self.reports_widget = self._create_scrollable_widget(ReportsWidget())
         
         self.stacked_widget.addWidget(self.dashboard_widget)
@@ -1158,31 +811,49 @@ class MainWindow(QMainWindow):
         nav_title.setObjectName("headerTitle")
         nav_layout.addWidget(nav_title)
         
-        self.nav_buttons = {
-            "dashboard": QPushButton("Dashboard Principal"),
-            "graphics": QPushButton("Análise Gráfica"),
-            "extraction": QPushButton("Extração de PDF"),
-            "reports": QPushButton("Relatórios")
+        # Botões que trocam a visualização
+        view_buttons = {
+            "dashboard": ("Dashboard Principal", 0),
+            "graphics": ("Análise Gráfica", 1),
+            "extraction": ("Extração de PDF", 2),
+            "reports": ("Relatórios", 3)
         }
         
-        for name, button in self.nav_buttons.items():
+        self.nav_buttons = {}
+        for name, (text, index) in view_buttons.items():
+            button = QPushButton(text)
             button.setObjectName("navButton")
             button.setCheckable(True)
             button.setAutoExclusive(True)
+            button.clicked.connect(lambda checked=False, i=index: self._switch_view(i))
             nav_layout.addWidget(button)
-        
-        self.nav_buttons["dashboard"].clicked.connect(lambda: self._switch_view(0))
-        self.nav_buttons["graphics"].clicked.connect(lambda: self._switch_view(1))
-        self.nav_buttons["extraction"].clicked.connect(lambda: self._switch_view(2))
-        self.nav_buttons["reports"].clicked.connect(lambda: self._switch_view(3))
-        
+            self.nav_buttons[name] = button
+
+        # Botões de ação
+        action_buttons = {
+            "open_html": ("Abrir HTML Externo", self._open_external_html)
+        }
+
+        for name, (text, action) in action_buttons.items():
+            button = QPushButton(text)
+            button.setObjectName("navButton") # Pode ter um estilo diferente se quiser
+            button.clicked.connect(action)
+            nav_layout.addWidget(button)
+            self.nav_buttons[name] = button
+
         nav_layout.addStretch()
         
-        info_label = QLabel("Sistema MUST v1.0")
+        info_label = QLabel("Sistema MUST Desktop v3.4.3")
         info_label.setStyleSheet("color: #6B7280; font-size: 11px; padding: 10px;")
         nav_layout.addWidget(info_label)
         
         return nav_panel
+    
+    def _open_external_html(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Selecione o arquivo HTML", "", "HTML Files (*.html *.htm)")
+        if file_path:
+            # Garante que o caminho seja absoluto e no formato correto para URL
+            webbrowser.open(Path(file_path).as_uri())
     
     def _create_scrollable_widget(self, widget):
         scroll_area = QScrollArea()
@@ -1199,11 +870,21 @@ class MainWindow(QMainWindow):
 # ==============================================================================
 
 def main():
+    """Ponto de entrada da aplicação."""
     app = QApplication(sys.argv)
     
-    db_folder = Path(r"./database").resolve()
-    if not db_folder.exists():
-        print(f"\n\nERRO: Pasta do banco de dados não encontrada: {db_folder}")
+    # --- Definição de Caminhos Dinâmicos ---
+    # Constrói o caminho para a pasta 'database' de forma relativa ao local do script
+    try:
+        script_dir = Path(__file__).resolve().parent
+        db_folder = script_dir / "database"
+        
+        if not db_folder.exists():
+            raise FileNotFoundError(f"Pasta do banco de dados não encontrada em: {db_folder}")
+            
+    except Exception as e:
+        QMessageBox.critical(None, "Erro de Configuração", f"Não foi possível determinar o caminho do banco de dados.\n\n{e}")
+        sys.exit(1)
 
     access_db_path = db_folder / "Database_MUST.accdb"
     sqlite_db_path = db_folder / "database_consolidado.db"

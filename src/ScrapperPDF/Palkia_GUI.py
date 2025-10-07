@@ -76,7 +76,7 @@ class Worker(QObject):
             error_details = f"❌ Erro na execução da tarefa: {e}\n{traceback.format_exc()}"
             self.error.emit(error_details)
 
-class MainWindow(QMainWindow):
+class PalkiaWindowGUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Palkia - Extrator de PDF")
@@ -326,6 +326,6 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = MainWindow()
+    window = PalkiaWindowGUI()
     window.show()
     sys.exit(app.exec())

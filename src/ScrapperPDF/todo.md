@@ -29,9 +29,11 @@
 ## ! Alinhar pontos de upgrades em 30/09 e 01/10 
 
 ## Backend
-- Launcher (Palkia GUI) para script run.py rodando na mesma tela do dashboard_desktop_GUI.py
-- Conexão com SQLite e Microsoft Access
-- flask pikachu server template (opcional para conexões)
+- [x] Launcher (Palkia GUI) para script run.py rodando na mesma tela do dashboard_desktop_GUI.py
+
+- [x] Conexão com SQLite e Microsoft Access
+
+- [ ] Alterar o run.py para ajustar os intervalos de páginas e alterar apenas o Arquivo Palkia para manutenção
 
 1)Uso da planilha Excel  de Controle de MUST compartilhado no SharePoint para alimentar a ferramenta Desktop
 

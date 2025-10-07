@@ -106,8 +106,28 @@ def consolidate_and_merge_results():
 
 # EXTL (Extract, Load, Transform): Você extrai o conteúdo bruto dos PDFs (Extract), carrega esse conteúdo bruto (por exemplo, o texto completo de cada página) em uma área de preparação (staging area) no seu banco de dados ou em um Data Lake (Load), e só então executa rotinas (com SQL, Python, etc.) para limpar e estruturar os dados em tabelas finais (Transform). Este modelo é mais moderno e flexível.
 
+# --- Definição de Caminhos Dinâmicos ---
+
+# Obtém o caminho absoluto do diretório onde o script está localizado
+# __file__ é uma variável especial do Python que contém o caminho para o arquivo atual
+SCRIPT_DIR = Path(__file__).resolve().parent
+
+# Constrói o caminho para a pasta de entrada de forma relativa ao local do script
+# Isso torna o código portável e independente de onde ele é executado
+input_folder = SCRIPT_DIR / "src" / "models" / "arquivos_PDF_MUST"
+
+# Verifica se a pasta de entrada existe para evitar erros
+if not input_folder.exists():
+    raise FileNotFoundError(f"ERRO CRÍTICO: A pasta de entrada não foi encontrada em: {input_folder}")
+
+console.log(f"Pasta de entrada definida como: {input_folder}", "info")
+
 #! O nome dessa variavel é crucial para o modo "single" nas 2 funções
 single_file_name = "CUST-2002-123-41 - JAGUARI - RECON 2025-2028.pdf"
+
+intervalos_paginas = ["8-16", "8-24", "7-10", "10-32", "7-13", "7-9"]
+
+#-------------------------------------------------------------------------------------------------------------------------------
 
 def run_extract_PDF_tables(intervalos_paginas,mode = "folder" ):
  
@@ -163,15 +183,9 @@ def extract_text_from_must_tables(mode = "folder"):
 
     print("\n🔚 Script concluído.")
 
-#! windows
-input_folder = r"C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\AUTOMACÕES ONS\arquivos"
-
-#!Linux
-#input_folder = r"/home/pedrov12/Documentos/GitHub/Electrical-System-Simulator/ONS_SIMULATOR_SYSTEM/arquivos"
 
 
-intervalos_paginas = ["8-16", "8-24", "7-10", "10-32", "7-13", "7-9"]
-
+# Main da automação 
 if __name__ == "__main__":
 
     run_extract_PDF_tables(intervalos_paginas, mode="folder")
