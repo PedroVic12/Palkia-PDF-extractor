@@ -1,6 +1,6 @@
 import streamlit as st
-from mvc.controller import PDFController
-from mvc.components import tab_extract_text, tab_extract_text_ocr, tab_extract_tables, read_must_tables_page
+from controller import PDFController
+from components import tab_extract_text, tab_extract_text_ocr, tab_extract_tables, read_must_tables_page
 from pdf2image import convert_from_path
 from PyPDF2 import PdfReader
 import os

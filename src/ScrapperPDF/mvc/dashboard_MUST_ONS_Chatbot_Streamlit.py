@@ -7,9 +7,9 @@ from PyPDF2 import PdfReader
 import camelot
 
 
-from mvc.view import render_texto_tab, render_tabelas_tab, ChatbotWithRAG
-from mvc.components import read_must_tables_page, tab_extract_text_ocr
-from mvc.controller import PDFController
+from view import render_texto_tab, render_tabelas_tab, ChatbotWithRAG
+from components import read_must_tables_page, tab_extract_text_ocr
+from controller import PDFController
 
 # --- Dependências para o Chatbot com Contexto ---
 from langchain_community.document_loaders import PyMuPDFLoader # Langchain ainda é útil para carregar o PDF
