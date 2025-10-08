@@ -811,36 +811,24 @@ class MainWindow(QMainWindow):
         nav_title.setObjectName("headerTitle")
         nav_layout.addWidget(nav_title)
         
-        # Botões que trocam a visualização
-        view_buttons = {
-            "dashboard": ("Dashboard Principal", 0),
-            "graphics": ("Análise Gráfica", 1),
-            "extraction": ("Extração de PDF", 2),
-            "reports": ("Relatórios", 3)
+        self.nav_buttons = {
+            "dashboard": QPushButton("Dashboard Principal"),
+            "graphics": QPushButton("Análise Gráfica"),
+            "extraction": QPushButton("Extração de PDF"),
+            "reports": QPushButton("Relatórios")
         }
         
-        self.nav_buttons = {}
-        for name, (text, index) in view_buttons.items():
-            button = QPushButton(text)
+        for name, button in self.nav_buttons.items():
             button.setObjectName("navButton")
             button.setCheckable(True)
             button.setAutoExclusive(True)
-            button.clicked.connect(lambda checked=False, i=index: self._switch_view(i))
             nav_layout.addWidget(button)
-            self.nav_buttons[name] = button
-
-        # Botões de ação
-        action_buttons = {
-            "open_html": ("Abrir HTML Externo", self._open_external_html)
-        }
-
-        for name, (text, action) in action_buttons.items():
-            button = QPushButton(text)
-            button.setObjectName("navButton") # Pode ter um estilo diferente se quiser
-            button.clicked.connect(action)
-            nav_layout.addWidget(button)
-            self.nav_buttons[name] = button
-
+        
+        self.nav_buttons["dashboard"].clicked.connect(lambda: self._switch_view(0))
+        self.nav_buttons["graphics"].clicked.connect(lambda: self._switch_view(1))
+        self.nav_buttons["extraction"].clicked.connect(lambda: self._switch_view(2))
+        self.nav_buttons["reports"].clicked.connect(lambda: self._switch_view(3))
+        
         nav_layout.addStretch()
         
         info_label = QLabel("Sistema MUST Desktop v3.4.3")
@@ -848,12 +836,6 @@ class MainWindow(QMainWindow):
         nav_layout.addWidget(info_label)
         
         return nav_panel
-    
-    def _open_external_html(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Selecione o arquivo HTML", "", "HTML Files (*.html *.htm)")
-        if file_path:
-            # Garante que o caminho seja absoluto e no formato correto para URL
-            webbrowser.open(Path(file_path).as_uri())
     
     def _create_scrollable_widget(self, widget):
         scroll_area = QScrollArea()
