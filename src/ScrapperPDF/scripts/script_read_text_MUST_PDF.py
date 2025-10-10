@@ -14,11 +14,11 @@ def process_PDF_text_single_pdf(pdf_path: str, output_folder: str):
     """
     print(f"\n{'='*50}\nProcessando arquivo: {os.path.basename(pdf_path)}\n{'='*50}")
 
-    # Processa o PDF e extrai o texto
+    #! 1) Processa o PDF e extrai o texto
     pdf_processor = PDFProcessor(pdf_path)
     raw_text = pdf_processor.extract_text()
 
-    # Vincula anotações às linhas de dados
+    #! 2) Vincula anotações às linhas de dados
     annotation_linker = AnnotationLinker(raw_text)
     final_df = annotation_linker.link_annotations()
 
@@ -27,7 +27,7 @@ def process_PDF_text_single_pdf(pdf_path: str, output_folder: str):
         base_name = os.path.splitext(os.path.basename(pdf_path))[0]
         output_excel_path = os.path.join(output_folder, f"saida_anotacoes_{base_name}.xlsx")
 
-        # Exporta para Excel
+        #! 3) Exporta para Excel
         ExcelExporter.export_to_excel(final_df, output_excel_path)
     else:
         print("Nenhum dado processado para exportação.")

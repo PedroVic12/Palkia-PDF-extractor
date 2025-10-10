@@ -9,6 +9,15 @@ from datetime import datetime
 import tempfile
 import os
 
+# --- NOVAS DEPENDÊNCIAS NECESSÁRIAS ---
+# Para executar esta versão, instale as seguintes bibliotecas:
+# pip install pandas plotly PySide6-WebEngine
+#
+# --- NOTA IMPORTANTE PARA MS ACCESS ---
+# Para conectar a um banco de dados .accdb, é necessário ter o 
+# "Microsoft Access Database Engine" instalado no seu sistema.
+# Se não tiver o MS Office/Access, você pode baixá-lo separadamente no site da Microsoft.
+
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QComboBox, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
@@ -28,7 +37,7 @@ except ImportError:
     pd = px = go = QWebEngineView = None
 
 # ==============================================================================
-# --- PARTE 1: MODELO DE DADOS (CLASSE DashboardDB CORRIGIDA) ---
+# --- PARTE 1: MODELO DE DADOS (CLASSE DashboardDB) ---
 # ==============================================================================
 
 class DashboardDB:
@@ -40,7 +49,6 @@ class DashboardDB:
         self.db_type = 'access' if self.db_path.suffix.lower() == '.accdb' else 'sqlite'
         print(f"Tipo de banco de dados detectado: {self.db_type.upper()}")
 
-        # CORREÇÃO: Nomes de tabela específicos para cada dialeto
         if self.db_type == 'sqlite':
             self.tbl_empresas = 'empresas'
             self.tbl_anotacao = 'anotacao'
@@ -258,7 +266,8 @@ class DetailsDialog(QDialog):
         history_table.setRowCount(len(history_data))
         for i, row in enumerate(history_data):
             valor = row.get('valor')
-            valor_str = f"{valor}" if valor is not None else "N/D"
+            # CORREÇÃO: Formatar o valor para duas casas decimais, tratando o caso de ser Nulo.
+            valor_str = f"{float(valor):.2f}" if valor is not None else "N/D"
             history_table.setItem(i, 0, QTableWidgetItem(str(row['ano'])))
             history_table.setItem(i, 1, QTableWidgetItem(str(row['periodo'])))
             history_table.setItem(i, 2, QTableWidgetItem(valor_str))
@@ -481,7 +490,7 @@ class DashboardApp(QMainWindow):
     def _plot_remarks_pie(self, data):
         if not data: return go.Figure()
         with_remarks = data.get('with_remarks', 0); approved = data.get('total', 0) - with_remarks
-        labels = ['Sem Ressalva', 'Com Ressalva']; values = [approved, with_remarks] # Legenda corrigida
+        labels = ['Sem Ressalva', 'Com Ressalva']; values = [approved, with_remarks]
         fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.4, marker_colors=['#22C55E', '#F97316'])])
         fig.update_layout(self._get_plotly_layout("Proporção de Ressalvas"))
         return fig
@@ -527,13 +536,18 @@ class DashboardApp(QMainWindow):
         for i in reversed(range(self.yearly_stats_layout.count())): self.yearly_stats_layout.itemAt(i).widget().setParent(None)
         yearly_totals = {}
         for row in stats_data:
-            if row['ano'] not in yearly_totals: yearly_totals[row['ano']] = {}
-            yearly_totals[row['ano']][row['periodo']] = row.get('total_valor', 0)
+            ano = row.get('ano')
+            if ano not in yearly_totals: yearly_totals[ano] = {}
+            # CORREÇÃO: Ser mais robusto na busca pelo período
+            periodo = str(row.get('periodo', '')).lower().replace('_', ' ')
+            yearly_totals[ano][periodo] = row.get('total_valor', 0)
+            
         row, col, MAX_COLS = 0, 0, 4
         for year in sorted(yearly_totals.keys()):
             card = QFrame(); card.setObjectName("kpiCard"); layout = QVBoxLayout(card)
             year_label = QLabel(f"Ano: {year}"); year_label.setStyleSheet("font-weight: bold; font-size: 16px;")
-            ponta_val, fora_ponta_val = yearly_totals[year].get('ponta', 0), yearly_totals[year].get('fora_ponta', 0)
+            ponta_val = yearly_totals[year].get('ponta', 0)
+            fora_ponta_val = yearly_totals[year].get('fora ponta', 0) # Checa por 'fora ponta'
             ponta_label = QLabel(f"Ponta: {ponta_val:,.2f}"); fora_ponta_label = QLabel(f"Fora Ponta: {fora_ponta_val:,.2f}")
             ponta_label.setObjectName("kpiTitle"); fora_ponta_label.setObjectName("kpiTitle")
             layout.addWidget(year_label); layout.addWidget(ponta_label); layout.addWidget(fora_ponta_label)
@@ -648,5 +662,4 @@ if __name__ == '__main__':
         layout.addWidget(label); error_dialog.setLayout(layout)
         error_dialog.exec()
         sys.exit(1)
- 
-        
+

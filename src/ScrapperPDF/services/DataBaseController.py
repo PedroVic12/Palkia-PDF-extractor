@@ -291,7 +291,7 @@ class AccessController(DataBaseController):
 if __name__ == '__main__':
     print("--- INICIANDO TESTE DO DATABASE CONTROLLER (REATORADO) ---")
     
-    EXCEL_PATH = Path(r"C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\AUTOMACÕES ONS\arquivos\database\must_tables_PDF_notes_merged.xlsx")
+    EXCEL_PATH = Path(r"C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\GitHub\Palkia-PDF-extractor\src\ScrapperPDF\database\must_tables_PDF_notes_merged.xlsx")
     
     DB_OUTPUT_FOLDER = EXCEL_PATH.parent
     SQLITE_DB_PATH = DB_OUTPUT_FOLDER / "database_consolidado.db"
