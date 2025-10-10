@@ -1,5 +1,5 @@
 PyPDF2
-camelot
+camelot-py
 pdf2image
 streamlit 
 python-poppler
