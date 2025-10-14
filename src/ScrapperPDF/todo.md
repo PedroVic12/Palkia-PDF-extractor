@@ -42,3 +42,8 @@
 3)Implementação do banco de dados com Microsoft Access (usando SQL e Python) com dados da PLC para análises de dados (Semanal ou Mensal)
 
 4)Estudos de SEP de Linhas de Transmissão e Proteção de Rede.
+
+---
+
+## Pedencias Atrasados (14/10/2025)
+
