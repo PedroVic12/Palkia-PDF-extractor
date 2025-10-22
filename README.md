@@ -4,6 +4,8 @@
 - Lancher do ETL de arquivos MUST: `Palkia_GUI.py`
 - PySide6 Controle e Gestão MUST: `desktop_Dashboard_app.py`
 
+Use pyqt6-tools via `pip install pyqt6-tools` and rode o comando `pyqt6-tools designer`
+
 
 ## Updates e Melhorias ate 31/10/2025
 
