@@ -1,6 +1,28 @@
-# PDF Extractor
+# Palkia-ScrapperPDF V3.1.1
+
+- script para rodar a automação: `run.py`
+- Lancher do ETL de arquivos MUST: `Palkia_GUI.py`
+- PySide6 Controle e Gestão MUST: `desktop_Dashboard_app.py`
+
+
+## Updates e Melhorias ate 31/10/2025
+
+- Refatoração do código de arquivo unico .py para um projeto MVC usando QT - Designer
+- Deck Builder caso analisado com o MUST solicitado
+- Template de Word (docx) para criação do relatorio final
+- Dashboard atividades SP / Dashboard Must / Relatórios (gráficos) / Palkia Extractor GUI / Deck Builder da solicitação de MUST
+- Criação de projetos PySide6 com componentes e MVC template com menu lateral de navegação e clean code para POO em Eventos para softwares Desktops.
+
+ver arquivo @todo.md
+
+---
+
+--- 
+## PDF Extractor
 
 Este projeto é uma ferramenta para extrair dados de arquivos PDF usando Python. Ele utiliza diversas bibliotecas para processamento de PDFs, manipulação de dados e interação com bancos de dados.
+
+Substitua `<URL do repositório>`, `<nome do repositório>` e `<nome_do_seu_script>.py` com as informações específicas do seu projeto. Ajuste a seção "Uso" conforme as funcionalidades do seu projeto.
 
 ## Dependências
 
@@ -58,13 +80,12 @@ O projeto requer as seguintes variáveis de ambiente para configurar o acesso ao
 
 Na pasta src/files/, crie uma subpasta correspondente ao tipo de arquivo que você deseja processar. Em seguida, adicione as regras de extração de dados no arquivo src/configs/rules/notas.py. Caso precise de apoio visual para criar as regras, utilize o arquivo pdf_viz.py para obter uma referência visual da área de extração do arquivo. Após configurar as regras, faça as alterações necessárias no arquivo start.py. Com essas etapas concluídas, o sistema extrairá automaticamente todos os dados dos arquivos na pasta e os salvará no banco de dados
 
-## Contribuição
 
-Se você deseja contribuir para este projeto, por favor, faça um fork do repositório, crie uma branch para suas alterações e envie um pull request.
 
 ## Licença
 
 Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+Este projeto é um Fork de de tecnologias de OCR e Visão Computacional para ETL de arquivos .PDF para Excel e Banco de dados. 
 ```
 
-Substitua `<URL do repositório>`, `<nome do repositório>` e `<nome_do_seu_script>.py` com as informações específicas do seu projeto. Ajuste a seção "Uso" conforme as funcionalidades do seu projeto.
