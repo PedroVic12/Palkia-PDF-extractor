@@ -8,6 +8,11 @@ import pandas as pd
 from services.DataBaseController import SQLiteController, AccessController
 from pathlib import Path
 
+
+#! Refatorção do Projeto para projeto profissional Python com SQL Alchemy e Pyside com QT Designer MVP
+#! Update 22/10/2025
+#! Refatorar partindo do banco: Access Microsoft -> Crud - Pyside6 Controle e Gestão Desktop (Deck Builder + Gerador de Relatórios .docx e com AI em HTML) + Site Dashboard Atividades SP com controle aprovação MUST
+
 # Função para conectar com o Banco de dados (apos o Excel consolidado)
 def run_database_load_process():
     """
