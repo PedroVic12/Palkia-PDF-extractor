@@ -4,7 +4,16 @@
 - Lancher do ETL de arquivos MUST: `Palkia_GUI.py`
 - PySide6 Controle e Gestão MUST: `desktop_Dashboard_app.py`
 
-Use pyqt6-tools via `pip install pyqt6-tools` and rode o comando `pyqt6-tools designer`
+Use pyqt6-tools via `pip install pyqt6-tools` ou `pip install qt6-applications` and rode o comando `pyqt6-tools designer`
+
+Convert .ui to Python Code:
+Use the pyside6-uic tool to convert your .ui file into a Python class:
+
+```sh
+pyside6-uic mainwindow.ui -o ui_mainwindow.py
+```
+
+This generates a Python file (e.g., ui_mainwindow.py) containing the Python code representation of your designed UI.
 
 
 ## Updates e Melhorias ate 31/10/2025

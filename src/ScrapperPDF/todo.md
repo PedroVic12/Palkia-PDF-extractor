@@ -1,3 +1,19 @@
+# Levantamento de requisitos do Software de Controle e Gestão MUST e Atividades SP (Dashboard)
+
+- [x] ETL de arquivos PDF e Excel
+- [x] Controle e gestão de Banco de dados de informações de MUST de atividades SP
+- [x] Aprovação com ou sem Ressalvas para criar deck de analise no anaRede e abrir com Pyautogui
+
+- [ ] Entender a modelagem do banco de dados do SQL Server e filtrar apenas para area SP
+
+- [ ] Atividades SP em banco Access atualizado com excel de atividades SP
+
+- [ ] Automação em Pyautogui para abrir o SIN atualizado ja na barra ou linha de análise no AnaREDE
+- [ ] Criação de relatorios docx template dá analise a partir do excel de controle
+
+- [ ] Iniciar com deploy do app com dashbaord em HTML e Pyside6 com ferramentas e usando mvc com QT-Designer com arquivos  .ui e .py
+    
+
 ## IN_PROGRESS
 - [x] Agrupação de paginas por tab no menu lateral
 - [x] App Template Windows Desktop (Bloco de notas sobre)
@@ -15,21 +31,11 @@
 - [ ] incluir no banco de dados de MUST a relação ponto de MUST x barras/circuitos do Fluxo de potência
 - [ ] "régua" para inclusão de LTs e Trafos via script do Organon
 
+
+
 --- 
 
-## Levantamento de requisitos do Software de Controle e Gestão MUST e Atividades SP (Dashboard)
-
-- [x] ETL de arquivos PDF e Excel
-- [x] Controle e gestão de Banco de dados de informações de MUST de atividades SP
-- [x] Aprovação com ou sem Ressalvas para criar deck de analise no anaRede e abrir com Pyautogui
-
-- [ ] Entender a modelagem do banco de dados do SQL Server e filtrar apenas para area SP
-
-- [ ] Atividades SP em banco Access atualizado com excel de atividades SP
-
-- [ ] Automação em Pyautogui para abrir o SIN atualizado ja na barra ou linha de análise no AnaREDE
-- [ ] Criação de relatorios docx template dá analise a partir do excel de controle
-
+# Atividades 28/10/25
 
 ## Frontend
 
@@ -47,7 +53,6 @@
 - [ ] Container de Tabela histórico das análises
 
 
-## ! Alinhar pontos de upgrades em 30/09 e 01/10 
 
 ## Backend
 
