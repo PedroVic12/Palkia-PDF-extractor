@@ -1,4 +1,24 @@
-# pip3 install weasyprint
+# pip install weasyprint
+
+# pacman -S python-weasyprint
+
+"""
+On WIndows,
+
+Install WeasyPrint in a virtual environment using pip:
+
+python -m venv venv
+venv\Scripts\activate.bat
+python -m pip install weasyprint
+python -m weasyprint --info
+
+or use other lib like
+
+pip install pdfkit
+
+https://wkhtmltopdf.org/downloads.html
+
+"""
 
 from weasyprint import HTML
 import io
