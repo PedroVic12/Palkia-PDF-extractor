@@ -196,10 +196,10 @@
                 <div id="main-dashboard-view" class="view-container">
                      <h5 class="card-title fw-bold">Visão Geral das Atividades</h5>
                      <p class="tool-description">Visualize o status geral das atividades carregadas do arquivo Excel/CSV. Utilize os filtros laterais para refinar a visualização e os gráficos para identificar tendências e gargalos.</p>
-                    <div id="dashboard-view-content" class="d-none"> {/* Conteúdo escondido até carregar */}
+                    <div id="dashboard-view-content" class="d-none"> <!-- Conteúdo escondido até carregar -->
                         <div class="row g-4 mb-4" id="stats-cards"></div>
                         <div class="row g-4 mb-4">
-                            {/* Gráficos */}
+                            <!-- Gráficos -->
                             <div class="col-lg-4"><div class="card h-100"><div class="card-body d-flex flex-column"><h5 class="card-title fw-bold">Status Geral</h5><div class="flex-grow-1" style="position: relative; min-height: 250px;"><canvas id="statusChart"></canvas></div></div></div></div>
                             <div class="col-lg-4"><div class="card h-100"><div class="card-body d-flex flex-column"><h5 class="card-title fw-bold">Atividades c/ Ressalva</h5><div class="flex-grow-1" style="position: relative; min-height: 250px;"><canvas id="ressalvasChart"></canvas></div></div></div></div>
                             <div class="col-lg-4"><div class="card h-100"><div class="card-body d-flex flex-column"><h5 class="card-title fw-bold">Atividades por Responsável</h5><div class="flex-grow-1" style="position: relative; min-height: 250px;"><canvas id="responsavelChart"></canvas></div></div></div></div>
@@ -208,7 +208,7 @@
                             <div class="col-12"><div class="card h-100"><div class="card-body"><h5 class="card-title fw-bold">Detalhes da Atividade</h5><div id="data-table-container" class="table-responsive"></div></div></div></div>
                         </div>
                     </div>
-                     <div id="initial-message" class="text-center p-5 bg-light rounded-3 mt-4"> {/* Mensagem inicial exibida por padrão */}
+                     <div id="initial-message" class="text-center p-5 bg-light rounded-3 mt-4"> <!-- Mensagem inicial exibida por padrão -->
                         <i class="bi bi-file-earmark-spreadsheet" style="font-size: 4rem; color: #6c757d;"></i>
                         <h3 class="mt-3">Aguardando arquivo...</h3>
                         <p class="text-muted">Use o menu lateral para carregar um arquivo Excel ou CSV para visualizar o Dashboard.</p>
@@ -221,8 +221,8 @@
                         <div class="card-body">
                              <h5 class="card-title fw-bold">Kanban Tarefas (Pendentes)</h5>
                              <p class="tool-description">Visualize as tarefas **pendentes** carregadas do Excel/CSV. Arraste os cartões entre as colunas para atualizar o status da tarefa (a mudança é salva no navegador e refletida no Dashboard/Exportação).</p>
-                             {/* Botão Adicionar removido daqui, pois é populado do Excel */}
-                            <div id="kanban-excel-container"></div> {/* Container específico para o Kanban do Excel */}
+                             <!-- Botão Adicionar removido daqui, pois é populado do Excel -->
+                            <div id="kanban-excel-container"></div> <!-- Container específico para o Kanban do Excel -->
                         </div>
                     </div>
                 </div>
@@ -382,18 +382,22 @@
             }
 
             // Retorna dados para o Kanban (apenas tarefas pendentes do Excel filtrado)
-            getKanbanExcelData() {
-                // *** CORREÇÃO: Kanban deve mostrar TODAS as pendentes, não apenas as filtradas ***
-                // Ou podemos decidir mostrar apenas as filtradas. Vamos manter filtradas por enquanto.
-                const tasks = this.excelData.filtered.filter(task => task.STATUS === 'Pendente');
-                 // Retorna no formato esperado pelo renderKanbanExcel
-                 return {
-                    // Separa por alguma lógica se necessário, ou tudo em 'todo'
-                    todo: tasks.filter(t => !t._kanbanCategory || t._kanbanCategory === 'todo'), // Se não tiver categoria salva, vai pra 'todo'
-                    inprogress: tasks.filter(t => t._kanbanCategory === 'inprogress'),
-                    done: [] // Coluna 'done' é apenas destino do drop
-                 };
-            }
+             getKanbanExcelData() {
+                 const tasks = this.excelData.filtered.filter(task => task.STATUS === 'Pendente');
+                 // Separa as tarefas pendentes pela categoria salva (se existir)
+                 const groupedTasks = { todo: [], inprogress: [], done: [] }; // done sempre vazio aqui
+                 tasks.forEach(task => {
+                     const category = task._kanbanCategory || 'todo'; // Default 'todo'
+                     if (groupedTasks[category]) {
+                         groupedTasks[category].push(task);
+                     } else {
+                         groupedTasks.todo.push(task); // Fallback para 'todo' se categoria inválida
+                     }
+                 });
+                 console.log("Grouped Kanban Excel data:", groupedTasks);
+                 return groupedTasks;
+             }
+
 
             // Obtém dados para as matrizes MANUAIS
             getAnalysisData() {
@@ -429,11 +433,13 @@
                     }
                     // Guarda a categoria do Kanban DENTRO do objeto da tarefa
                     // Isso ajuda a lembrar onde ela estava no Kanban se os filtros mudarem
-                    if (newKanbanCategory) {
-                        itemAll._kanbanCategory = newKanbanCategory; // Propriedade interna
-                    } else if (newStatus === 'Concluído') {
-                        // Se virou concluído, remove a categoria Kanban (não aparecerá mais lá)
+                    if (newKanbanCategory && newStatus === 'Pendente') { // Só salva categoria se for Pendente
+                        itemAll._kanbanCategory = newKanbanCategory;
+                        console.log(`Set _kanbanCategory=${newKanbanCategory} for ${itemId}`);
+                    } else {
+                        // Se virou concluído ou não tem categoria, remove a propriedade
                         delete itemAll._kanbanCategory;
+                         console.log(`Removed _kanbanCategory for ${itemId}`);
                     }
                 }
                 // Atualiza em filteredData (se existir lá)
@@ -444,9 +450,9 @@
                         console.log(`Updated status in filteredData for ${itemId} to ${newStatus}`);
                         changed = true; // Garante que é true se mudou aqui
                     }
-                     if (newKanbanCategory) {
+                    if (newKanbanCategory && newStatus === 'Pendente') {
                         itemFiltered._kanbanCategory = newKanbanCategory;
-                    } else if (newStatus === 'Concluído') {
+                    } else {
                         delete itemFiltered._kanbanCategory;
                     }
                  }
@@ -569,7 +575,7 @@
                                 ...row,
                                 dueDate: row.dueDate ? new Date(row.dueDate) : null // Converte de volta para Date
                             }));
-                             // Atualiza o nome do arquivo na UI
+                             // Atualiza o nome do arquivo na UI (mas só o nome)
                              const fileNameEl = document.getElementById('file-name');
                              if (fileNameEl) fileNameEl.textContent = this.excelData.fileName;
 
@@ -657,11 +663,13 @@
                  (sheetNames || []).forEach(n => { const o=document.createElement('option');o.value=n;o.textContent=n;this.sheetSelector.appendChild(o); });
                  (responsibles || []).forEach(r => { const o=document.createElement('option');o.value=r;o.textContent=r;this.responsavelFilter.appendChild(o); });
 
+                 // Habilita os filtros baseado na presença de sheetNames (indica que um arquivo foi carregado)
                  const hasData = sheetNames && sheetNames.length > 0;
                  [this.sheetSelector, this.responsavelFilter, this.statusGeralFilter, this.ressalvaFilter].forEach(el => {
                      if(el) el.disabled = !hasData;
                  });
             }
+
 
             // Renderiza os cards de estatísticas
             renderStatsCards({ total, responsibleCount }) {
@@ -672,13 +680,14 @@
             }
 
              // Renderiza o Kanban conectado ao Excel
-             renderKanbanExcel(tasksByStatus, handlers) { // Recebe tarefas já separadas
+             renderKanbanExcel(tasksByStatus, handlers) { // Recebe tarefas já separadas por status do controller
                  if (!this.kanbanExcelContainer) return;
                  const config = { todo: { t: 'A Fazer' }, inprogress: { t: 'Em Andamento' }, done: { t: 'Concluído' } };
                  let html = '<div class="row g-3">';
 
                  for (const key in config) {
-                     const tasks = tasksByStatus[key] || []; // Pega as tarefas da categoria
+                     // As tarefas já vêm agrupadas corretamente pelo controller
+                     const tasks = tasksByStatus[key] || [];
                      html += `<div class="col-lg-4 col-md-6 d-flex flex-column">
                                  <h6 class="text-secondary column-title"><i class="bi bi-list-task me-2"></i>${config[key].t} (${tasks.length})</h6>
                                  <div class="kanban-column flex-grow-1" data-category="${key}" style="min-height: 400px; max-height: 600px; overflow-y: auto;">`;
@@ -750,20 +759,25 @@
 
                  // Remove listeners antigos dos itens antes de adicionar novos
                  items.forEach(item => {
+                     // Usa funções nomeadas ou propriedades para remover corretamente
                      item.removeEventListener('dragstart', this._handleDragStart);
                      item.removeEventListener('dragend', this._handleDragEnd);
-                     item.addEventListener('dragstart', this._handleDragStart);
-                     item.addEventListener('dragend', this._handleDragEnd);
+                     item.addEventListener('dragstart', this._handleDragStart.bind(this)); // Bind 'this' se necessário
+                     item.addEventListener('dragend', this._handleDragEnd.bind(this));
                  });
 
                  columns.forEach(column => {
-                      // Remove listeners antigos das colunas
-                     column.removeEventListener('dragover', this._handleDragOver);
-                     column.removeEventListener('dragleave', this._handleDragLeave);
-                     column.removeEventListener('drop', column.__dropHandler); // Remove handler antigo se existir
+                      // Remove handler antigo associado à coluna
+                      const oldDropHandler = column.__dropHandler;
+                      if (oldDropHandler) {
+                          column.removeEventListener('drop', oldDropHandler);
+                      }
+                      column.removeEventListener('dragover', this._handleDragOver);
+                      column.removeEventListener('dragleave', this._handleDragLeave);
+
                       // Cria um novo handler wrapper
-                     const dropHandler = (e) => this._handleDrop(e, handlers.onDrop);
-                     column.__dropHandler = dropHandler; // Guarda referência para remover depois
+                      const dropHandler = (e) => this._handleDrop(e, handlers.onDrop);
+                      column.__dropHandler = dropHandler; // Guarda referência para remover depois
                       // Adiciona os novos listeners
                      column.addEventListener('dragover', this._handleDragOver);
                      column.addEventListener('dragleave', this._handleDragLeave);
@@ -773,6 +787,7 @@
              // --- Funções Helper para Drag & Drop (movidas para View) ---
              _handleDragStart(e) {
                  const draggableElement = e.currentTarget;
+                 // Permite arrastar .kanban-card ou .manual-item
                  if (draggableElement.matches('.kanban-card, .manual-item')) {
                      e.dataTransfer.setData('text/plain', draggableElement.dataset.id);
                      e.dataTransfer.effectAllowed = 'move';
@@ -798,17 +813,11 @@
                  if (!container) return;
                  console.log(`Adding Edit/Delete listeners (delegated) to ${container.id} for type ${toolType}`);
 
-                 // Remove listeners antigos para evitar duplicação
-                 container.removeEventListener('click', container.__clickHandler);
-                 container.removeEventListener('focusout', container.__blurHandler);
-                 container.removeEventListener('keydown', container.__keydownHandler);
-                 container.removeEventListener('focusin', container.__focusinHandler); // Para guardar texto original
-
                  // --- Handler para CLICK (Deleção) ---
-                 const clickHandler = (e) => {
+                  const clickHandler = (e) => {
                      const deleteButton = e.target.closest('.delete-item');
                      if (deleteButton) {
-                         const itemElement = deleteButton.closest('[data-id]');
+                         const itemElement = deleteButton.closest('[data-id]'); // O elemento pai com data-id
                          if (itemElement) {
                              const itemId = itemElement.dataset.id;
                              const category = itemElement.closest('[data-category]')?.dataset.category;
@@ -818,68 +827,70 @@
                          }
                      }
                  };
+                  // Remove listener antigo se existir e adiciona novo
+                 container.removeEventListener('click', container.__clickHandler);
                  container.addEventListener('click', clickHandler);
-                 container.__clickHandler = clickHandler; // Guarda referência para remover depois
+                 container.__clickHandler = clickHandler;
 
                 // --- Handler para FOCUSIN (Guardar texto original) ---
                 const focusinHandler = (e) => {
                     const editableP = e.target.closest('.editable-text');
-                    if (editableP && !editableP.dataset.originalText) { // Guarda só se não tiver um valor salvo
+                     // Verifica se é o elemento correto e se já não tem texto guardado
+                    if (editableP && editableP === e.target && !editableP.dataset.originalText) {
                         editableP.dataset.originalText = editableP.innerText;
                         console.log(`Focus In: Stored original text for ${editableP.dataset.taskId}`);
                     }
                 };
-                container.addEventListener('focusin', focusinHandler, true); // Usa capturing phase
-                container.__focusinHandler = focusinHandler;
+                 container.removeEventListener('focusin', container.__focusinHandler, true); // Remove antigo (capturing)
+                 container.addEventListener('focusin', focusinHandler, true); // Adiciona novo (capturing)
+                 container.__focusinHandler = focusinHandler;
 
 
                  // --- Handler para FOCUSOUT/BLUR (Salvar Edição) ---
                  const blurHandler = (e) => {
                      const editableP = e.target.closest('.editable-text');
-                     if (editableP) {
+                      // Verifica se é o elemento correto
+                     if (editableP && editableP === e.target) {
                          const itemId = editableP.dataset.taskId;
                          const newText = editableP.innerText.trim();
-                         const originalText = editableP.dataset.originalText; // Pega o texto guardado
+                         const originalText = editableP.dataset.originalText;
                          console.log(`Blur event on item ${itemId}: NewText='${newText}', Original='${originalText}'`);
 
-                         if (itemId) { // Garante que temos um ID
+                         if (itemId) {
                              if (newText && newText !== originalText) {
                                  handlers.onUpdate(itemId, newText); // Chama o update do controller
                              } else if (!newText && originalText) {
-                                 // Se ficou vazio, restaura o original
                                  editableP.innerText = originalText;
-                                 console.log(`Restored original text for ${itemId} because it was empty.`);
+                                 console.log(`Restored original text for ${itemId} (was empty).`);
                              } else {
-                                  // Se não mudou, apenas limpa
-                                 console.log(`Text unchanged for ${itemId}.`);
+                                  console.log(`Text unchanged for ${itemId}.`);
                              }
-                         } else {
-                              console.warn("Blur event on element without data-task-id");
-                         }
+                         } else { console.warn("Blur event on element without data-task-id"); }
                          // Limpa o texto original guardado após o blur
                          delete editableP.dataset.originalText;
                      }
                  };
-                 container.addEventListener('focusout', blurHandler);
-                 container.__blurHandler = blurHandler; // Guarda referência
+                  container.removeEventListener('focusout', container.__blurHandler);
+                  container.addEventListener('focusout', blurHandler);
+                  container.__blurHandler = blurHandler;
 
                  // --- Handler para KEYDOWN (Salvar com Enter, Cancelar com Escape) ---
                  const keydownHandler = (e) => {
                      const editableP = e.target.closest('.editable-text');
-                     if (editableP) {
+                     if (editableP && editableP === e.target) { // Garante que o evento é no <p>
                          if (e.key === 'Enter') {
-                             e.preventDefault(); // Impede nova linha no contenteditable
-                             editableP.blur(); // Dispara o blur para salvar
+                             e.preventDefault();
+                             editableP.blur(); // Salva
                          } else if (e.key === 'Escape') {
-                             // Restaura o texto original e dispara o blur para limpar
-                             editableP.innerText = editableP.dataset.originalText || '';
-                             editableP.blur();
+                             editableP.innerText = editableP.dataset.originalText || ''; // Restaura
+                             editableP.blur(); // Cancela e tira foco
                          }
-                         // Não precisa guardar o original aqui, o focusin cuida disso
+                         // Não precisa guardar original aqui
                      }
                  };
-                 container.addEventListener('keydown', keydownHandler);
-                 container.__keydownHandler = keydownHandler; // Guarda referência
+                  container.removeEventListener('keydown', container.__keydownHandler);
+                  container.addEventListener('keydown', keydownHandler);
+                  container.__keydownHandler = keydownHandler;
              }
 
 
@@ -927,11 +938,15 @@
 
                 // Remove listeners antigos antes de adicionar novos
                 this.dataTableContainer.querySelectorAll('.date-cell').forEach(cell => {
+                    // Remove listener antigo associado a esta célula
+                     if (cell.__dateClickHandler) {
+                        cell.removeEventListener('click', cell.__dateClickHandler);
+                    }
+                    // Adiciona o novo listener se tiver ID
                     if (cell.dataset.activityId) {
                          const handler = () => onDateClick(cell.dataset.activityId);
-                         cell.removeEventListener('click', cell.__dateClickHandler); // Remove handler antigo
                          cell.addEventListener('click', handler);
-                         cell.__dateClickHandler = handler; // Guarda referência
+                         cell.__dateClickHandler = handler; // Guarda referência para remover depois
                     }
                 });
             }
@@ -946,42 +961,20 @@
             // Torna as colunas da tabela redimensionáveis
             makeTableResizable() {
                  if (!this.dataTableContainer) return;
-                 // Usa delegação de eventos no thead para mousedown no resizer
                  const thead = this.dataTableContainer.querySelector('thead');
                  if (!thead) return;
 
-                 let currentTh = null;
-                 let startX, startWidth;
-
-                 const onMouseMove = (e) => {
-                     if (currentTh && startWidth !== null) {
-                         const newWidth = startWidth + e.clientX - startX;
-                         currentTh.style.width = `${Math.max(newWidth, 50)}px`;
-                     }
-                 };
-
-                 const onMouseUp = () => {
-                     currentTh = null;
-                     startWidth = null;
-                     window.removeEventListener('mousemove', onMouseMove);
-                     window.removeEventListener('mouseup', onMouseUp);
-                     document.body.style.cursor = 'default';
-                 };
+                 let currentTh = null; let startX, startWidth;
+                 const onMouseMove = (e) => { if (currentTh && startWidth !== null) { const newWidth = startWidth + e.clientX - startX; currentTh.style.width = `${Math.max(newWidth, 50)}px`; } };
+                 const onMouseUp = () => { currentTh = null; startWidth = null; window.removeEventListener('mousemove', onMouseMove); window.removeEventListener('mouseup', onMouseUp); document.body.style.cursor = 'default'; };
 
                  // Remove listener antigo para evitar duplicação
                  thead.removeEventListener('mousedown', thead.__resizerMouseDownHandler);
-
                  const mouseDownHandler = (e) => {
-                     // Verifica se o clique foi no resizer
                      if (e.target.classList.contains('resizer')) {
-                         e.preventDefault();
-                         currentTh = e.target.closest('th'); // Pega o header pai
-                         if (!currentTh) return;
-
-                         startX = e.clientX;
-                         startWidth = currentTh.offsetWidth;
-                         window.addEventListener('mousemove', onMouseMove);
-                         window.addEventListener('mouseup', onMouseUp);
+                         e.preventDefault(); currentTh = e.target.closest('th'); if (!currentTh) return;
+                         startX = e.clientX; startWidth = currentTh.offsetWidth;
+                         window.addEventListener('mousemove', onMouseMove); window.addEventListener('mouseup', onMouseUp);
                          document.body.style.cursor = 'col-resize';
                      }
                  };
@@ -1105,9 +1098,9 @@
                     });
                 });
 
-                // Botão Adicionar Tarefa Kanban (agora fica fora do render)
-                 // const addKanbanBtn = document.getElementById('add-kanban-task-btn'); // REMOVIDO pois Kanban é do Excel
-                 // if (addKanbanBtn) addKanbanBtn.addEventListener('click', () => this.handleKanbanAddItem());
+                // Botão Adicionar Tarefa Kanban (REMOVIDO)
+                // const addKanbanBtn = document.getElementById('add-kanban-task-btn');
+                // if (addKanbanBtn) addKanbanBtn.addEventListener('click', () => this.handleKanbanAddItem());
 
                 console.log("Global event listeners set up.");
             }
@@ -1179,10 +1172,22 @@
                         }
                     } else if (this.currentView === 'kanban-view') {
                         // Renderiza Kanban com dados PENDENTES do Excel FILTRADO e handlers
-                        this.view.renderKanbanExcel(this.model.excelData.filtered, {
+                         // Prepara os dados agrupados por categoria salva ou 'todo'
+                         const tasks = this.model.excelData.filtered.filter(task => task.STATUS === 'Pendente');
+                         const groupedTasks = { todo: [], inprogress: [], done: [] }; // done sempre vazio
+                         tasks.forEach(task => {
+                             const category = task._kanbanCategory || 'todo';
+                             if (groupedTasks[category]) {
+                                 groupedTasks[category].push(task);
+                             } else {
+                                 groupedTasks.todo.push(task); // Fallback
+                             }
+                         });
+
+                        this.view.renderKanbanExcel(groupedTasks, { // Passa dados agrupados
                             onDrop: (id, cat) => this.handleKanbanDrop(id, cat)
                         });
-                        // Kanban não usa toggleDashboardContentVisibility, sempre é visível quando ativo
+                        this.view.toggleDashboardContentVisibility(false); // Esconde conteúdo do dashboard principal
                     } else if (this.currentView === 'eisenhower-view') {
                         this.view.renderEisenhower(this.model.getAnalysisData().eisenhower, {
                            onAdd: (q) => this.handleMatrixAddItem('eisenhower', q),
@@ -1190,7 +1195,7 @@
                            onDelete: (category, itemId) => this.handleMatrixDeleteItem('eisenhower', category, itemId),
                            onDrop: (itemId, targetCategory) => this.handleMatrixDrop('eisenhower', itemId, targetCategory)
                         });
-                        // Matrizes não usam toggleDashboardContentVisibility
+                        this.view.toggleDashboardContentVisibility(false);
                     } else if (this.currentView === 'swot-view') {
                          this.view.renderProsCons(this.model.getAnalysisData().prosCons, {
                            onAdd: (category) => this.handleMatrixAddItem('prosCons', category),
@@ -1198,17 +1203,18 @@
                            onDelete: (category, itemId) => this.handleMatrixDeleteItem('prosCons', category, itemId),
                            onDrop: (itemId, targetCategory) => this.handleMatrixDrop('prosCons', itemId, targetCategory)
                         });
-                        // Matrizes não usam toggleDashboardContentVisibility
+                        this.view.toggleDashboardContentVisibility(false);
                     }
                  } catch (error) {
                      console.error(`Error during dashboard update for view ${this.currentView}:`, error);
                      alert("Ocorreu um erro ao atualizar a visualização. Verifique o console.");
                  }
                  // Habilita/desabilita botão Exportar baseado se há *qualquer* dado
-                 const hasAnyData = (this.model.excelData.all && this.model.excelData.all.length > 0) ||
-                                    Object.values(this.model.eisenhowerState).some(arr => arr.length > 0) ||
-                                    Object.values(this.model.prosConsState).some(arr => arr.length > 0);
-                 if (this.view.exportButton) this.view.exportButton.disabled = !hasAnyData;
+                 const hasExcelDataForExport = this.model.excelData.all && this.model.excelData.all.length > 0;
+                 const hasManualData = Object.values(this.model.eisenhowerState).some(arr => arr.length > 0) ||
+                                      Object.values(this.model.prosConsState).some(arr => arr.length > 0);
+                 if (this.view.exportButton) this.view.exportButton.disabled = !(hasExcelDataForExport || hasManualData);
+
 
                  console.log("Dashboard UI update complete.");
             }
@@ -1219,26 +1225,22 @@
             handleKanbanDrop(taskId, targetColumnName) {
                 console.log(`Kanban Drop (Excel Task): ID='${taskId}', Target='${targetColumnName}'`);
                 const newStatus = (targetColumnName === 'done') ? 'Concluído' : 'Pendente';
-                // Atualiza o status no modelo e guarda a nova categoria Kanban (se não for 'done')
-                const statusChanged = this.model.updateExcelActivityStatus(taskId, newStatus, newStatus === 'Pendente' ? targetColumnName : null);
-                if (statusChanged) {
-                    // Re-renderiza o Kanban para refletir a mudança visualmente
-                    this.updateDashboard();
-                    // Opcional: Atualizar gráficos se estiver no Dashboard?
-                    // Se a mudança de status for relevante para os gráficos,
-                    // teríamos que forçar uma re-renderização do Dashboard ou
-                    // atualizar os gráficos diretamente aqui.
-                    // Por simplicidade, eles atualizarão se o usuário navegar de volta.
-                } else {
-                     console.debug(`Drop não resultou em mudança de status para a tarefa '${taskId}'.`);
-                     // Mesmo sem mudança de status, a categoria Kanban pode ter mudado (ex: todo -> inprogress)
-                     // Re-renderiza para garantir a posição visual correta
-                     this.updateDashboard();
+                 // Define a categoria Kanban apenas se o novo status for Pendente
+                 const newKanbanCategory = (newStatus === 'Pendente') ? targetColumnName : null;
+
+                // Atualiza o status e a categoria no modelo de dados do Excel
+                const statusChanged = this.model.updateExcelActivityStatus(taskId, newStatus, newKanbanCategory);
+
+                // Re-renderiza o Kanban para refletir a mudança visualmente,
+                // mesmo que o status não tenha mudado (pode ter mudado de coluna pendente)
+                this.updateDashboard();
+
+                // Se o status mudou, e estávamos no Dashboard, força atualização dele também
+                if (statusChanged && this.currentView === 'main-dashboard-view') {
+                    // Força re-aplicação dos filtros e re-render do dashboard
+                    this.handleFilterChange();
                 }
             }
-             // Handler para adicionar Tarefa Kanban Manual (foi removido, mas o botão ficou no HTML anterior)
-             // Este botão foi removido do HTML desta versão do Kanban Excel.
-             // Se precisar de Kanban Manual, seria uma view separada.
 
             // ** MATRIZES MANUAIS **
             handleMatrixAddItem(matrixType, category) {

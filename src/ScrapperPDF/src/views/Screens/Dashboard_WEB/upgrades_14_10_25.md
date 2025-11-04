@@ -20,7 +20,7 @@ Ele completa palavras-chave ou funções, não linhas inteiras. Por exemplo, se 
 
 Possui um script .bat ou .exe que abre no terminal e faz a configuração do plugin antes de abrir o Notepad++
 
-### Busca com automaçãod o Excel de controle de MUST operado por Alexandre
+### Busca com automação o Excel de controle de MUST operado por Alexandre
 
 - Pega o excel do SharePoint mais atualizado e atualiza a tela de pendencias do dashboard em HTML
 
