@@ -5,17 +5,22 @@
 # Levantamento de requisitos do Software de Controle e Gestão MUST e Atividades SP (Dashboard)
 
 ## Refatoração e nova arquitetura
-- MVC Arquitetura
+- [x] MVC Arquitetura
 - App Template com menu arvore lateral de navegação e tabs para cara Iframe em arquivos separados
-- main.py compilado com .ui (futuramente) e usando pyinstaller
-- Criação do Executavel com Instalador para abrir o app "pesado" depois de compilar para windwows
-- Modeladem de dados e integração com Dashboard SP com análise de dados
-- Deck Builder para Análise de contigencias MUST
 - HTML to .PDF relatorio automatizado
-- Scrapy toda segunda e sexta dados do Sharepoint
 - Cada Tab é uma funcionalidade diferente (Palkia GUI, Junta Deck, Organiza Arquivos, MUST Dashboard, Controle e Gestão Fora Ponta com OBS, Deck Builder (com pyautogui simulando no AnaREDE com diagrama do SIN), Gerar Relatorio com análise de contigencia ) 
 - Refatoração Análise de contigencias de Invervenção no SEP com agendamento ótimo (PandaPower + DEAP) com Lancher.py refatorado 
 - [ ] Dashboard atividades SP / Dashboard Must / Relatórios (gráficos) / Palkia Extractor GUI / Deck Builder da solicitação de MUST
+
+- main.py compilado com .ui (futuramente) e usando pyinstaller
+- Criação do Executavel com Instalador para abrir o app "pesado" depois de compilar para windwows
+- Modeladem de dados e integração com Dashboard SP com análise de dados
+
+
+- Deck Builder para Análise de contigencias MUST
+- Scrapy toda segunda e sexta dados do Sharepoint
+
+
 
 ## Critérios de funcionamento - Outubro
 - [x] ETL de arquivos PDF e Excel com pandas e PowerQuery

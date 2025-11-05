@@ -23,9 +23,15 @@ from typing import List, Optional
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QTreeWidget, QTreeWidgetItem, QPushButton, QTabWidget, QToolBar,
-    QTextBrowser, QInputDialog, QMessageBox, QAction, QLineEdit, QLabel
+    QTextBrowser, QInputDialog, QMessageBox, QLineEdit, QLabel
 )
 from PySide6.QtCore import Qt, Signal, QObject
+from PySide6.QtGui import QAction
+try:
+    from PySide6.QtUiTools import loadUi
+except Exception:
+    # fallback if QtUiTools not available
+    loadUi = None
 
 try:
     from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -86,7 +92,44 @@ class MainWindow(QMainWindow):
         self.resize(1000, 700)
         self._dark = True
 
-        # main layout
+        # Attempt to load UI from .ui file created with Qt Designer. If not found,
+        # fall back to programmatic construction.
+        ui_path = Path(__file__).resolve().parent / "tree_mvc_main.ui"
+        if loadUi and ui_path.exists():
+            try:
+                loadUi(str(ui_path), self)
+                # map designer object names to expected attributes used below
+                # designer widget names: treeWidget, addIframeBtn, toggleThemeBtn, tabWidget, statusLabel
+                self.tree = getattr(self, 'treeWidget', None)
+                self.add_iframe_btn = getattr(self, 'addIframeBtn', None)
+                self.toggle_theme_btn = getattr(self, 'toggleThemeBtn', None)
+                self.tabs = getattr(self, 'tabWidget', None)
+                self.status_label = getattr(self, 'statusLabel', None)
+            except Exception:
+                # if load fails, build fallback UI
+                self._build_fallback_ui()
+        else:
+            self._build_fallback_ui()
+
+        # Populate the tree with sample nodes (if tree exists)
+        if getattr(self, 'tree', None):
+            self._populate_tree()
+
+        # Connections (guard if widgets missing)
+        if getattr(self, 'add_iframe_btn', None):
+            self.add_iframe_btn.clicked.connect(self._on_create_iframe_clicked)
+        if getattr(self, 'toggle_theme_btn', None):
+            self.toggle_theme_btn.clicked.connect(self._on_toggle_theme)
+        if getattr(self, 'tree', None):
+            self.tree.itemDoubleClicked.connect(self._on_tree_item_double_clicked)
+        if getattr(self, 'tabs', None):
+            self.tabs.tabCloseRequested.connect(self._on_tab_close_requested)
+
+        # Apply default theme
+        self.apply_theme("dark")
+
+    def _build_fallback_ui(self):
+        # programmatic fallback UI (kept from previous implementation)
         central = QWidget()
         self.setCentralWidget(central)
         main_layout = QHBoxLayout(central)
@@ -127,18 +170,6 @@ class MainWindow(QMainWindow):
         right_layout.addWidget(self.tabs, 1)
 
         main_layout.addWidget(right, 1)
-
-        # Populate the tree with sample nodes
-        self._populate_tree()
-
-        # Connections
-        self.add_iframe_btn.clicked.connect(self._on_create_iframe_clicked)
-        self.toggle_theme_btn.clicked.connect(self._on_toggle_theme)
-        self.tree.itemDoubleClicked.connect(self._on_tree_item_double_clicked)
-        self.tabs.tabCloseRequested.connect(self._on_tab_close_requested)
-
-        # Apply default theme
-        self.apply_theme("dark")
 
     def apply_theme(self, which: str):
         if which == "dark":

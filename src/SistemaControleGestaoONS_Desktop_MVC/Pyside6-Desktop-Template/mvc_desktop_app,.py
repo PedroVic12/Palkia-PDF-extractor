@@ -30,7 +30,7 @@ from typing import List, Optional, Dict, Any
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QTreeWidget, QTreeWidgetItem, QTreeWidgetItemIterator, QPushButton, QTabWidget, QToolBar,
-    QTextBrowser, QInputDialog, QMessageBox, QAction, QLineEdit, QLabel,
+    QTextBrowser, QInputDialog, QMessageBox,  QLineEdit, QLabel,
     QFrame, QGridLayout, QComboBox, QTableWidget, QTableWidgetItem,
     QHeaderView, QScrollArea, QDialog, QProgressBar, QStackedWidget,
     QFileDialog, QTextEdit, QSizePolicy, QGroupBox, QTableView,

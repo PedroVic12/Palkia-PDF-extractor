@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1000</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Tree MVC - Tabs / Iframes (UI)</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QWidget" name="sidebar">
+      <property name="minimumSize">
+       <size>
+        <width>220</width>
+        <height>0</height>
+       </size>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="labelTitle">
+         <property name="text"><string>Controles</string></property>
+         <property name="alignment"><set>Qt::AlignCenter</set></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="addIframeBtn">
+         <property name="text"><string>+ Criar Iframe</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="toggleThemeBtn">
+         <property name="text"><string>Alternar Tema</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTreeWidget" name="treeWidget">
+         <property name="headerHidden"><bool>true</bool></property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation"><enum>Qt::Vertical</enum></property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="content">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QToolBar" name="toolBar">
+         <property name="toolButtonStyle"><enum>Qt::ToolButtonTextOnly</enum></property>
+         <attribute name="toolBarArea">
+          <number>0</number>
+         </attribute>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="statusLabel">
+         <property name="text"><string></string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTabWidget" name="tabWidget"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <resources/>
+  <connections/>
+ </widget>
+ <customwidgets/>
+</ui>
