@@ -18,6 +18,10 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import random
 
+# pip install PySide6 pandas scikit-learn matplotlib requests numpy
+
+# script feito por gemini 2.5
+
 # --- CONFIGURAÇÃO DE AMBIENTE (VARIÁVEIS CRÍTICAS) ---
 # Substitua com sua chave real para ativar o chatbot Gemini
 GEMINI_API_KEY = "" 
