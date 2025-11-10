@@ -1,8 +1,8 @@
 # ///////////////////////////////////////////////////////////////
 #
-# BY: WANDERSON M.PIMENTA
+# BY: Pedro Victor Rodrigues Veras
 # PROJECT MADE WITH: Qt Designer and PySide6
-# V: 1.0.0
+# V: 2.1.1
 #
 # This project can be used freely for all uses, as long as they maintain the
 # respective credits only in the Python scripts, any information in the visual
