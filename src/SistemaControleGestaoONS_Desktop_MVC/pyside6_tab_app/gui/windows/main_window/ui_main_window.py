@@ -1,24 +1,9 @@
-# ///////////////////////////////////////////////////////////////
-#
-# BY: WANDERSON M.PIMENTA
-# PROJECT MADE WITH: Qt Designer and PySide6
-# V: 1.0.0
-#
-# This project can be used freely for all uses, as long as they maintain the
-# respective credits only in the Python scripts, any information in the visual
-# interface (GUI) can be modified without any implication.
-#
-# There are limitations on Qt licenses if you want to use your products
-# commercially, I recommend reading them on the official website:
-# https://doc.qt.io/qtforpython/licenses.html
-#
-# ///////////////////////////////////////////////////////////////
-
 # IMPORT QT CORE
 from qt_core import *
 
 # IMPORT CUSTOM WIDGETS
 from gui.widgets.py_push_button import PyPushButton
+from gui.widgets.py_text_button import PyTextButton
 
 # MAIN WINDOW
 class UI_MainWindow(object):
@@ -40,79 +25,23 @@ class UI_MainWindow(object):
         self.main_layout.setContentsMargins(0,0,0,0)
         self.main_layout.setSpacing(0)
 
-        # LEFT MENU
+        # LEFT MENU (A DYNAMIC CONTAINER)
         # ///////////////////////////////////////////////////////////////
         self.left_menu = QFrame()
-        self.left_menu.setStyleSheet("background-color: #44475a")
-        self.left_menu.setMaximumWidth(50)
-        self.left_menu.setMinimumWidth(50)
+        self.left_menu.setObjectName("left_menu")
+        self.left_menu.setMinimumWidth(240)
+        self.left_menu.setMaximumWidth(240)
 
         # LEFT MENU LAYOUT
         self.left_menu_layout = QVBoxLayout(self.left_menu)
-        self.left_menu_layout.setContentsMargins(0,0,0,0)
-        self.left_menu_layout.setSpacing(0)
-
-        # TOP FRAME MENU
-        self.left_menu_top_frame = QFrame()
-        self.left_menu_top_frame.setMinimumHeight(40)
-        self.left_menu_top_frame.setObjectName("left_menu_top_frame")
-
-        # TOP FRAME LAYOUT
-        self.left_menu_top_layout = QVBoxLayout(self.left_menu_top_frame)
-        self.left_menu_top_layout.setContentsMargins(0,0,0,0)
-        self.left_menu_top_layout.setSpacing(0)
-
-        # TOP BTNS
-        self.toggle_button = PyPushButton(
-            text = "Ocultar menu",
-            icon_path = "icon_menu.svg"
-        )
-        self.btn_dashboard = PyPushButton(
-            text = "Dashboard",
-            is_active = True,
-            icon_path = "icon_home.svg"
-        )
-        self.btn_pomodoro = PyPushButton(
-            text = "Pomodoro",
-            icon_path = "icon_widgets.svg"
-        )
-        self.btn_checklist = PyPushButton(
-            text = "Checklist",
-            icon_path = "icon_widgets.svg" # Placeholder icon
-        )
-
-        # ADD BTNS TO LAYOUT
-        self.left_menu_top_layout.addWidget(self.toggle_button)
-        self.left_menu_top_layout.addWidget(self.btn_dashboard)
-        self.left_menu_top_layout.addWidget(self.btn_pomodoro)
-        self.left_menu_top_layout.addWidget(self.btn_checklist)
-
-        # MENU SPACER
-        # ///////////////////////////////////////////////////////////////
-        self.left_menu_spacer = QSpacerItem(20,20, QSizePolicy.Minimum, QSizePolicy.Expanding)
-
-        # BOTTOM FRAME MENU
-        # ///////////////////////////////////////////////////////////////
-        self.left_menu_bottom_frame = QFrame()
-        self.left_menu_bottom_frame.setMinimumHeight(40)
-        self.left_menu_bottom_frame.setObjectName("left_menu_bottom_frame")
-
-        self.left_menu_bottom_layout = QVBoxLayout(self.left_menu_bottom_frame)
-        self.left_menu_bottom_layout.setContentsMargins(0,0,0,0)
-        self.left_menu_bottom_layout.setSpacing(0)
-
-        # BOTTOM BTNS
-        self.settings_btn = PyPushButton(
-            text = "Configurações",
-            icon_path = "icon_settings.svg"
-        )
-
-        # ADD BTNS TO LAYOUT
-        self.left_menu_bottom_layout.addWidget(self.settings_btn)
-
+        self.left_menu_layout.setContentsMargins(5,5,5,5)
+        self.left_menu_layout.setSpacing(10)
+        
+        # The layout will be populated dynamically by main.py
+        
         # LABEL VERSION
         # ///////////////////////////////////////////////////////////////
-        self.left_menu_label_version = QLabel("v2.0.0")
+        self.left_menu_label_version = QLabel("v9.0.0")
         self.left_menu_label_version.setAlignment(Qt.AlignCenter)
         self.left_menu_label_version.setMinimumHeight(30)
         self.left_menu_label_version.setMaximumHeight(30)
@@ -120,92 +49,60 @@ class UI_MainWindow(object):
 
         # ADD TO LAYOUT
         # ///////////////////////////////////////////////////////////////
-        self.left_menu_layout.addWidget(self.left_menu_top_frame)
-        self.left_menu_layout.addItem(self.left_menu_spacer)
-        self.left_menu_layout.addWidget(self.left_menu_bottom_frame)
         self.left_menu_layout.addWidget(self.left_menu_label_version)
 
         # CONTENT
         # ///////////////////////////////////////////////////////////////
         self.content = QFrame()
-        self.content.setStyleSheet("background-color: #282a36")
+        self.content.setObjectName("content")
 
         # Content Layout
         self.content_layout = QVBoxLayout(self.content)
         self.content_layout.setContentsMargins(0,0,0,0)
         self.content_layout.setSpacing(0)
 
-        # TOP BAR
+        # TOP BAR (AppBar)
         # ///////////////////////////////////////////////////////////////
         self.top_bar = QFrame()
-        self.top_bar.setMinimumHeight(30)
-        self.top_bar.setMaximumHeight(30)
-        self.top_bar.setStyleSheet("background-color: #21232d; color: #6272a4")
+        self.top_bar.setMinimumHeight(40)
+        self.top_bar.setMaximumHeight(40)
+        self.top_bar.setObjectName("top_bar")
         self.top_bar_layout = QHBoxLayout(self.top_bar)
         self.top_bar_layout.setContentsMargins(10,0,10,0)
 
-        # Left label
-        self.top_label_left = QLabel("Aplicação Pomodoro com Abas")
-
-        # Top spacer
+        # Left side of AppBar
+        self.toggle_button = PyPushButton(text="Ocultar Menu", icon_path="icon_menu.svg")
+        self.toggle_button.setToolTip("Ocultar/Mostrar Menu Lateral")
+        
+        # Spacer
         self.top_spacer = QSpacerItem(20,20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
-        # Right label
-        self.top_label_right = QLabel("| DASHBOARD")
-        self.top_label_right.setStyleSheet("font: 700 9pt 'Segoe UI'")
-
-        # Add to layout
-        self.top_bar_layout.addWidget(self.top_label_left)
+        # Add to AppBar layout
+        self.top_bar_layout.addWidget(self.toggle_button)
         self.top_bar_layout.addItem(self.top_spacer)
-        self.top_bar_layout.addWidget(self.top_label_right)
+        # TextButtons for links will be added dynamically by main.py
 
         # Application Tabs
         self.tabs = QTabWidget()
+        self.tabs.setObjectName("tabs")
         self.tabs.setTabsClosable(True)
         self.tabs.setMovable(True)
-        self.tabs.setStyleSheet("""
-            QTabBar::tab {
-                background-color: #44475a;
-                color: #c3ccdf;
-                padding: 10px 20px;
-                border-top-left-radius: 5px;
-                border-top-right-radius: 5px;
-                border: 1px solid #282a36;
-            }
-            QTabBar::tab:selected {
-                background-color: #6272a4;
-                color: #f8f8f2;
-            }
-            QTabWidget::pane {
-                border: none;
-            }
-        """)
 
         # BOTTOM BAR
         # ///////////////////////////////////////////////////////////////
         self.bottom_bar = QFrame()
         self.bottom_bar.setMinimumHeight(30)
         self.bottom_bar.setMaximumHeight(30)
-        self.bottom_bar.setStyleSheet("background-color: #21232d; color: #6272a4")
+        self.bottom_bar.setObjectName("bottom_bar")
 
         self.bottom_bar_layout = QHBoxLayout(self.bottom_bar)
         self.bottom_bar_layout.setContentsMargins(10,0,10,0)
 
         # Left label
         self.bottom_label_left = QLabel("Criado por: Pedro Veras (com base em Wanderson M. Pimenta)")
-
-        # Top spacer
-        self.bottom_spacer = QSpacerItem(20,20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        # Right label
-        self.bottom_label_right = QLabel("© 2025")
-
-        # Add to layout
         self.bottom_bar_layout.addWidget(self.bottom_label_left)
-        self.bottom_bar_layout.addItem(self.bottom_spacer)
-        self.bottom_bar_layout.addWidget(self.bottom_label_right)
 
-        # Add to content layout
+        # ADD TO CONTENT LAYOUT
         self.content_layout.addWidget(self.top_bar)
         self.content_layout.addWidget(self.tabs)
         self.content_layout.addWidget(self.bottom_bar)

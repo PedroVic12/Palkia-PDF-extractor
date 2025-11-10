@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt
 
 class DashboardWidget(QWidget):
-    def __init__(self):
+    def __init__(self, side_menu=None):
         super().__init__()
         
         self.layout = QVBoxLayout(self)

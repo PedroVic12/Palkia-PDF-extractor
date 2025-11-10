@@ -13,20 +13,23 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 from model import TodoModel
 
 class ChecklistWidget(QWidget):
-    def __init__(self):
+    def __init__(self, side_menu=None):
         super().__init__()
         
-        # Each checklist has its own model instance
         self.model = TodoModel()
-        
+        self.side_menu = side_menu
+        self.current_filter = "all" # Default filter
+
         self.main_layout = QVBoxLayout(self)
         
         self._create_input_widgets()
         self._create_list_widget()
         self._create_action_buttons()
         
-        # Connect model signal to the view's slot
+        # Connect signals
         self.model.tasks_changed.connect(self.render_tasks)
+        if self.side_menu:
+            self.side_menu.filter_changed.connect(self.apply_filter)
         
         # Initial render
         self.render_tasks()
@@ -65,23 +68,33 @@ class ChecklistWidget(QWidget):
     def toggle_task_status(self, item):
         task_id = item.data(Qt.UserRole)
         is_completed = item.checkState() == Qt.Checked
-        # Block signals to prevent render_tasks from re-triggering this
-        self.task_list.blockSignals(True)
         self.model.update_task_status(task_id, is_completed)
-        self.task_list.blockSignals(False)
 
     @Slot()
     def delete_completed(self):
         self.model.delete_completed_tasks()
 
+    @Slot(str)
+    def apply_filter(self, filter_str):
+        self.current_filter = filter_str
+        self.render_tasks()
+
     @Slot()
     def render_tasks(self):
-        # Block signals to prevent itemChanged from firing during refresh
+        all_tasks = self.model.get_tasks()
+        
+        # Filter tasks based on the current filter
+        if self.current_filter == "pending":
+            tasks_to_show = [task for task in all_tasks if not task['concluida']]
+        elif self.current_filter == "completed":
+            tasks_to_show = [task for task in all_tasks if task['concluida']]
+        else: # "all"
+            tasks_to_show = all_tasks
+
         self.task_list.blockSignals(True)
         self.task_list.clear()
-        tasks = self.model.get_tasks()
         
-        for task in tasks:
+        for task in tasks_to_show:
             item = QListWidgetItem(task['descricao'])
             item.setData(Qt.UserRole, task['id'])
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
@@ -100,6 +113,5 @@ class ChecklistWidget(QWidget):
         self.task_list.blockSignals(False)
 
     def closeEvent(self, event):
-        """Ensure the database connection is closed when the widget is destroyed."""
         self.model.close()
         super().closeEvent(event)

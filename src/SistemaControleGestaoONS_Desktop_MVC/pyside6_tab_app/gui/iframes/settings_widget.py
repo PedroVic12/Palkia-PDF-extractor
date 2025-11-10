@@ -9,7 +9,7 @@ class SettingsWidget(QWidget):
     # Signal to notify the main window of changes, sending all settings at once
     settings_saved = Signal(dict)
 
-    def __init__(self):
+    def __init__(self, side_menu=None):
         super().__init__()
         
         self.main_layout = QVBoxLayout(self)
