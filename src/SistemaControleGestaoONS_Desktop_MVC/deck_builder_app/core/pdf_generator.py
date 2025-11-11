@@ -1,5 +1,5 @@
 import os
-from weasyprint import HTML, CSS, FontConfiguration
+from weasyprint import HTML, CSS
 
 def generate_deck_report(parsed_data, output_path):
     """
@@ -15,7 +15,6 @@ def generate_deck_report(parsed_data, output_path):
     html_content = create_html_template(parsed_data)
     
     try:
-        font_config = FontConfiguration()
         css = CSS(string='''
             @page {
                 size: A4;
@@ -59,9 +58,9 @@ def generate_deck_report(parsed_data, output_path):
             .summary-box p {
                 margin: 5px 0;
             }
-        ''', font_config=font_config)
+        ''')
         
-        HTML(string=html_content).write_pdf(output_path, stylesheets=[css], font_config=font_config)
+        HTML(string=html_content).write_pdf(output_path, stylesheets=[css])
         return True
     except Exception as e:
         print(f"Error generating PDF with WeasyPrint: {e}")
