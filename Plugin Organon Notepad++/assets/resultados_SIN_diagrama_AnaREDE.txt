@@ -1,0 +1,188 @@
+
+CEPEL - CENTRO DE PESQUISAS DE ENERGIA ELETRICA - PROGRAMA DE ANALISE DE REDES - V12.00.01                                 PAG.   1
+
+ ONS - 3Q2025 - DEZEMBRO - Máxima Noturna RSE                                    
+ Listagem dos casos armazenados de Fluxo de Potencia - ANAREDE
+ Arquivo Historico: C:\USERS\PEDROVICTOR.VERAS\ONEDRIVE-OPERADORNACIONALDOSISTEMAELETRICO\DOCU      
+ X----X-------------------------------------------------------------------------------------X
+  CASO                      INFORMACOES DO CASO GRAVADO
+ X----X-------------------------------------------------------------------------------------X
+
+     4 DATA: 03/07/2025 / HORA: 16:40:12   / VERSAO DO PROGRAMA: V12.00.01             
+
+CEPEL - CENTRO DE PESQUISAS DE ENERGIA ELETRICA - PROGRAMA DE ANALISE DE REDES - V12.00.01                                 PAG.   2
+
+ ONS - 3Q2025 - DEZEMBRO - Máxima Noturna RSE                                    
+ RELATORIO DE PADRAO PARA OPCOES DE EXECUCAO
+
+ X------X------X------X------X------X------X------X------X------X------X
+  OPCAO  OPCAO  OPCAO  OPCAO  OPCAO  OPCAO  OPCAO  OPCAO  OPCAO  OPCAO
+  NOME E NOME E NOME E NOME E NOME E NOME E NOME E NOME E NOME E NOME E
+ X----X-X----X-X----X-X----X-X----X-X----X-X----X-X----X-X----X-X----X-X
+
+  QLIM L VLIM L CREM L CTAP L STEP L NEWT L RCVG L RMON L FILE L SUBS L
+  CONT L NOVO L CELO L MFCT L AREG L STPO L VLCR L PMIN L CPHS L INMN L
+  IANG L UNPG L
+
+CEPEL - CENTRO DE PESQUISAS DE ENERGIA ELETRICA - PROGRAMA DE ANALISE DE REDES - V12.00.01                                 PAG.   3
+
+ ONS - 3Q2025 - DEZEMBRO - Máxima Noturna RSE                                    
+ RELATORIO DE TRANSFORMADORES COM POSSIBILIDADE DE PROBLEMAS DE CONTROLE
+
+ X------------------X------------------X--X-----X
+      BARRA DE          BARRA PARA         BARRA  
+   NUM.     NOME      NUM.     NOME     NC CONT.
+ X-----X------------X-----X------------X--X-----X
+
+  45261 CANTA--RR034 45262 CANTA--RR013  1 45261
+  44561 APIAU--RR034 44563 APIAU--RR013  1 44561
+  44560 IRACEM-RR034 44562 IRACEM-RR013  1 44560
+  41004 P10-A--RS230 41312 PA10-5-RS000  5  9301
+  41004 P10-A--RS230 41309 PA10-3-RS000  3  9245
+  10471 CNEGR3-RS230 10478 CN4-1--RS000  1 10472
+  10466 CNEGR2-RS230 10476 CN2-1--RS000  2 10469
+  10466 CNEGR2-RS230 10474 CN3-1--RS000  1 10467
+  10391 SCRIST-SC138 40060 SCO--3-SC000  3 10181
+  10094 INDAIA-SC230 10097 IND--2-SC000  2 10095
+  10094 INDAIA-SC230 10096 IND--1-SC000  1 10095
+   9935 JOIBVI-SC138 40062 JBV--2-SC000  2  2763
+   9874 GERIBA-RS138 10372 COLGE1-RS000  1  9875
+   9874 GERIBA-RS138 10374 COLGE2-RS000  1  9876
+   9785 CANDIO-RS230 41223 CAN--1-RS000  1  9787
+   8881 MATA.M-RR069 45259 MATA.M-RR013  1  8881
+   8820 JATAPU-RR069  9488 JATAPUPCH005  3  8820
+   8820 JATAPU-RR069  9488 JATAPUPCH005  2  8820
+   8820 JATAPU-RR069  9488 JATAPUPCH005  1  8820
+   8331 PARINT-AM230  8336 PARNT2-AM000  4  8332
+   8331 PARINT-AM230  8334 PARNT1-AM000  3  8332
+   8321 JURUTI-PA230  8325 JURUT2-PA000  2  8322
+   8321 JURUTI-PA230  8324 JURUT1-PA000  1  8322
+   8300 ORIXIM-PA500  8315 ORIXI2-PA000  4  8311
+   8300 ORIXIM-PA500  8313 ORIXI1-PA000  3  8311
+   7661 CENTEN-RR069  7662 CENTEN-RR013  2  7661
+   7661 CENTEN-RR069  7662 CENTEN-RR013  1  7661
+   6401 MARABA-PA230  6399 MART2--PA000  5  6403
+   5797 FEIRAS-BA230 44837 FRAST2-BA000  2  5798
+   5797 FEIRAS-BA230 44835 FRAST1-BA000  1  5798
+   5152 BONGI--PE230 47623 BGI-T9-PE000  9  5156
+   4562 SORRIS-MT230  7731 SORRI4-MT000  4  7542
+   3715 CARAJA-GO138 47413 CARAJA-GO000  1  3776
+   2866 TIMBO--SC138 10757 TBO--1-SC000  1  2871
+   2712 BLUME2-SC138 40037 BND--5-SC000  5  2713
+   2712 BLUME2-SC138 40036 BND--4-SC000  4  2713
+   2068 CACHOE-RS138 40127 CACH-3-RS000  3  2067
+   2068 CACHOE-RS138 40125 CACH-2-RS000  2  2067
+   1204 PPETRO-RS230 41343 PPE--4-RS000  4  1337
+   1204 PPETRO-RS230 41342 PPE--3-RS000  3  1337
+   1204 PPETRO-RS230 41340 PPE--2-RS000  2  1337
+    836 UVITOR-PR138 10630 UVI--1-PR000  1 10631
+    435 NORTE--SP345 41766 NORTT4-SP000  4   436
+    435 NORTE--SP345 41764 NORTT3-SP000  3   436
+    435 NORTE--SP345 41762 NORTT2-SP000  2   437
+    435 NORTE--SP345 41760 NORTT1-SP000  1   437
+    427 CENTRO-SP230 48149 CT-T11-SP000  5   418
+    391 SGOTA2-MG345 42076 SGOTA6-MG000  6  9049
+    313 BARREI-MG345  1574 BARRE1-MG000  1   314
+
+CEPEL - CENTRO DE PESQUISAS DE ENERGIA ELETRICA - PROGRAMA DE ANALISE DE REDES - V12.00.01                                 PAG.   4
+
+ ONS - 3Q2025 - DEZEMBRO - Máxima Noturna RSE                                    
+ RELATORIO DE CHECAGEM DE INCONSISTENCIAS EM ARQUIVOS HISTORICOS
+
+ X-------X------------------X----------------------------------------------------------------------------------------------------------------------------------------------------------------X
+   TIPO         BARRA
+  INCONS.  NUM.      NOME                                                     DESCRICAO DA INCONSISTENCIA
+ X-------X-----X------------X----------------------------------------------------------------------------------------------------------------------------------------------------------------X
+  BSH-TRF   180 JACAR2-RJ138 Barra controlada por banco shunt e transformador cuja tensao especificada esta fora da faixa de controle do banco shunt.
+    BSH     180 JACAR2-RJ138 Tensao em barra controlada fora da faixa de controle do banco shunt.
+    BSH     437 NORTE1-SP088 Tensao em barra controlada fora da faixa de controle do banco shunt.
+    BSH     562 BAURU--SP138 Tensao em barra controlada fora da faixa de controle do banco shunt.
+    BSH     588 JANDI--SP088 Tensao em barra controlada fora da faixa de controle do banco shunt.
+    BSH    4582 SINOP--MT230 Grupo  20 de banco shunt de linha com injeção capacitiva.
+    BSH    5090 GARANH-PE500 Bancos shunt controlando mesma barra com especificacoes de controle diferentes.
+    BSH    5485 SBDT1--CE013 Bancos shunt controlando mesma barra com especificacoes de controle diferentes.
+    BSH    5525 C.NETO-MA230 Bancos shunt controlando mesma barra com especificacoes de controle diferentes.
+    BSH    6990 CRUZSU-AC230 Bancos shunt controlando mesma barra com especificacoes de controle diferentes.
+    BSH    7057 ARARQ2-SP500 Bancos shunt controlando mesma barra com especificacoes de controle diferentes.
+    BSH    7493 PADUA--RJ069 Tensao em barra controlada fora da faixa de controle do banco shunt.
+    BSH    7876 PEDFV--SP034 Tensao em barra controlada fora da faixa de controle do banco shunt.
+    BSH    8709 V.NOVA-RJ069 Tensao em barra controlada fora da faixa de controle do banco shunt.
+  BSH-TRF  8807 MUCAJA-RR013 Barra controlada por banco shunt e transformador cuja tensao especificada esta fora da faixa de controle do banco shunt.
+  BSH-TRF  8824 EQUATO-RR013 Barra controlada por banco shunt e transformador cuja tensao especificada esta fora da faixa de controle do banco shunt.
+    BSH   45045 BSOR-B-MG034 Tensao em barra controlada fora da faixa de controle do banco shunt.
+    CSC      78 TPRETO-SP345 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC     127 MO-RL1-SP345 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC     128 MO-RL2-SP345 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC     277 ZIN----RJ138 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC     277 ZIN----RJ138 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC     328 J.RLC7-MG138 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC    4581 SINOP2-MT013 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC    4586 SINOP1-MT013 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC    6410 TUCURU-PA500 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC    9245 PAL10C-RS013 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC    9301 PAL10D-RS013 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC    9753 SCR1RA-RS013 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC    9754 SCR1RB-RS013 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC   41001 CAXI-1-RS013 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC   41002 CAXI-2-RS013 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC   41003 GRAR-1-RS013 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC   41006 SAN-2--RS013 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC   41007 SAN-3--RS013 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC   41132 PFUN-3-RS013 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC   42226 J.RLC8-MG138 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC   43166 LON--3-PR013 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    CSC   43167 LONE-4-PR013 Valor do CSC positivo e Constante ZMIN diferente do valor padrão. Limite máximo do CSC alterado para o novo ZMIN.
+    GER    3323 U.G-G3-MG138 Geracao de potencia reativa em barra de carga.
+    GER    3330 UGUAG3-MG138 Geracao de potencia reativa em barra de carga.
+    GER    3333 U.T-G3-MG138 Geracao de potencia reativa em barra de carga.
+    GER    4970 3MA-G3-MT138 Geracao de potencia reativa em barra de carga.
+    GER    4971 CUR-G3-MT138 Geracao de potencia reativa em barra de carga.
+    GER    4990 BNO-G3-MT138 Geracao de potencia reativa em barra de carga.
+    GER    4997 BNO1G3-MT138 Geracao de potencia reativa em barra de carga.
+    GER    5196 MRRT3--PE013 Geracao de potencia reativa em barra de carga.
+    GER    8349 DIA.TO-TO138 Geracao de potencia reativa em barra de carga.
+    GER    8750 AFBEZA-RN013 Geracao de potencia reativa em barra de carga.
+    GER    9763 IACO--BIO013 Geracao de potencia reativa em barra de carga.
+    GER   46881 JIP-G3-RO138 Geracao de potencia reativa em barra de carga.
+    GER   46946 CER3G3-RS069 Geracao de potencia reativa em barra de carga.
+    GER   46947 CER1G3-RS023 Geracao de potencia reativa em barra de carga.
+    GER   46951 CHE-G3-GO069 Geracao de potencia reativa em barra de carga.
+    GER   47053 TAU-G3-SP138 Geracao de potencia reativa em barra de carga.
+    GER   47081 NUM-G3-MG069 Geracao de potencia reativa em barra de carga.
+    GER   47082 MUR2G3-MG069 Geracao de potencia reativa em barra de carga.
+    GER   47083 MUR1G3-MG069 Geracao de potencia reativa em barra de carga.
+    GER   47084 UIT-G3-MG069 Geracao de potencia reativa em barra de carga.
+    GER   47085 MAN-G3-MG138 Geracao de potencia reativa em barra de carga.
+    GER   47087 UER-G3-MG069 Geracao de potencia reativa em barra de carga.
+    GER   47123 MUS-F3-PB069 Geracao de potencia reativa em barra de carga.
+    GER   47124 SRI-G3-PB069 Geracao de potencia reativa em barra de carga.
+    GER   47125 COR-G3-CE069 Geracao de potencia reativa em barra de carga.
+    GER   47126 JPE-G3-PB069 Geracao de potencia reativa em barra de carga.
+    GER   47128 CGD-G3-PB069 Geracao de potencia reativa em barra de carga.
+    GER   47129 VIL-G3-RO069 Geracao de potencia reativa em barra de carga.
+    GER   47130 PBU-G3-RO138 Geracao de potencia reativa em barra de carga.
+    GER   47134 ARI-G3-RO069 Geracao de potencia reativa em barra de carga.
+    GER   47137 TOC-G3-TO138 Geracao de potencia reativa em barra de carga.
+    GER   47139 PAL-G3-TO138 Geracao de potencia reativa em barra de carga.
+    GER   47140 IKE-G3-TO138 Geracao de potencia reativa em barra de carga.
+    GER   47141 DIA-G3-TO138 Geracao de potencia reativa em barra de carga.
+    GER   47142 MAL-G3-TO138 Geracao de potencia reativa em barra de carga.
+    GER   47144 RLA-G3-AL069 Geracao de potencia reativa em barra de carga.
+    GER   47145 ANG-G3-AL069 Geracao de potencia reativa em barra de carga.
+    GER   47158 IZM-G3-MA069 Geracao de potencia reativa em barra de carga.
+    GER   47161 PNB-G3-PI138 Geracao de potencia reativa em barra de carga.
+    GER   47162 TSA-G3-PI069 Geracao de potencia reativa em barra de carga.
+    GER   47276 CER-G3-RS023 Geracao de potencia reativa em barra de carga.
+    GER   47290 APA-G3-SP088 Geracao de potencia reativa em barra de carga.
+    GER   47308 NIT-G3-SP069 Geracao de potencia reativa em barra de carga.
+    GER   47309 CAT-G3-SP138 Geracao de potencia reativa em barra de carga.
+    GER   47310 BRA-G3-SP138 Geracao de potencia reativa em barra de carga.
+    GER   47313 OCR-G3-SP138 Geracao de potencia reativa em barra de carga.
+    GER   47317 MIR-G3-TO138 Geracao de potencia reativa em barra de carga.
+    GER   47318 PEN-G3-AL069 Geracao de potencia reativa em barra de carga.
+    GER   47321 CHA-G3-GO069 Geracao de potencia reativa em barra de carga.
+    GER   47336 SLQ-G3-AL069 Geracao de potencia reativa em barra de carga.
+    GER   47741 BPE-G3-SP088 Geracao de potencia reativa em barra de carga.
+    GER   47770 INP-G3-MT138 Geracao de potencia reativa em barra de carga.
+    GER   47821 FLO-G3-SP088 Geracao de potencia reativa em barra de carga.
+    GER   48013 MAT-G3-MT138 Geracao de potencia reativa em barra de carga.

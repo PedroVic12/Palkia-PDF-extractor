@@ -1,0 +1,164 @@
+triggertext
+GLOBAL
+This is some stub text for the content of your new snippet.
+Please replace the stub text with the content that you want to show when the snippet is triggered.
+
+Enjoy!
+[>END<]!$[FingerTextData FingerTextData]@#
+SOLVECASE
+GLOBAL
+' Executa o fluxo de potência no caso carregado
+SOLVE
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+SHUNT
+GLOBAL
+SHUNT
+#SHUNT #barra VMIN={VMIN} VMAX={VMAX} DEL={DEL}
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+SAVECASE
+GLOBAL
+' Salva o caso atual
+SAVE CASE 'C:\\ONS\\CASOS\\salvo.sav'
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+REPORT
+GLOBAL
+' Gera relatório pós-solução
+REPORT VOLTAGE
+REPORT FLOW
+REPORT SUMMARY
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+NEWTON
+GLOBAL
+' Executa o fluxo de potência 
+NEWTON
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+LOADUNIT
+GLOBAL
+LOADUNIT
+#LOADUNIT #barra PL={PL} QL={QL} STATUS={STATUS} DEL={DEL}
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+LOADCASE
+GLOBAL
+' Caminho do arquivo .sav a ser carregado
+CASE 'C:\\ONS\\CASOS\\meu_caso.sav'
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+LOAD
+GLOBAL
+LOAD
+#LOAD #barra PL={PL} QL={QL} DEL={DEL}
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+LIST
+GLOBAL
+' Lista os parâmetros elétricos da barra ou linha
+LIST BUS {barra}
+LIST BRANCH {linha}
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+HVDC
+GLOBAL
+HVDC
+#HVDC #id MODE={MODE} PD={PD} ID={ID} VD={VD} ALFA={ALFA} ALFAMIN={ALFAMIN} ALFAMAX={ALFAMAX} GAMA={GAMA} GAMAMIN={GAMAMIN} GAMAMAX={GAMAMAX} TAPMINR={TAPMINR} TAPMAXR={TAPMAXR} TAPMINI={TAPMINI} TAPMAXI={TAPMAXI} IMARG={IMARG} VCCMIN={VCCMIN} NRCONV={NRCONV} NICONV={NICONV} DEL={DEL}
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+GF
+GLOBAL
+GF
+#GF #fatores_barra FT={FT} V={V} PG={PG} QG={QG} PL={PL} QL={QL}
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+GENUNIT
+GLOBAL
+GENUNIT
+#GENUNIT #barra V={V} PG={PG} PMAX={PMAX} PMIN={PMIN} QMAX={QMAX} QMIN={QMIN} FP={FP} STAT={STAT} BLCK={BLCK} DEL={DEL}
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+GEN
+GLOBAL
+GEN
+#GEN #barra V={V} PG={PG} PMAX={PMAX} QMAX={QMAX} QMIN={QMIN} UMIN={UMIN} CB={CB} DEL={DEL}
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+DLIN
+GLOBAL
+DLIN
+(De )d O d(Pa )NcEPM( R% )( X% )(Mvar)(Tap)(Tmn)(Tmx)(Phs)(Bc  )(Cn)(Ce)Ns(Cq)(1)(2)(3)(4)(5)(6)(7)(8)(9)(10)
+
+9999
+[>END<]!$[FingerTextData FingerTextData]@#
+DBAR
+GLOBAL
+DBAR
+(Num)OETGb(    nome    )Gl( V)( A)( Pg)( Qg)( Qn)( Qm)(Bc  )( Pl)( Ql)( Sh)Are(Vf)
+
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+CONTINGENCY
+GLOBAL
+' Simulação de contingências
+CONTINGENCY BRANCH {linha}
+RUNPF
+SHOW LIMITS
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+CHANGEPAR
+GLOBAL
+' Altera um parâmetro em tempo de execução
+CHANGEPAR BRANCH {linha} TAP={tap} STATUS={status}
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+BUS
+GLOBAL
+BUS
+#BUS #barra NAME={V} V={V} ANG={ANG} GSHT={GSHT} BSHT={BSHT} SHTST={SHTST} VINF={VINF} VSUP={VSUP} VINFE={VINFE} VSUPE={VSUPE} TP={TP} BC={BC} AREA={AREA} MONIT={MONIT} DEL={DEL}
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#
+BRANCH
+GLOBAL
+BRANCH
+#BRANCH #from #to R={R} X={X} BSH={BSH} BC={BC} SIDE={SIDE} TAP={TAP} TAPMIN={TAPMIN} TAPMAX={TAPMAX} DEF={DEF} NSTEPS={NSTEPS} BRKF={BRKF} BRKT={BRKT} SHTFST={SHTFST} SHTTST={SHTTST} MONIT={MONIT} VMIN={VMIN} VMAX={VMAX} NORMAL={NORMAL} OVERL={OVERL} EMERG={EMERG} BSHTFR={BSHTFR} BSHTTO={BSHTTO} GSHTFR={GSHTFR} GSHTTO={GSHTTO} TYPE={TYPE} DEL={DEL}
+
+9999
+[>END<]
+!$[FingerTextData FingerTextData]@#

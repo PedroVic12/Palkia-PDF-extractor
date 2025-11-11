@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<NotepadPlus>
+  <UserLang name="Organon_Script_Plugin" ext="spt pwf dat" udlVersion="2.1">
+    <Settings>
+      <Global caseIgnored="no" allowFoldOfComments="no" foldCompact="no" forcePureLC="0" decimalSeparator="." />
+      <Prefix Keywords1="no" Keywords2="no" Keywords3="no" Keywords4="no" Keywords5="no" Keywords6="no" Keywords7="no" Keywords8="no" />
+    </Settings>
+
+    <KeywordLists>
+      <!-- Comentários CORRIGIDOS -->
+      <!-- Comentários CORRIGIDOS
+      <Keywords name="Comments">00! 01(</Keywords>
+      -->
+
+      <Keywords name="Comments">00(</Keywords>
+      <Keywords name="Numbers">0123456789.</Keywords>
+
+      <!-- Comandos principais - AZUL -->
+      <Keywords name="Keywords1">BUS GEN GENUNIT LOAD LOADUNIT SHUNT BRANCH HVDC GF UDV UDT CASO ARQV</Keywords>
+
+      <!-- Simulações - AZUL -->
+      <Keywords name="Keywords2">NEWTON EXLF SDPF CPF PFCTG TARGET TDS TDSCTG TDSCRIT SGEN AVR OEL UEL PSS GOV SVC PROT REP REMOVE REDUCE EXCLUDE EXTERN INTERN MRGPRM MARGINB5</Keywords>
+
+      <!-- Arquivos - LARANJA -->
+      <Keywords name="Keywords3">OPEN SAVE DEL COPY CHDIR</Keywords>
+
+      <!-- Controle - VERMELHO -->
+      <Keywords name="Keywords4">ENDIF</Keywords>
+
+      <!-- Batch Anarede - AZUL -->
+      <Keywords name="Keywords5">DBAR DLIN DSHL DCAR DINJ DOPC DANC DELO DCCV DCNV DCBA DCRE DBTB DFTB DPGE DQGE TITU</Keywords>
+
+      <!-- Conversão - AZUL -->
+      <Keywords name="Keywords6">DEMT DGMT DWMT CHECKSTB CONV2PLV CONV2EVT CONV2CTG</Keywords>
+
+      <!-- Parâmetros - MARROM -->
+      <Keywords name="Keywords7">NAME V ANG GSHT BSHT SHTST VINF VSUP VINFE VSUPE TP BC AREA MONIT DEL PG PMAX PMIN QMAX QMIN UMIN CB FP STAT BLCK PL QL STATUS R X BSH BC SIDE TAP TAPMIN TAPMAX DEF NSTEPS BRKF BRKT SHTFST SHTTST MONIT VMIN VMAX NORMAL L1 OVERL L2 EMERG L3 BSHTFR BSHTTO GSHTFR GSHTTO TYPE TL TRAFO OLTC PSHFT SWITCH BREAKR MODE PD ID VD ALFA ALFAMIN ALFAMAX GAMA GAMAMIN GAMAMAX TAPMINR TAPMAXR TAPMINI TAPMAXI IMARG VCCMIN NRCONV NICONV KPG KPC KQC TAP TDSCR INCHG SHIFT CTAP TABE TIME CTG UDT BLOCK NDIR DIR G1MW G2MW TRUV TROV INUV INOV SSDV SSUV SSTH VOSC USWG UFRQ DPAC MXAN PPSR EFDX OELT NONE ALL BUS FLOW BRANCH AREA DC GEN OVERV UNDERV UDT PFCTG TDCTG CONV NOCONV STAB NOTSTAB SYSTEM ZONE VOLT ISLAND HVDC</Keywords>
+
+      <!-- FIM/END - VERMELHO NEGRITO -->
+      <Keywords name="Keywords8">END FIM</Keywords>
+    </KeywordLists>
+
+    <Styles>
+      <!-- Default -->
+      <WordsStyle name="DEFAULT" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+      
+      <!-- Comentários CORRIGIDOS: ! e ( -->
+      <WordsStyle name="COMMENTS" fgColor="008000" bgColor="FFFFFF" fontStyle="2" nesting="0" />
+      <WordsStyle name="LINE COMMENTS" fgColor="008000" bgColor="FFFFFF" fontStyle="2" nesting="0" />
+      
+      <!-- Números -->
+      <WordsStyle name="NUMBERS" fgColor="FF0000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+
+      <!-- Grupos de keywords -->
+      <WordsStyle name="KEYWORDS1" fgColor="0000FF" bgColor="FFFFFF" fontStyle="1" nesting="0" />
+      <WordsStyle name="KEYWORDS2" fgColor="0000FF" bgColor="FFFFFF" fontStyle="1" nesting="0" />
+      <WordsStyle name="KEYWORDS3" fgColor="FFA500" bgColor="FFFFFF" fontStyle="1" nesting="0" />
+      <WordsStyle name="KEYWORDS4" fgColor="FF0000" bgColor="FFFFFF" fontStyle="1" nesting="0" />
+      <WordsStyle name="KEYWORDS5" fgColor="0000FF" bgColor="FFFFFF" fontStyle="1" nesting="0" />
+      <WordsStyle name="KEYWORDS6" fgColor="0000FF" bgColor="FFFFFF" fontStyle="1" nesting="0" />
+      <WordsStyle name="KEYWORDS7" fgColor="A52A2A" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+      <WordsStyle name="KEYWORDS8" fgColor="FF0000" bgColor="FFFFFF" fontStyle="1" nesting="0" />
+
+      <!-- Estilos padrão -->
+      <WordsStyle name="OPERATORS" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+      <WordsStyle name="FOLDER IN CODE1" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+      <WordsStyle name="FOLDER IN CODE2" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+      <WordsStyle name="FOLDER IN COMMENT" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+      <WordsStyle name="DELIMITERS1" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+      <WordsStyle name="DELIMITERS2" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+      <WordsStyle name="DELIMITERS3" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+      <WordsStyle name="DELIMITERS4" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+      <WordsStyle name="DELIMITERS5" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+      <WordsStyle name="DELIMITERS6" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+      <WordsStyle name="DELIMITERS7" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+      <WordsStyle name="DELIMITERS8" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+    </Styles>
+  </UserLang>
+</NotepadPlus>

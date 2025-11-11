@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<NotepadPlus>
+    <AutoComplete language="Organon_Script_Plugin">
+    <Environment ignoreCase="yes" startFunc="(" stopFunc=")" paramSeparator="," terminal=";" additionalWordChar="." />
+        
+        <KeyWord name="DEMT" func="yes">
+            <Overload retVal="" descr="Dados de Barramentos Candidatos">
+                <Param name="(BCan (   Iden   ) (SE) (SA) (Ar) (P.CC) (Pmx ) (P)" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="DGMT" func="yes">
+            <Overload retVal="" descr="Dados de Gerações das Subestações">
+                <Param name="(SE) (Bger (Pmx ) (P) (Qmn) (Qmx)" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="DWMT" func="yes">
+            <Overload retVal="" descr="Dados de SWING P/ MARGEM">
+                <Param name="#SE  Tp(1=System/2=Area/2=Zone/4=Bus)   0/#Area/#Zone/#Bus" />
+            </Overload>
+        </KeyWord>
+
+        <KeyWord name="BUS" func="yes">
+            <Overload retVal="" descr="Altera dados de barra">
+                <Param name="#barra NAME=V ANG=V GSHT=V BSHT=V SHTST=V" />
+            </Overload>
+        </KeyWord>
+        <KeyWord name="GEN" func="yes">
+            <Overload retVal="" descr="Altera dados de geração">
+                <Param name="#barra V=V PG=V PMAX=V QMAX=V QMIN=V" />
+            </Overload>
+        </KeyWord>
+
+        <KeyWord name="BRANCH" />
+        <KeyWord name="CHANGEPAR" />
+        <KeyWord name="CONTINGENCY" />
+        <KeyWord name="CPF" />
+        <KeyWord name="DBAR" />
+        <KeyWord name="DLIN" />
+        <KeyWord name="END" />
+        <KeyWord name="EXPORT" />
+        <KeyWord name="EXLF" />
+        <KeyWord name="FIM" />
+        <KeyWord name="GENUNIT" />
+        <KeyWord name="GF" />
+        <KeyWord name="HVDC" />
+        <KeyWord name="LIST" />
+        <KeyWord name="LOAD" />
+        <KeyWord name="LOADCASE" />
+        <KeyWord name="LOADUNIT" />
+        <KeyWord name="NEWTON" />
+        <KeyWord name="OPEN" />
+        <KeyWord name="PFCTG" />
+        <KeyWord name="REPORT" />
+        <KeyWord name="RUNPF" />
+        <KeyWord name="SAVE" />
+        <KeyWord name="SAVECASE" />
+        <KeyWord name="SDPF" />
+        <KeyWord name="SGEN" />
+        <KeyWord name="SHUNT" />
+        <KeyWord name="SOLVECASE" />
+        <KeyWord name="TARGET" />
+        <KeyWord name="TDS" />
+        <KeyWord name="TDSCRIT" />
+        <KeyWord name="TDSCTG" />
+        <KeyWord name="UDT" />
+        <KeyWord name="UDV" />
+        
+        <KeyWord name="AVR" />
+        <KeyWord name="GOV" />
+        <KeyWord name="OEL" />
+        <KeyWord name="PROT" />
+        <KeyWord name="PSS" />
+        <KeyWord name="REP" />
+        <KeyWord name="SVC" />
+        <KeyWord name="UEL" />
+        <KeyWord name="MRGPRM" />
+        <KeyWord name="MARGINB5" />
+
+        <KeyWord name="NAME" />
+        <KeyWord name="V" />
+        <KeyWord name="ANG" />
+        <KeyWord name="PG" />
+        <KeyWord name="PMAX" />
+        <KeyWord name="PMIN" />
+        <KeyWord name="QMAX" />
+        <KeyWord name="QMIN" />
+        <KeyWord name="PL" />
+        <KeyWord name="QL" />
+        <KeyWord name="STATUS" />
+        <KeyWord name="DEL" />
+        <KeyWord name="TAP" />
+        <KeyWord name="TIME" />
+        <KeyWord name="BLOCK" />
+        
+        <KeyWord name="T" />
+        <KeyWord name="F" />
+        <KeyWord name="1" />
+        <KeyWord name="0" />
+    </AutoComplete>
+</NotepadPlus>
