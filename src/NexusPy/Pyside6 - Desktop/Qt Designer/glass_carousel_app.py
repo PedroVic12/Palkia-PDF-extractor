@@ -98,16 +98,15 @@ class CarouselWidget(QWidget):
         self._pages = pages or []
         self._interval = interval_ms
         self._autoplay = autoplay
-        self._setup_ui()
+        self.stack = QStackedWidget()
+        self.stack.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self._setup_timer()
+        self._setup_ui()
 
     def _setup_ui(self):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(6, 6, 6, 6)
         layout.setSpacing(8)
-
-        self.stack = QStackedWidget()
-        self.stack.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         btn_layout = QHBoxLayout()
         btn_layout.setSpacing(8)

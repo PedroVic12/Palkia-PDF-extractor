@@ -1,9 +1,10 @@
-#!/bin/bash
-CURRENT_DIR="$(dirname "$0")"
-cd "$CURRENT_DIR/src/ScrapperPDF"
-if [ -f "requirements.txt" ]; then
+@echo off
+pushd "%~dp0"
+cd src\ScrapperPDF
+IF EXIST requirements.txt (
     echo "Instalando dependências..."
     pip install -r requirements.txt
-fi
+)
 echo "Iniciando PLC_Controle_Gestao_desktop.py..."
 python PLC_Controle_Gestao_desktop.py
+popd

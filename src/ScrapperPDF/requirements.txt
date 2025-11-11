@@ -1,10 +1,7 @@
-PyPDF2
-camelot-py
-pdf2image
-streamlit 
-python-poppler
-ansi2html
-pyodbc
+PySide6
 pandas
 plotly
-PySide6
+weasyprint
+flask
+pyodbc
+ansi2html

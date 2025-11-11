@@ -48,10 +48,10 @@ try:
     from weasyprint import HTML
     import io
     WEASYPRINT_AVAILABLE = True
-except ImportError:
+except (ImportError, OSError) as e:
     HTML = io = None
     WEASYPRINT_AVAILABLE = False
-    print("AVISO: weasyprint não instalado. Geração de PDF desabilitada.")
+    print(f"AVISO: weasyprint e/ou suas dependências não instalados. Geração de PDF desabilitada. Erro: {e}")
 
 try:
     import sqlite3
