@@ -24,14 +24,15 @@
 
 ## Refatoração e nova arquitetura
 - [x] MVC Arquitetura
-- App Template com menu arvore lateral de navegação e tabs para cara Iframe em arquivos separados
-- HTML to .PDF relatorio automatizado
+- [x] App Template com menu lateral responsivo de navegação e tabs para cara Iframe (paginas) em arquivos separados
+- [x] HTML to .PDF relatorio automatizado
+- [ ] Dashboard atividades SP / Dashboard Must / Relatórios (gráficos) / Palkia Extractor GUI / Deck Builder da solicitação de MUST
+- [ ] main.py compilado com .ui (futuramente) e usando pyinstaller
+- [ ] Criação do Executavel com Instalador para abrir o app "pesado" depois de compilar para Windows
+
 - Cada Tab é uma funcionalidade diferente (Palkia GUI, Junta Deck, Organiza Arquivos, MUST Dashboard, Controle e Gestão Fora Ponta com OBS, Deck Builder (com pyautogui simulando no AnaREDE com diagrama do SIN), Gerar Relatorio com análise de contigencia ) 
 - Refatoração Análise de contigencias de Invervenção no SEP com agendamento ótimo (PandaPower + DEAP) com Lancher.py refatorado 
-- [ ] Dashboard atividades SP / Dashboard Must / Relatórios (gráficos) / Palkia Extractor GUI / Deck Builder da solicitação de MUST
 
-- main.py compilado com .ui (futuramente) e usando pyinstaller
-- Criação do Executavel com Instalador para abrir o app "pesado" depois de compilar para windwows
 - Modeladem de dados e integração com Dashboard SP com análise de dados
 
 
