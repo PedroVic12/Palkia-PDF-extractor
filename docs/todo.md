@@ -5,24 +5,21 @@
 # Levantamento de requisitos do Software de Controle e Gestão MUST e Atividades SP (Dashboard)
 
 #### Requisitos Funcionais (RF)
-- **RF01**: A aplicação deve ter uma janela principal com um menu lateral e uma área de conteúdo principal.
-- **RF02**: A navegação principal para abrir diferentes módulos (ferramentas) deve estar claramente disponível.
-- **RF03**: O usuário deve poder abrir múltiplos módulos em abas, podendo alternar entre eles.
-- **RF04**: O usuário deve poder fechar as abas que não está mais usando.
-- **RF05**: A aplicação deve fornecer acesso rápido a uma lista de links externos, que devem abrir no navegador padrão do usuário.
-- **RF06**: O usuário deve poder customizar a aparência da aplicação, incluindo:
+- [x] **RF01**: A aplicação deve ter uma janela principal com um menu lateral e uma área de conteúdo principal com um Layout Dashboard como App Template no Pyside6.
+- [x] **RF02**: A navegação principal para abrir diferentes módulos (ferramentas) deve estar claramente disponível em cada Pagina como Iframe Separado por tabs e conectado ao menu lateral
+- [x] **RF03**: O usuário deve poder abrir múltiplos módulos em abas, podendo alternar entre eles.
+- [x] **RF04**: O usuário deve poder fechar as abas que não está mais usando.
+- [x] **RF05**: A aplicação deve fornecer acesso rápido a uma lista de links externos, que devem abrir no navegador padrão do usuário com uma AppBar com Textbutton
+- [x] **RF06**: O usuário deve poder customizar a aparência da aplicação, incluindo:
     - Mudar o tema entre claro (Light) e escuro (Dark).
     - Mudar a família da fonte da aplicação.
     - Mudar o tamanho da fonte da aplicação.
-- **RF07**: As customizações de aparência devem ser salvas e persistir entre as sessões da aplicação.
-- **RF08**: O menu lateral deve ser "responsivo", mostrando controles contextuais que são relevantes para a aba atualmente ativa.
-- **RF09**: O usuário deve poder ocultar e re-exibir o menu lateral.
+- [x] **RF07**: As customizações de aparência devem ser salvas e persistir entre as sessões da aplicação.
+- [x] **RF08**: O menu lateral deve ser "responsivo", mostrando controles contextuais que são relevantes para a aba atualmente ativa.
 
 #### Requisitos Não-Funcionais (RNF)
-- **RNF01**: O código-fonte deve ser organizado e modular, separando a lógica da interface.
-- **RNF02**: A arquitetura deve ser extensível, facilitando a adição de novos módulos (abas/IFrames) no futuro.
+- **RNF01**: O código-fonte deve ser organizado e modular MVC, separando a lógica da interface.
 - **RNF03**: A aplicação deve usar o framework PySide6 e seguir as boas práticas de desenvolvimento em Python.
-- **RNF04**: A interface deve ter uma aparência moderna e profissional, baseada nos templates de referência.
 
 
 ## Refatoração e nova arquitetura

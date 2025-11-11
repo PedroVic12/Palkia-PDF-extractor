@@ -12,11 +12,10 @@ venv\Scripts\activate.bat
 python -m pip install weasyprint
 python -m weasyprint --info
 
-or use other lib like
+or use other lib like (Windows only)
 
-pip install pdfkit
+pip install xhtml2pdf
 
-https://wkhtmltopdf.org/downloads.html
 
 """# -*- coding: utf-8 -*-
 # Servidor Flask para conversão de HTML para PDF (v1.1 - CORRIGIDO)
