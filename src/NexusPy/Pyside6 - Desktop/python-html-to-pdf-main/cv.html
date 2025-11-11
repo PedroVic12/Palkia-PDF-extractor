@@ -26,9 +26,9 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif; /* WeasyPrint suporta fontes do sistema */
-            background: linear-gradient(180deg, var(--color-bg) 0%, var(--color-accent) 200%);
-            color: var(--color-text);
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(180deg, #0a192f 0%, #c084fc 200%);
+            color: #e2e8f0;
             padding: 40px;
             line-height: 1.6;
         }
@@ -36,36 +36,36 @@
         /* --- Estrutura --- */
         .header {
             text-align: center;
-            border-bottom: 2px solid var(--color-primary);
+            border-bottom: 2px solid #5eead4;
             padding-bottom: 20px;
             margin-bottom: 30px;
         }
 
         .header h1 {
-            color: var(--color-primary);
+            color: #5eead4;
             font-size: 36px;
             margin: 0;
         }
 
         .header .subtitle {
             font-size: 16px;
-            color: var(--color-text-secondary);
+            color: #94a3b8;
             font-style: italic;
         }
         
         .header .contact {
              font-size: 14px;
-             color: var(--color-text-secondary);
+             color: #94a3b8;
         }
 
         /* Seções (Cards com Glassmorphism) */
         .section {
             margin-bottom: 25px;
-            border: 1px solid var(--color-border);
+            border: 1px solid #334155;
             border-radius: 8px;
             
             /* Efeito Glassmorphism (Simulado, pois WeasyPrint pode não suportar backdrop) */
-            background-color: var(--color-bg-card); 
+            background-color: rgba(30, 41, 59, 0.7); 
             
             padding: 20px;
             /* WeasyPrint pode ter dificuldade com backdrop-filter, usamos o BG transparente */
@@ -73,8 +73,8 @@
 
         .section h2 {
             font-size: 22px;
-            color: var(--color-primary); /* Verde Água */
-            border-bottom: 1px solid var(--color-border);
+            color: #5eead4; /* Verde Água */
+            border-bottom: 1px solid #334155;
             padding-bottom: 8px;
             margin-top: 0;
             margin-bottom: 15px;
@@ -97,12 +97,12 @@
             position: absolute;
             left: 0;
             top: 0;
-            color: var(--color-primary);
+            color: #5eead4;
             font-size: 14px;
         }
 
         strong {
-            color: var(--color-text); /* Texto normal mais claro */
+            color: #e2e8f0; /* Texto normal mais claro */
             font-weight: 600;
         }
         

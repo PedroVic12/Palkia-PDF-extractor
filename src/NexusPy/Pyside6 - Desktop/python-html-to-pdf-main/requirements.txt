@@ -1,4 +1,4 @@
 Flask
 weasyprint
-pdfkit
+xhtml2pdf
 requests
