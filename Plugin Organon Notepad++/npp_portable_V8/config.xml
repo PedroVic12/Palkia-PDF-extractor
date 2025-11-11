@@ -6,8 +6,6 @@
         <Replace name="" />
     </FindHistory>
     <History nbMaxFile="10" inSubMenu="no" customLength="-1">
-        <File filename="C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\AUTOMAC&#x00D5;ES ONS\Plugin Organon Notepad++\npp_portable_V8\plugins\Config\FingerText\SnippetsBackup-202510151608.ftd" />
-        <File filename="C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\AUTOMAC&#x00D5;ES ONS\Plugin Organon Notepad++\npp_portable_V8\plugins\Config\FingerText\SnippetEditor.ftb" />
         <File filename="C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\AUTOMAC&#x00D5;ES ONS\Plugin Organon Notepad++\npp_portable_V8\plugins\Config\FingerText\SnippetsBackup-202510151609.ftd" />
         <File filename="C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\organizador_arquivos.py" />
         <File filename="C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\GitHub\Electrical-System-Simulator\frontend\ONS_SIN_Website_Para_Leigos\start.sh" />
@@ -16,13 +14,15 @@
         <File filename="C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\ONS + SIN - Casos Real 2025\SIN\decks\Organon\01_INV_LEVE_FSUL_24 1.PWF" />
         <File filename="C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\AUTOMAC&#x00D5;ES ONS - PLC\Plugin Organon Notepad++\npp_portable_V8\plugins\Config\FingerText\SnippetEditor.ftb" />
         <File filename="C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\ONS + SIN - Casos Real 2025\SIN\decks\Decks-Flow-Sudeste-SUL-Controle_Tensao\CASO77-FLOW-DBSH.dat" />
+        <File filename="C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGI~1\ONS_SI~1\DESPAC~1\1)CONT~1\MENSAL~2\DESLIG~1\COMPAR~1\COMPAR~1\ADIO~1\GO-DF\32-DIS~1.PWF" />
+        <File filename="C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGI~1\ONS_SI~1\DESPAC~1\1)CONT~1\MENSAL~2\DESLIG~1\COMPAR~1\COMPAR~1\ADIO~1\GO-DF\25-DIS~1.PWF" />
     </History>
     <ProjectPanels>
         <ProjectPanel id="0" workSpaceFile="" />
         <ProjectPanel id="1" workSpaceFile="" />
         <ProjectPanel id="2" workSpaceFile="" />
     </ProjectPanels>
-    <FileBrowser latestSelectedItem="C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\ONS + SIN - Casos Real 2025\SIN\decks\Decks-Flow-Sudeste-SUL-Controle_Tensao\CASO99-FLOW.PWF">
+    <FileBrowser latestSelectedItem="C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\ONS + SIN - Casos Real 2025\Despacho de  Cargas Semanal + Quadrimestral\1) Controle de casos - MENSAL\Mensal 12_2025\Desligamento de Linhas (Decks)">
         <root foldername="C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025" />
     </FileBrowser>
     <ColumnEditor choice="number">
@@ -36,7 +36,7 @@
         <GUIConfig name="ScintillaViewsSplitter">vertical</GUIConfig>
         <GUIConfig name="UserDefineDlg" position="undocked">hide</GUIConfig>
         <GUIConfig name="TabSetting" replaceBySpace="no" size="4" backspaceUnindent="no" />
-        <GUIConfig name="AppPosition" x="679" y="0" width="1100" height="913" isMaximized="no" />
+        <GUIConfig name="AppPosition" x="679" y="0" width="1100" height="1028" isMaximized="no" />
         <GUIConfig name="FindWindowPosition" left="913" top="290" right="1546" bottom="649" isLessModeOn="no" />
         <GUIConfig name="FinderConfig" wrappedLines="no" purgeBeforeEverySearch="no" showOnlyOneEntryPerFoundLine="yes" />
         <GUIConfig name="noUpdate" intervalDays="15" nextUpdateDate="20080426" autoUpdateMode="0">yes</GUIConfig>
@@ -78,7 +78,7 @@
         <GUIConfig name="SmartHighLight" matchCase="no" wholeWordOnly="yes" useFindSettings="no" onAnotherView="no">yes</GUIConfig>
         <GUIConfig name="DarkMode" enable="no" colorTone="0" customColorTop="2105376" customColorMenuHotTrack="4539717" customColorActive="3684408" customColorMain="2105376" customColorError="176" customColorText="14737632" customColorDarkText="12632256" customColorDisabledText="8421504" customColorLinkText="65535" customColorEdge="6579300" customColorHotEdge="10197915" customColorDisabledEdge="4737096" enableWindowsMode="no" darkThemeName="DarkModeDefault.xml" darkToolBarIconSet="0" darkTbFluentColor="0" darkTbFluentCustomColor="0" darkTbFluentMono="no" darkTabIconSet="2" darkTabUseTheme="no" lightThemeName="" lightToolBarIconSet="4" lightTbFluentColor="0" lightTbFluentCustomColor="12873472" lightTbFluentMono="no" lightTabIconSet="0" lightTabUseTheme="yes" />
         <GUIConfig name="ScintillaPrimaryView" lineNumberMargin="show" lineNumberDynamicWidth="yes" bookMarkMargin="show" indentGuideLine="show" folderMarkStyle="box" isChangeHistoryEnabled="1" lineWrapMethod="aligned" currentLineIndicator="1" currentLineFrameWidth="1" virtualSpace="no" scrollBeyondLastLine="no" rightClickKeepsSelection="no" selectedTextForegroundSingleColor="no" disableAdvancedScrolling="no" wrapSymbolShow="hide" Wrap="no" borderEdge="yes" isEdgeBgMode="no" edgeMultiColumnPos="" zoom="0" zoom2="0" whiteSpaceShow="hide" eolShow="hide" eolMode="1" npcShow="show" npcMode="1" npcCustomColor="no" npcIncludeCcUniEOL="no" npcNoInputC0="yes" ccShow="yes" borderWidth="2" smoothFont="no" paddingLeft="0" paddingRight="0" distractionFreeDivPart="4" lineCopyCutWithoutSelection="yes" multiSelection="yes" columnSel2MultiEdit="yes" />
-        <GUIConfig name="DockingManager" leftWidth="322" rightWidth="241" topHeight="200" bottomHeight="200">
+        <GUIConfig name="DockingManager" leftWidth="401" rightWidth="241" topHeight="200" bottomHeight="200">
             <PluginDlg pluginName="Notepad++::InternalFunction" id="44085" curr="0" prev="-1" isVisible="yes" />
             <PluginDlg pluginName="FingerText.dll" id="2" curr="1" prev="-1" isVisible="no" />
             <ActiveTabs cont="0" activeTab="0" />

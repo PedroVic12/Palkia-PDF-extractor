@@ -1,6 +1,6 @@
 # ///////////////////////////////////////////////////////////////
 #
-# BY: Pedro Victor Rodrigues Veras (based on Wanderson M. Pimenta)
+# BY: Pedro Victor Rodrigues Veras 
 # PROJECT MADE WITH: Qt Designer and PySide6
 # V: 10.0.0 (Final Architecture)
 #
