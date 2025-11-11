@@ -25,6 +25,27 @@ Antes de criar novas páginas, é fundamental entender como a aplicação princi
 
 ## 2. Passo a Passo: Criando uma Nova Página
 
+Criar uma interface com "páginas" usando QStackedWidget
+Para replicar a ideia de "iframes", onde diferentes conteúdos são exibidos em uma área, você usará o QStackedWidget.
+Crie sua interface principal:
+Abra o Qt Designer.
+Crie um novo QMainWindow.
+Na "Widget Box" (caixa de widgets) à esquerda, procure por QStackedWidget e arraste-o para sua janela.
+Crie suas "sub-interfaces":
+No "Widget Box", arraste um QWidget para o QStackedWidget. Ele será sua primeira página.
+Para adicionar outra página, selecione o QStackedWidget na barra de "Object Inspector" (geralmente à direita) e clique com o botão direito para selecionar Adicionar página > Adicionar página após a página atual.
+Para cada página, adicione os widgets desejados, como botões, rótulos e caixas de texto.
+Adicione um controle para trocar as páginas:
+Fora do QStackedWidget, adicione um QPushButton ou QComboBox para controlar qual página está visível.
+Salve o arquivo .ui. Salve seu design com um nome como main_window.ui. 
+4. Converter o arquivo .ui para Python
+Use o comando pyside6-uic para gerar o código Python correspondente.
+sh
+pyside6-uic main_window.ui -o ui_main_window.py
+Use o código com cuidado.
+
+Isso criará o arquivo ui_main_window.py.
+
 Vamos criar uma página de exemplo chamada "**Análise de Dados**".
 
 ### Passo 2.1: Criar o Widget da Página Principal

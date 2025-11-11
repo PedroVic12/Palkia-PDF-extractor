@@ -1,14 +1,20 @@
-# Plano de Desenvolvimento: OrquestraPy (anteriormente Caixa de Ferramentas ONS)
+# Pyside6 desktop: NexusPy 
+
+Caixa de Ferramentas ONS - Controle e Gestão de automações e Análise de SP/RJ (perdas duplas) assim como controle de requerimentos para MUST com automação de relátorios
+
+---
 
 ## 1. Visão Geral e Arquitetura
 
-**Objetivo do Projeto**: Desenvolver uma aplicação desktop (`PySide6`), o **OrquestraPy**, que funcione como um orquestrador de processos e automações para a equipe de curto prazo do ONS. O software facilitará a automação de tarefas, análise de dados e visualização de estudos de sistemas elétricos de potência (SEP).
+**Objetivo do Projeto**: Software de Controle e Gestão de automações para a equipe de curto prazo do ONS (PLC). O software facilitará a automação de tarefas, análise de dados e visualização de estudos de sistemas elétricos de potência (SEP).
+
+Possui integrações com o Plugin Notepad++, AnaREDE, Organon e 
 
 **Arquitetura Principal**: **Model-View-Controller (MVC)**. Esta arquitetura é ideal para organizar a complexidade do projeto, separando a lógica de dados, a interface do usuário e o controle da aplicação.
 
--   **Model (Modelo)**: O cérebro da aplicação. Contém os parsers de arquivos, a lógica de negócio, as classes que representam os dados (ex: `Usina`, `Linha`) e os scripts de automação.
+-   **Model (Modelo)**: a lógica de negócio, as classes que representam os dados (ex: `Usina`, `Linha`) e os scripts de automação com conexão ao banco de Dados
 -   **View (Visão)**: A interface gráfica (GUI) construída com PySide6. Contém as janelas, abas, botões e gráficos. É responsável por exibir dados e capturar as ações do usuário.
--   **Controller (Controlador)**: O intermediário que conecta o Model e a View. Recebe ações da View, aciona a lógica no Model e atualiza a View com os resultados.
+-   **Controller (Controlador)**: O intermediário que conecta o Model e a View. Recebe ações da View, aciona a lógica no Model e atualiza a View com os resultados. É possivel usar pandas, flask e análise de dados para tomada de decisões. assim como solver e machine learning 
 
 ## 2. Roadmap de Desenvolvimento Gamificado
 
@@ -24,6 +30,11 @@ Cada tarefa é projetada para ser concluída em blocos de tempo focados, com pon
 
 ### **Fase 0: Concepção e Planejamento**
 *O objetivo desta fase é definir o escopo e preparar o terreno para o desenvolvimento.*
+
+### UI Dinâmica: AppBar e Menu de Contexto
+
+- **AppBar de Links**: O `main.py`, no método `_setup_appbar_links`, popula a barra superior com `PyTextButton`s, conectando cada um para abrir uma URL externa.
+- **Menu Lateral Híbrido**: O `main.py`, através do método `on_tab_changed`, gerencia o conteúdo do menu lateral. Ele sempre garante que o menu de navegação principal (`NavigationMenu`) esteja presente e, em seguida, adiciona o menu de contexto específico da aba ativa, criando a experiência "responsiva" que você desejava.
 
 -   [ ] **Tarefa 1**: Detalhar os 3 principais processos/scripts que o OrquestraPy irá automatizar. Descrever as entradas, o processamento esperado e as saídas desejadas para cada um. `[50 min | Médio | 25 XP]`
 -   [ ] **Tarefa 2**: Desenhar um wireframe (esboço em papel ou em software simples) da interface principal e das abas para cada uma das 3 ferramentas. `[50 min | Fácil | 10 XP]`
@@ -66,11 +77,48 @@ Cada tarefa é projetada para ser concluída em blocos de tempo focados, com pon
 
 ---
 
-### **Fase 4: Polimento e Evolução**
-*O objetivo é adicionar funcionalidades que melhoram a experiência do usuário e a robustez da aplicação.*
+### **Fase 4: Deploy e testes**
 
 -   [ ] **Tarefa 1**: Adicionar um seletor de tema (Claro/Escuro) e fazer a aplicação trocar os estilos dinamicamente. `[50 min | Médio | 25 XP]`
--   [ ] **Tarefa 2**: Integrar uma biblioteca de gráficos (`PyQtGraph` ou `Matplotlib`) para exibir um gráfico de barras simples com os dados da Ferramenta 1. `[50 min | Difícil | 50 XP]`
--   [ ] **Tarefa 3**: Implementar uma barra de status na `MainWindow` para exibir mensagens informativas (ex: "Arquivo carregado", "Script em execução..."). `[25 min | Médio | 25 XP]`
+-   [ ] **Tarefa 3**: Implementar uma notification popup de status na `MainWindow` para exibir mensagens informativas (ex: "Arquivo carregado", "Script em execução..."). `[25 min | Médio | 25 XP]`
 -   [ ] **Tarefa 4**: Gerar a primeira versão executável (`.exe` ou binário) da aplicação usando `PyInstaller`. `[50 min | Médio | 25 XP]`
--   [ ] **🏆 DESAFIO 4**: Ter um executável funcional que pode ser compartilhado com um colega para teste. `[Marco | 100 XP]`
+
+
+## 4. Seu Checklist de Desenvolvimento (Próximos Passos)
+
+Agora que a base está pronta, aqui está um guia para você migrar sua aplicação `desktop_MUST_dashboard_UI_05_11.py`.
+
+**Passo 1: Crie o IFrame do Dashboard MUST**
+- Crie o arquivo `pyside6_tab_app/gui/iframes/must_dashboard_widget.py`.
+- Crie a classe `MustDashboardWidget(QWidget)`.
+
+**Passo 2: Crie o Modelo de Dados do MUST**
+- Crie o arquivo `pyside6_tab_app/must_model.py`.
+- Mova a classe `DashboardDB` do seu script antigo para este novo arquivo.
+
+**Passo 3: Construa a UI e a Lógica do Dashboard**
+- Dentro de `MustDashboardWidget`, importe e instancie seu `MustModel`.
+- Recrie a interface que você tinha. Use `QFrame` com `setObjectName("glassCard")` para criar os "containers" com efeito de vidro.
+- Conecte os botões e filtros a funções que chamam os métodos do seu modelo para buscar os dados.
+- Use `QWebEngineView` para exibir os gráficos do Plotly.
+
+**Passo 4: Crie o Menu de Contexto para o Dashboard**
+- Crie `pyside6_tab_app/gui/side_menus/must_sidemenu.py`.
+- Adicione os widgets de filtro que você precisa (ComboBox de empresa, ano, etc.) e faça com que emitam sinais.
+
+**Passo 5: Integre Tudo no `main.py`**
+- Em `main.py`, importe suas novas classes `MustDashboardWidget` e `MustSideMenu`.
+- Altere o método `open_dashboard_tab` para que ele abra o seu novo dashboard e associe o menu de contexto a ele:
+  ```python
+  def open_dashboard_tab(self):
+      self.open_or_focus_tab("Dashboard MUST", MustDashboardWidget, MustSideMenu)
+  ```
+- No `MustDashboardWidget`, conecte os sinais do menu lateral para que os gráficos e tabelas sejam atualizados quando um filtro for alterado.
+
+## 5. Como Adicionar Novas Abas com Qt Designer
+
+O processo para adicionar novas abas com o Designer continua o mesmo:
+1.  **Desenhe** sua interface em um arquivo `.ui` usando o Qt Designer.
+2.  **Converta** o `.ui` para `.py` com o comando `pyside6-uic`.
+3.  **Crie** a classe do seu widget que herda de `QWidget` e da classe da UI gerada, implementando a lógica.
+4.  **Integre** em `main.py`, importando sua nova classe e chamando `open_or_focus_tab` a partir de um sinal (ex: clique de um botão no `NavigationMenu`).
