@@ -1,0 +1,12 @@
+(Área de Estudo: MENSAL - Estudo: MENSAL JULHO/2025 - Área de Carga: EC - Responsável: ONSCarga - Situação do Caso: Disponibilizado  versão 02
+DBAR
+(Num)OETGb(   nome   )Gl( V)( A)( Pg)( Qg)( Qn)( Qm)(Bc  )( Pl)( Ql)(  Sh)Are(Vf)M(1)(2)(3)(4)(5)(6)(7)(8)(9)(10)
+(004 MÍNIMA DOMINGO/FERIADO JUL/2025 - Agente/Grupo: MT-ENERGISA MT - jul/2025
+ 7542M                                                     46.9 16.4
+ 7778M                                                      7.0  2.5
+ 7542M                           16.3  0.0                          
+ 7778M                            2.4  0.0                          
+(TOTAIS                        GERAÇÃO ATIVA GERAÇÃO REATIVA CARGA ATIVA CARGA REATIVA
+(MT-ENERGISA MT                         18.8             0.0        53.9          18.8
+(TOTAL GERAL                            18.8             0.0        53.9          18.8
+99999
