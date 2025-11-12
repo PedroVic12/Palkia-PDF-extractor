@@ -11,7 +11,7 @@ path = os.path.abspath(rf"src/files/pdf/redrex/{file_name}.pdf")
 
 path_windows = r"C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\GitHub\Palkia-PDF-extractor\src\files\pdf\redrex\Redrex - Fatura (2).pdf"
 
-tables = camelot.read_pdf(path,
+tables = camelot.read_pdf(path_windows,
                           flavor='stream',
                           table_areas= ['70, 560,498,279'],
                           columns= ['70, 105, 160, 230, 285, 340, 380, 446'],
