@@ -23,11 +23,26 @@ if errorlevel 1 (goto fail) else (goto success)
     echo.
 
     set "SCRIPT_DIR=%~dp0"
-    set "PORTABLE_ROOT="
-    if exist "%SCRIPT_DIR%npp_portable_V8\notepad++.exe" set "PORTABLE_ROOT=%SCRIPT_DIR%npp_portable_V8"
-    
-    if not defined PORTABLE_ROOT (
-        echo [ERRO] Pasta 'npp_portable_V8' nao encontrada.
+    set "NOTEPAD_ROOT="
+
+    :: Tenta encontrar a versao portatil primeiro
+    if exist "%SCRIPT_DIR%npp_portable_V8\notepad++.exe" (
+        set "NOTEPAD_ROOT=%SCRIPT_DIR%npp_portable_V8"
+        echo   [INFO] Notepad++ portatil encontrado em: %NOTEPAD_ROOT%
+    ) else (
+        :: Se nao encontrou portatil, tenta encontrar a instalacao padrao
+        for %%P in ("%ProgramFiles%" "%ProgramFiles(x86)%") do (
+            if exist "%%P\Notepad++\notepad++.exe" (
+                set "NOTEPAD_ROOT=%%P\Notepad++"
+                echo   [INFO] Notepad++ instalado encontrado em: !NOTEPAD_ROOT!
+                goto :found_notepad
+            )
+        )
+    )
+
+    :found_notepad
+    if not defined NOTEPAD_ROOT (
+        echo [ERRO] Notepad++ nao encontrado em nenhuma das localizacoes esperadas.
         exit /b 1
     )
 
@@ -35,9 +50,9 @@ if errorlevel 1 (goto fail) else (goto success)
     echo [ETAPA 1 de 4] Verificacao de Reset
     set /p USER_CHOICE="Deseja resetar os snippets (apagar a pasta Config do FingerText)? [S/N]: "
     if /I "%USER_CHOICE%"=="S" (
-        if exist "%PORTABLE_ROOT%\plugins\Config\FingerText" (
+        if exist "%NOTEPAD_ROOT%\plugins\Config\FingerText" (
             echo   [INFO] Removendo configuracoes antigas do FingerText...
-            rd /s /q "%PORTABLE_ROOT%\plugins\Config\FingerText" || exit /b 1
+            rd /s /q "%NOTEPAD_ROOT%\plugins\Config\FingerText" || exit /b 1
         )
     )
 
@@ -54,7 +69,7 @@ if errorlevel 1 (goto fail) else (goto success)
     :: --- Etapa 3: Instalacao dos Arquivos ---
     echo.
     echo [ETAPA 3 de 4] Instalando e configurando arquivos...
-    call :install_for_target "%PORTABLE_ROOT%" || exit /b 1
+    call :install_for_target "%NOTEPAD_ROOT%" || exit /b 1
     exit /b 0
 
 :: SUB-ROTINA DE INSTALACAO
@@ -107,8 +122,8 @@ if errorlevel 1 (goto fail) else (goto success)
     echo.
     echo Lembrete: Para o TAB funcionar, desative-o no NppSnippets.
     echo.
-    if defined PORTABLE_ROOT (
-        start "" "%PORTABLE_ROOT%\notepad++.exe"
+    if defined NOTEPAD_ROOT (
+        start "" "%NOTEPAD_ROOT%\notepad++.exe"
     )
     goto end
 

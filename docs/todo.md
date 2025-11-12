@@ -22,6 +22,9 @@
 - **RNF03**: A aplicação deve usar o framework PySide6 e seguir as boas práticas de desenvolvimento em Python.
 
 
+
+
+
 ## Refatoração e nova arquitetura
 - [x] MVC Arquitetura
 - [x] App Template com menu lateral responsivo de navegação e tabs para cara Iframe (paginas) em arquivos separados
@@ -72,7 +75,14 @@
 - [ ] Uso da planilha Excel (atividades SP) de Controle de MUST compartilhado no SharePoint para alimentar a ferramenta Desktop
 
 ## Frontend
-
+- [x] QUAIS PONTOS SERÃO ANALISADOS, QUANTO O AGENTE ESTÁ PEDINDO, 	QUEM É O ID PROBLEMA ,	QUEM É O ID SOLUÇÃO
+- [x] Ajustar componentes react para usar no astro futuramente
+- [x] Análise por empresa
+- [ ] DEVERÁ TRAZER TODAS ESTATÍSTICAS PARA CADA UM DOS ANOS das tabelas MUST
+- [ ] PONTOS APROVADOS OU RESSALVAS OU LIMITADOS DE CADA EMPRESA
+- [ ] QUANTIDADE DE SOLICITAÇÕES APROVADAS POR EMPRESA OU PONTOS
+- [x] Coluna aprovado - SIM ou NAO
+- [x] Container de historico das análises
 - [ ] Refatoração do código de arquivo unico .py para um projeto MVC usando QT - Designer
 - [ ] Deck Builder caso analisado com o MUST solicitado
 - [ ] Template de Word (docx) para criação do relatorio final em .PDF

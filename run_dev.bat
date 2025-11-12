@@ -6,5 +6,5 @@ IF EXIST requirements.txt (
     pip install -r requirements.txt
 )
 echo "Iniciando PLC_Controle_Gestao_desktop.py..."
-python PLC_Controle_Gestao_desktop.py
+python desktop_Dashboard_app.py
 popd

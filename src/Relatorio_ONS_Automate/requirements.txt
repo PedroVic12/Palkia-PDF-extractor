@@ -1,0 +1,4 @@
+Flask
+weasyprint
+xhtml2pdf
+requests
