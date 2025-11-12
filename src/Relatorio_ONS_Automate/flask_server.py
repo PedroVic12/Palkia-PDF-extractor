@@ -1,72 +1,9 @@
-# pip install weasyprint
-
-# pacman -S python-weasyprint
-
-"""
-On WIndows,
-
-Install WeasyPrint in a virtual environment using pip:
-
-python -m venv venv
-venv\Scripts\activate.bat
-python -m pip install weasyprint
-python -m weasyprint --info
-
-or use other lib like (Windows only)
-
-pip install xhtml2pdf
-
-
-"""# -*- coding: utf-8 -*-
-# Servidor Flask para conversão de HTML para PDF (v1.1 - CORRIGIDO)
-# Requer: pip install weasyprint
-# NOTA: O Flask rodará na porta 8888.
-
+from flask import Flask, Response, request, send_file, render_template_string
 import os
-import io
 import threading
 import time
 import requests
-
-from flask import Flask, Response, request, send_file, render_template_string
-
-class RelatorioGeneratorPDF:
-    def __init__(self):
-        self.pdf_generator = None
-        self._load_pdf_generator()
-
-    def _load_pdf_generator(self):
-        try:
-            from weasyprint import HTML
-            self.pdf_generator = ("weasyprint", HTML)
-            print("✅ WeasyPrint carregado com sucesso.")
-        except (ImportError, OSError) as e:
-            print(f"❌ Erro ao carregar WeasyPrint: {e}. Tentando xhtml2pdf...")
-            try:
-                from xhtml2pdf import pisa
-                self.pdf_generator = ("xhtml2pdf", pisa)
-                print("✅ xhtml2pdf carregado com sucesso.")
-            except ImportError:
-                print("❌ xhtml2pdf também não encontrado. Geração de PDF desabilitada.")
-
-    def generate(self, html_content: str) -> io.BytesIO:
-        if not self.pdf_generator:
-            raise RuntimeError("Nenhum gerador de PDF disponível (WeasyPrint ou pdfkit).")
-
-        pdf_buffer = io.BytesIO()
-
-        if self.pdf_generator[0] == "weasyprint":
-            html_class = self.pdf_generator[1]
-            html_class(string=html_content).write_pdf(target=pdf_buffer)
-        elif self.pdf_generator[0] == "xhtml2pdf":
-            pisa_module = self.pdf_generator[1]
-            pisa_module.CreatePDF(
-                io.StringIO(html_content),
-                dest=pdf_buffer
-            )
-        
-        pdf_buffer.seek(0)
-        return pdf_buffer
+from generate_pdf import RelatorioGeneratorPDF
 
 class FlaskServer:
     def __init__(self, pdf_generator: RelatorioGeneratorPDF, host: str = '0.0.0.0', port: int = 8888, debug: bool = True):
@@ -127,8 +64,3 @@ class FlaskServer:
 
         #while True:
         #    time.sleep(1)
-
-if __name__ == "__main__":
-    pdf_generator_instance = RelatorioGeneratorPDF()
-    flask_server_instance = FlaskServer(pdf_generator=pdf_generator_instance)
-    flask_server_instance.run()
