@@ -18,7 +18,7 @@ if errorlevel 1 (goto fail) else (goto success)
 :run_installer
     cls
     echo =====================================================
-    echo  INSTALADOR DO PLUGIN ORGANON PARA NOTEPAD++
+    echo  PLUGIN ORGANON PARA NOTEPAD++
     echo =====================================================
     echo.
 

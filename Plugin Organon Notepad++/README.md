@@ -9,6 +9,9 @@ Este guia completo explica como instalar e utilizar o conjunto de ferramentas pa
 
 
 
+
+
+
 ## Como Utilizar o Plugin
 (UPDATE: 22/10/2025)
 - Esta sendo usado uma versão portatil do Notepad++ para instalar o Plugin com script.bat sem senha de administrador.
@@ -21,6 +24,51 @@ Este guia completo explica como instalar e utilizar o conjunto de ferramentas pa
 
 
 --- 
+
+IExpress (Integrado no Windows): Este é um utilitário que vem com o próprio Windows (você pode encontrá-lo digitando iexpress.exe no menu Iniciar ou na caixa de diálogo "Executar"). Ele é um assistente para criar pacotes auto-extraíveis, mas também pode ser usado para empacotar um script .bat e executá-lo. Não é uma conversão direta para .exe, mas cria um executável que executa o .bat. É um pouco mais complexo de usar do que os outros dois.
+
+Abra o IExpress:
+Pressione Win + R para abrir a caixa de diálogo "Executar".
+Digite iexpress.exe e pressione Enter.
+Início do Assistente:
+Na primeira tela do IExpress Wizard, selecione "Create new Self Extraction Directive file" e clique em "Next".
+Tipo de Pacote:
+Selecione "Extract files and Run an Installation Command" e clique em "Next".
+Título do Pacote:
+Digite um título para o seu pacote (por exemplo, "Instalador Organon") e clique em "Next".
+Confirmação do Usuário (opcional):
+Você pode deixar "No prompt" se não quiser uma mensagem antes da execução ou "Prompt user with" para adicionar uma mensagem. Clique em "Next".
+Acordo de Licença (opcional):
+Você pode deixar "Do not display a license" ou adicionar um arquivo de licença. Clique em "Next".
+Arquivos a Serem Empacotados:
+Aqui é onde você adiciona o seu executar.bat e quaisquer outros arquivos que seu script precise (como Organon_Script_Plugin.udl.xml, Organon_AutoComplete.xml, FingerText - 0.5.60\FingerText.dll, organon_GLOBAL_MESTRE.sqlite, e a pasta npp_portable_V8 se for incluída).
+Clique em "Add..." e navegue até a pasta onde está seu executar.bat e adicione-o. Faça o mesmo para todos os outros arquivos e pastas relevantes.
+Importante: Adicione todos os arquivos e pastas que o script executar.bat referencia em seu diretório (%SCRIPT_DIR%).
+Clique em "Next".
+Comando de Instalação:
+Neste passo, você dirá ao IExpress qual comando executar depois que os arquivos forem extraídos.
+No campo "Install Program", você deve digitar o nome do seu arquivo .bat: cmd /c executar.bat
+Você pode querer adicionar /c para que o cmd feche após a execução do bat.
+Clique em "Next".
+Mostrar Janela (Show Window):
+Selecione "Hidden" se você não quiser que a janela do console do script .bat apareça, ou "Default" se quiser que ela apareça. Para o seu instalador, "Hidden" pode ser mais limpo, mas "Default" pode ajudar a ver o progresso.
+Clique em "Next".
+Mensagem de Finalização (Finished Message):
+Você pode deixar "No message" ou adicionar uma mensagem de finalização. Clique em "Next".
+Nome e Opções do Pacote:
+Clique em "Browse..." para escolher onde salvar o arquivo .exe resultante e qual será o nome dele (por exemplo, InstalarOrganon.exe).
+Marque "Hide file extracting progress animation" para não mostrar a barra de progresso durante a extração (opcional).
+Marque "Store files using Long File Name inside Package" (geralmente é bom para evitar problemas com nomes longos).
+Clique em "Next".
+Configuração de Reinicialização (Restart Options):
+Selecione "No restart" e clique em "Next".
+Salvar o Arquivo de Diretiva (SDF):
+Você pode salvar o arquivo .sed (Self Extraction Directive) se quiser editar as configurações mais tarde. Clique em "Next".
+Criar o Pacote:
+Clique em "Next" para iniciar a criação do seu arquivo .exe.
+Após esses passos, você terá um arquivo .exe no local que você especificou. Quando alguém executar esse .exe, ele irá extrair os arquivos que você incluiu (seu .bat e outros) para uma pasta temporária e, em seguida, executará o executar.bat.
+
+---
 
 ## Componentes do Plugin e como fazer um:
 Cada arquivo tem uma função específica para integrar a linguagem Organon ao Notepad++:

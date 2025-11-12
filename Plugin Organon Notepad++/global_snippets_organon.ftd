@@ -7,7 +7,7 @@ Enjoy!
 [>END<]!$[FingerTextData FingerTextData]@#
 SOLVECASE
 GLOBAL
-( Executa o fluxo de potência no caso carregado
+( Executa o fluxo de potencia no caso carregado
 SOLVE
 
 9999
