@@ -28,4 +28,8 @@ De      Para    SE      SA      Ar      R(pu)    X(pu)    Sh(pu)   MVA      MVb 
 99
 
 
-NEWTON
+	( Executa o fluxo de potência 
+	NEWTON
+	
+	9999
+	
