@@ -24,7 +24,7 @@ from settings_model import SettingsModel
 # IMPORT MAIN WINDOW
 from gui.windows.main_window.ui_main_window import UI_MainWindow
 
-# IMPORT IFRAME WIDGETS
+# IMPORT IFRAME WIDGETS (pagina separadas para cada TAB)
 from gui.iframes.dashboard_widget import DashboardWidget
 from gui.iframes.pomodoro_widget import PomodoroWidget
 from gui.iframes.checklist_widget import ChecklistWidget
