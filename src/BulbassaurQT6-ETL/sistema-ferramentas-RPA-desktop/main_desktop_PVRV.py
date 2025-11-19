@@ -113,8 +113,8 @@ class MainWindow(QMainWindow):
     def _setup_appbar_links(self):
         links = {
             "🌍 GitHub": "https://github.com/PedroVic12",
-            "Documentação Pyside6 web": "https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineWidgets/QWebEngineView.html#PySide6.QtWebEngineWidgets.QWebEngineView",
-            "Documentação PySide6 QtWidgets": "https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication",
+            "Pyside6 web": "https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineWidgets/QWebEngineView.html#PySide6.QtWebEngineWidgets.QWebEngineView",
+            "PySide6 QtWidgets": "https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication",
             "📚 Dashboard Atividades SP": "https://dashboard-ons.onrender.com/",
             "📚 Habit Tracker": "https://gohann-treinamentos-web-app-one.vercel.app",
             "⚡ SEP para Leigos": "https://electrical-system-simulator.vercel.app/"

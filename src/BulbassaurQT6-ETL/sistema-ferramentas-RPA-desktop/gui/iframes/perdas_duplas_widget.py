@@ -26,15 +26,15 @@ class ProcessingThread(QThread):
     result_signal = Signal(pd.DataFrame)
     error_signal = Signal(str)
     
-    def __init__(self, pdf_path, script_type, process_options=None, page_range=None, parent=None):
+    def __init__(self, pdf_path, script_type, process_options=None, page_range=None, etl_controller=None, parent=None):
         super().__init__(parent)
         self.pdf_path = pdf_path
         self.script_type = script_type
         self.process_options = process_options or {}
         self.page_range = page_range  # Array de páginas específicas
 
-        # Instancia o controller que orquestra a lógica de negócio
-        self.etl_controller = ETLController()
+        # Usa a instância do controller passada, que já tem as opções da UI
+        self.etl_controller = etl_controller # etl_controller agora é passado do UIController
 
     def setState(self, state):
         self.state = state
@@ -177,8 +177,8 @@ class PerdasDuplasUIController:
         # Usa as páginas selecionadas ou None para todas
         page_range = self.widget.selected_pages if self.widget.selected_pages else None
         
-        # Cria e inicia a thread de processamento
-        self.thread = ProcessingThread(self.widget.current_pdf_path, script_type, process_options, page_range, parent=self.widget)
+        # Cria e inicia a thread de processamento, passando a instância do etl_controller
+        self.thread = ProcessingThread(self.widget.current_pdf_path, script_type, process_options, page_range, self.etl_controller, parent=self.widget)
         self.thread.progress_signal.connect(self.update_progress)
         self.thread.result_signal.connect(self.show_results)
         self.thread.error_signal.connect(self.show_error)

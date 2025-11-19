@@ -109,8 +109,9 @@ class ETLRepository:
         futura = "SIM" if prazo_atual == "Curto Prazo" else "NÃO"
 
         if enable_regex_processing:
-            if 'Contingência Dupla' in contingencia and process_options['separar_duplas']:
-                contingencia_limpa = re.sub(r'Contingência Dupla (da|das)?\s*', '', contingencia).strip()
+            # Torna a detecção de 'Contingência Dupla' case-insensitive
+            if re.search(r'contingência dupla', contingencia, re.IGNORECASE) and process_options['separar_duplas']:
+                contingencia_limpa = re.sub(r'Contingência Dupla (da|das)?\s*', '', contingencia, flags=re.IGNORECASE).strip()
 
                 if ' e ' in contingencia_limpa:
                     partes = contingencia_limpa.split(' e ')
@@ -131,19 +132,30 @@ class ETLRepository:
                         'Perdas Duplas na mesma contigencia': 'NÃO' # Nome da coluna padronizado
                     })
             else:
+                # Se o regex estiver ativado, mas não for uma 'Contingência Dupla' ou 'separar_duplas' for False
                 cleaned_contingency = self._clean_contingency_name(contingencia, process_options['adicionar_lt'])
                 contingencias_data.append({
                     'Perda Dupla': cleaned_contingency,
                     'Futura': futura,
-                    'Perdas Duplas na mesma contigencia': 'NÃO' # Nome da coluna padronizado
+                    'Perdas Duplas na mesma contigencia': 'NÃO'
                 })
         else:
             # Retorna a contingência bruta se o processamento de regex estiver desativado
+            # Garante que a versão bruta tenha marcadores e espaços extras removidos para consistência
             contingencias_data.append({
-                'Perda Dupla': contingencia.strip(), # Garante que a versão bruta tenha espaços extras removidos para consistência
+                'Perda Dupla': contingency_raw_line.replace('•', '').replace('-', '').replace('Contingência dupla da', '').strip(),
                 'Futura': futura,
                 'Perdas Duplas na mesma contigencia': 'NÃO' # Valor padrão, pois não houve processamento de duplas
             })
+        
+        # Se não houver dados, adicione uma entrada com 'Perda Dupla' como None para ser removida pelo dropna
+        if not contingencias_data:
+            contingencias_data.append({
+                'Perda Dupla': None, 
+                'Futura': futura, 
+                'Perdas Duplas na mesma contigencia': 'NÃO'
+            })
+        
         return contingencias_data
 
 # ===============================================================
@@ -238,28 +250,30 @@ class ETLController:
                     if match_pagina:
                         pagina_atual = int(match_pagina.group(1))
                     print(f"Marcador de página: {linha}")
-                    continue # Continua para a próxima linha após detectar o marcador de página
+                    # Não usar 'continue' aqui para permitir que Volume/Área/Prazo sejam resetados ou usados
                 
                 # 2) Identifica Volume e Área Geoelétrica
+                # Ajustado para aceitar prefixos numéricos (ex: "2.1") e capturar "Volume X - Área Y"
                 if self.process_options['enable_volume_area_extraction']:
-                    # Ajuste da regex para aceitar tanto hífen quanto traço longo como separador
-                    match_volume = re.search(r'Volume\s*(\d+)\s*[-–]\s*(.+)', linha) # Regex corrigida novamente para [-–]
+                    match_volume = re.search(r'(?:\d+\.\d+\s+)?Volume\s*(\d+)\s*[-–]\s*(.+)', linha) # Regex corrigida
                     if match_volume:
                         volume_atual = f"Volume {match_volume.group(1)}"
                         area_geoelerica_atual = match_volume.group(2).strip()
-                        continue
+                        continue # Continua para a próxima linha após identificar Volume/Área
                 
                 # 3) Identifica Prazo (Curto Prazo ou Médio Prazo)
+                # Ajustado para capturar Prazo em qualquer parte da linha, case-insensitive, com ou sem número de seção
                 if self.process_options['enable_prazo_extraction']:
-                    # Ajuste da regex para capturar Prazo em qualquer parte da linha, case-insensitive
-                    match_prazo = re.search(r'(Curto Prazo|Médio Prazo)', linha, re.IGNORECASE) # Ajustado para re.search
+                    match_prazo = re.search(r'(Curto\s+Prazo|Médio\s+Prazo)', linha, re.IGNORECASE) # Regex corrigida
                     if match_prazo:
                         prazo_atual = match_prazo.group(1).title()
-                        continue
+                        continue # Continua para a próxima linha após identificar Prazo
 
-                # 4) Identifica perdas duplas marcadas com '•' ou '-' ou 'Contingência dupla da'
+                # 4) Identifica perdas duplas
+                # Condição expandida para incluir linhas que começam com 'LT' e contêm 'kV'
                 if self.process_options['enable_contingency_identification']:
-                    if linha.startswith('•') or linha.startswith('-') or re.search(r'Contingência dupla da', linha, re.IGNORECASE):
+                    # Regex para identificar linhas de contingência mais robusta
+                    if linha.startswith('•') or linha.startswith('-') or re.search(r'Contingência dupla da', linha, re.IGNORECASE) or re.search(r'LT \d+\s*kV', linha):
 
                         # Delega o processamento detalhado da linha de contingência ao ETLRepository
                         contingencias_processadas = self._etl_repository._parse_contingency_line(
@@ -293,7 +307,13 @@ class ETLController:
                     # Padroniza a capitalização das colunas de texto usando o método privado
                     df = self._standardize_dataframe_text_columns(df, [self._COLUMN_NAMES[0], self._COLUMN_NAMES[1], self._COLUMN_NAMES[2], self._COLUMN_NAMES[3]])
             
+                # retirar as linhas em branco que ele leu
+                df = df.dropna(subset=['Perda Dupla'])
+
+                print("Dataframe de resultado atualizado por PVRV (após dropna):")
+                
             return df
+
         except Exception as e:
             print(f"Erro no processamento de contingências duplas: {e}")
             return pd.DataFrame({"Erro": [f"Falha no processamento: {e}"]})
@@ -326,6 +346,7 @@ def run_etl_perdas_duplas(test_file_path=None):
     print("\n--- Executa um teste da lógica de ETL para perdas duplas a partir de um arquivo TXT ou texto de exemplo. ---")
     etl_controller = ETLController()
 
+    extracted_text = "" # Inicializa com string vazia
 
     # Você pode modificar as opções de processamento aqui para testar cenários diferentes
     print("\n--- Opções de processamento ---")
@@ -333,8 +354,8 @@ def run_etl_perdas_duplas(test_file_path=None):
     etl_controller.process_options['enable_prazo_extraction'] = True
     etl_controller.process_options['enable_contingency_identification'] = True
     etl_controller.process_options['enable_regex_processing'] = True  # Alterado
-    etl_controller.process_options['separar_duplas'] = False       # Alterado 
-    etl_controller.process_options['adicionar_lt'] = False         # Alterado 
+    etl_controller.process_options['separar_duplas'] = True       # Alterado 
+    etl_controller.process_options['adicionar_lt'] = True         # Alterado 
     etl_controller.process_options['standardize_columns'] = True
     print(etl_controller.process_options)
     print("\n")
@@ -347,15 +368,19 @@ def run_etl_perdas_duplas(test_file_path=None):
         if file_content:
             extracted_text = file_content
         else:
-            print(f"Erro: Não foi possível ler o arquivo TXT {test_file_path}. Usando texto de exemplo.")
-
+            print(f"Erro: Não foi possível ler o arquivo TXT {test_file_path}. Não há texto para processar.")
+            return # Sai da função se não conseguir ler o arquivo
 
     # Executa o ETL
+    if not extracted_text:
+        print("Erro: Nenhuma texto para processar. O arquivo TXT pode estar vazio ou não foi lido.")
+        return
+
     df_resultados = etl_controller.process_contingencias_duplas(extracted_text)
     
     # Exibe os resultados
     print("\n--- Resultados do ETL ---")
-    print(df_resultados.to_string())
+    print(df_resultados.head(10)) 
     print("\n--- Teste concluído ---")
 
 if __name__ == '__main__':
