@@ -5,7 +5,7 @@
 # Levantamento de requisitos do Software de Controle e Gestão MUST e Atividades SP (Dashboard)
 
 #### Requisitos Funcionais (RF)
-- [x] **RF01**: A aplicação deve ter uma janela principal com um menu lateral e uma área de conteúdo principal com um Layout Dashboard como App Template no Pyside6.
+- [x] **RF01**: A aplicação deve ter uma janela principal com um menu lateral e uma área de conteúdo principal com um Layoubt Dashboard como App Template no Pyside6.
 - [x] **RF02**: A navegação principal para abrir diferentes módulos (ferramentas) deve estar claramente disponível em cada Pagina como Iframe Separado por tabs e conectado ao menu lateral
 - [x] **RF03**: O usuário deve poder abrir múltiplos módulos em abas, podendo alternar entre eles.
 - [x] **RF04**: O usuário deve poder fechar as abas que não está mais usando.

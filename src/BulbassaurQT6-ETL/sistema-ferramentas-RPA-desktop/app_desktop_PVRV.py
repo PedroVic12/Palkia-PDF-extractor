@@ -29,7 +29,6 @@ from gui.iframes.dashboard_widget import DashboardWidget
 from gui.iframes.pomodoro_widget import PomodoroWidget
 from gui.iframes.checklist_widget import ChecklistWidget
 from gui.iframes.settings_widget import SettingsWidget
-from gui.iframes.perdas_duplas_widget import PerdasDuplasWidget # Importa o novo widget de Perdas Duplas
 
 # IMPORT SIDE MENU WIDGETS
 from gui.side_menus.navigation_menu import NavigationMenu
@@ -38,7 +37,6 @@ from gui.side_menus.default_sidemenu import DefaultSideMenu
 
 # IMPORT CUSTOM WIDGETS
 from gui.widgets.py_text_button import PyTextButton
-from gui.widgets.py_iframe_header import PyIframeHeader # Importa o novo cabeçalho para iframes
 
 # MAIN WINDOW
 class MainWindow(QMainWindow):
@@ -64,11 +62,6 @@ class MainWindow(QMainWindow):
         self.navigation_menu = NavigationMenu()
         self.ui.left_menu_layout.insertWidget(0, self.navigation_menu)
 
-        # Adiciona um botão para o PerdasDuplasWidget no menu de navegação
-        btn_perdas_duplas = PyTextButton(text="🤖 Perdas Duplas ETL")
-        btn_perdas_duplas.clicked.connect(self.open_perdas_duplas_tab)
-        self.navigation_menu.layout().addWidget(btn_perdas_duplas)
-
         self.side_menu_stack = QStackedWidget()
         self.default_side_menu = DefaultSideMenu()
         self.side_menus['default'] = self.default_side_menu
@@ -92,8 +85,6 @@ class MainWindow(QMainWindow):
         self.navigation_menu.pomodoro_requested.connect(self.open_pomodoro_tab)
         self.navigation_menu.checklist_requested.connect(self.open_checklist_tab)
         self.navigation_menu.settings_requested.connect(self.open_settings_tab)
-        # Conecta o novo botão
-        # self.navigation_menu.perdas_duplas_requested.connect(self.open_perdas_duplas_tab)
         
         # Other UI
         self.ui.toggle_button.clicked.connect(self.toggle_button)
@@ -128,28 +119,12 @@ class MainWindow(QMainWindow):
                 else:
                     side_menu_widget = self.side_menus[side_menu_class.__name__]
             
-            # Cria o widget principal do iframe
-            main_widget = main_widget_class(side_menu=side_menu_widget) # Passa o side_menu para o widget, se houver
-
-            # Cria o cabeçalho do iframe
-            iframe_header = PyIframeHeader(title_text=tab_name)
-
-            # Cria um layout vertical para o cabeçalho e o conteúdo principal
-            iframe_layout = QVBoxLayout()
-            iframe_layout.setContentsMargins(0, 0, 0, 0)
-            iframe_layout.setSpacing(0)
-            iframe_layout.addWidget(iframe_header)
-            iframe_layout.addWidget(main_widget)
-            
-            # Cria um QWidget container para o iframe_layout
-            iframe_container = QWidget()
-            iframe_container.setLayout(iframe_layout)
-
-            index = self.ui.tabs.addTab(iframe_container, tab_name)
+            main_widget = main_widget_class(side_menu=side_menu_widget)
+            index = self.ui.tabs.addTab(main_widget, tab_name)
             self.ui.tabs.setCurrentIndex(index)
-            self.open_tabs[tab_name] = iframe_container # Armazena o container, não apenas o main_widget
+            self.open_tabs[tab_name] = main_widget
             if side_menu_widget:
-                self.tab_to_side_menu_map[iframe_container] = side_menu_widget
+                self.tab_to_side_menu_map[main_widget] = side_menu_widget
         
         self.navigation_menu.set_active_button(tab_name)
 
@@ -183,7 +158,6 @@ class MainWindow(QMainWindow):
     def open_pomodoro_tab(self): self.open_or_focus_tab("Pomodoro", PomodoroWidget)
     def open_checklist_tab(self): self.open_or_focus_tab("Checklist", ChecklistWidget, ChecklistSideMenu)
     def open_settings_tab(self): self.open_or_focus_tab("Configurações", SettingsWidget)
-    def open_perdas_duplas_tab(self): self.open_or_focus_tab("Perdas Duplas ETL", PerdasDuplasWidget)
 
     # SETTINGS
     # ///////////////////////////////////////////////////////////////
