@@ -74,7 +74,7 @@ class ETLRepository:
             str: O nome da contingência limpo e padronizado.
         """
         # Remove o texto "Contingência Dupla" e variações (ex: "Contingência Dupla da", "Contingência Dupla das")
-        cleaned_name = re.sub(r'Contingência Dupla (da|das)?\s*', '', contingency_name).strip()
+        cleaned_name = re.sub(r'Contingência Dupla (da|das)?\s*', '', contingency_name, flags=re.IGNORECASE).strip()
         
         # Adiciona "LT" se necessário, evitando duplicações e garantindo formato
         if add_lt_option:
@@ -98,63 +98,77 @@ class ETLRepository:
             contingency_raw_line (str): A linha de texto da contingência (ex: '• Contingência Dupla LT X e LT Y').
             process_options (dict): Opções de processamento, como 'separar_duplas' e 'adicionar_lt'.
             prazo_atual (str): O prazo atual (Curto Prazo ou Médio Prazo).
-            enable_regex_processing (bool, optional): Se True, ativa o processamento de regex para contingências duplas. Defaults to True.
+            enable_regex_processing (bool, optional): Se True, ativa o processamento de regex para contingências duplas.
 
         Returns:
             list: Uma lista de dicionários, onde cada dicionário representa uma contingência extraída.
         """
         contingencias_data = []
-        # Removido: .replace('Contingência dupla da', '') -> A regex agora lida com isso
-        contingencia = contingency_raw_line.replace('•', '').replace('-', '').strip() # Garante que a linha bruta seja limpa de marcadores e espaços
+        contingencia_base = contingency_raw_line.replace('•', '').replace('-', '').strip() # Garante que a linha bruta seja limpa de marcadores e espaços
         futura = "SIM" if prazo_atual == "Curto Prazo" else "NÃO"
 
-        if enable_regex_processing:
-            # Torna a detecção de 'Contingência Dupla' case-insensitive
-            if re.search(r'contingência dupla', contingencia, re.IGNORECASE) and process_options['separar_duplas']:
-                contingencia_limpa = re.sub(r'Contingência Dupla (da|das)?\s*', '', contingencia, flags=re.IGNORECASE).strip()
+        add_lt_enabled = process_options['adicionar_lt']
+        separate_duplas_enabled = process_options['separar_duplas']
 
-                if ' e ' in contingencia_limpa:
-                    partes = contingencia_limpa.split(' e ')
+        if enable_regex_processing:
+            is_contingencia_dupla = re.search(r'contingência dupla', contingencia_base, re.IGNORECASE)
+
+            if is_contingencia_dupla and separate_duplas_enabled:
+                contingencia_processada = re.sub(r'Contingência Dupla (da|das)?\s*', '', contingencia_base, flags=re.IGNORECASE).strip()
+
+                if ' e ' in contingencia_processada:
+                    partes = contingencia_processada.split(' e ')
                     for i, parte in enumerate(partes):
                         parte = parte.strip()
                         prev_part_ends_with_lt = (i > 0 and partes[i-1].strip().endswith('LT'))
-                        cleaned_part = self._clean_contingency_name(parte, process_options['adicionar_lt'], prev_part_ends_with_lt)
+                        
+                        final_part_name = parte
+                        if add_lt_enabled:
+                            final_part_name = self._clean_contingency_name(parte, True, prev_part_ends_with_lt)
+
                         contingencias_data.append({
-                            'Perda Dupla': cleaned_part,
+                            'Perda Dupla': final_part_name,
                             'Futura': futura,
-                            'Perdas Duplas na mesma contigencia': 'SIM' # Nome da coluna padronizado
+                            'Perdas Duplas na mesma contigencia': 'SIM'
                         })
                 else:
-                    cleaned_contingency = self._clean_contingency_name(contingencia, process_options['adicionar_lt'])
-                    contingencias_data.append({
-                        'Perda Dupla': cleaned_contingency,
-                        'Futura': futura,
-                        'Perdas Duplas na mesma contigencia': 'NÃO' # Nome da coluna padronizado
-                    })
+                    # É uma "Contingência Dupla" mas não tem separador " e ", trata como uma única
+                    final_contingency_name = contingencia_processada
+                    if add_lt_enabled:
+                        final_contingency_name = self._clean_contingency_name(contingencia_processada, True)
+
+                    if final_contingency_name: # Adiciona apenas se o nome final não for vazio
+                        contingencias_data.append({
+                            'Perda Dupla': final_contingency_name,
+                            'Futura': futura,
+                            'Perdas Duplas na mesma contigencia': 'NÃO'
+                        })
             else:
-                # Se o regex estiver ativado, mas não for uma 'Contingência Dupla' ou 'separar_duplas' for False
-                cleaned_contingency = self._clean_contingency_name(contingencia, process_options['adicionar_lt'])
+                # Não é uma "Contingência Dupla" ou a opção de separar está desativada
+                final_contingency_name = contingencia_base
+                if add_lt_enabled:
+                    final_contingency_name = self._clean_contingency_name(contingencia_base, True)
+
+                if final_contingency_name: # Adiciona apenas se o nome final não for vazio
+                    contingencias_data.append({
+                        'Perda Dupla': final_contingency_name,
+                        'Futura': futura,
+                        'Perdas Duplas na mesma contigencia': 'NÃO'
+                    })
+        else:
+            # enable_regex_processing está desativado
+            contingencia_bruta_limpa = contingency_raw_line.replace('•', '').replace('-', '').replace('Contingência dupla da', '').strip()
+            
+            final_contingency_name = contingencia_bruta_limpa
+            if add_lt_enabled:
+                final_contingency_name = self._clean_contingency_name(contingencia_bruta_limpa, True, False)
+            
+            if final_contingency_name: # Adiciona apenas se o nome final não for vazio
                 contingencias_data.append({
-                    'Perda Dupla': cleaned_contingency,
+                    'Perda Dupla': final_contingency_name,
                     'Futura': futura,
                     'Perdas Duplas na mesma contigencia': 'NÃO'
                 })
-        else:
-            # Retorna a contingência bruta se o processamento de regex estiver desativado
-            # Garante que a versão bruta tenha marcadores e espaços extras removidos para consistência
-            contingencias_data.append({
-                'Perda Dupla': contingency_raw_line.replace('•', '').replace('-', '').replace('Contingência dupla da', '').strip(),
-                'Futura': futura,
-                'Perdas Duplas na mesma contigencia': 'NÃO' # Valor padrão, pois não houve processamento de duplas
-            })
-        
-        # Se não houver dados, adicione uma entrada com 'Perda Dupla' como None para ser removida pelo dropna
-        if not contingencias_data:
-            contingencias_data.append({
-                'Perda Dupla': None, 
-                'Futura': futura, 
-                'Perdas Duplas na mesma contigencia': 'NÃO'
-            })
         
         return contingencias_data
 
@@ -354,13 +368,12 @@ def run_etl_perdas_duplas(test_file_path=None):
     etl_controller.process_options['enable_prazo_extraction'] = True
     etl_controller.process_options['enable_contingency_identification'] = True
     etl_controller.process_options['enable_regex_processing'] = True  # Alterado
-    etl_controller.process_options['separar_duplas'] = True       # Alterado 
-    etl_controller.process_options['adicionar_lt'] = True         # Alterado 
+    etl_controller.process_options['separar_duplas'] = False       # Alterado 
+    etl_controller.process_options['adicionar_lt'] = False         # Alterado 
     etl_controller.process_options['standardize_columns'] = True
     print(etl_controller.process_options)
     print("\n")
 
-    #! aqui tem que ter uma funcao de setState que atualiza esses status do signal do process_options
 
     if test_file_path:
         print(f"Lendo texto do arquivo: {test_file_path}")
