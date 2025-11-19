@@ -1,8 +1,8 @@
 # ///////////////////////////////////////////////////////////////
 #
-# BY: Pedro Victor Rodrigues Veras (based on Wanderson M. Pimenta)
-# PROJECT MADE WITH: Qt Designer and PySide6
-# V: 10.0.0 (Final Architecture)
+# BY: Pedro Victor Rodrigues Veras 
+# PROJECT MADE WITH: Qt Designer and PySide6 for a app template Pyside6 with IFrames, Widgets, Dark/Light Mode, Settings and more!
+# VERSÃO: 3.1.4
 #
 # ///////////////////////////////////////////////////////////////
 
@@ -19,16 +19,20 @@ from qt_core import *
 from styles import DARK_STYLE, LIGHT_STYLE
 
 # IMPORT MODEL
-from settings_model import SettingsModel
+from app.models.settings_model import SettingsModel
 
-# IMPORT MAIN WINDOW
+# IMPORT UI
 from gui.windows.main_window.ui_main_window import UI_MainWindow
 
 # IMPORT IFRAME WIDGETS (pagina separadas para cada TAB)
 from gui.iframes.dashboard_widget import DashboardWidget
-from gui.iframes.pomodoro_widget import PomodoroWidget
+#from gui.iframes.pomodoro_widget import PomodoroWidget
 from gui.iframes.checklist_widget import ChecklistWidget
 from gui.iframes.settings_widget import SettingsWidget
+
+# IMPORT IFRAME WIDGETS (pagina separadas para cada TAB)
+from gui.iframes.perdas_duplas_widget import PerdasDuplasWidget 
+
 
 # IMPORT SIDE MENU WIDGETS
 from gui.side_menus.navigation_menu import NavigationMenu
@@ -62,6 +66,8 @@ class MainWindow(QMainWindow):
         self.navigation_menu = NavigationMenu()
         self.ui.left_menu_layout.insertWidget(0, self.navigation_menu)
 
+
+        # import default widgets
         self.side_menu_stack = QStackedWidget()
         self.default_side_menu = DefaultSideMenu()
         self.side_menus['default'] = self.default_side_menu
@@ -82,10 +88,12 @@ class MainWindow(QMainWindow):
     def connect_signals(self):
         # Main Navigation
         self.navigation_menu.dashboard_requested.connect(self.open_dashboard_tab)
-        self.navigation_menu.pomodoro_requested.connect(self.open_pomodoro_tab)
+        #self.navigation_menu.pomodoro_requested.connect(self.open_pomodoro_tab)
         self.navigation_menu.checklist_requested.connect(self.open_checklist_tab)
         self.navigation_menu.settings_requested.connect(self.open_settings_tab)
+        self.navigation_menu.perdas_duplas_requested.connect(self.open_perdas_duplas_tab) # Conecta o sinal do NavigationMenu
         
+
         # Other UI
         self.ui.toggle_button.clicked.connect(self.toggle_button)
         self.ui.tabs.currentChanged.connect(self.on_tab_changed)
@@ -155,9 +163,10 @@ class MainWindow(QMainWindow):
     # NAVIGATION HANDLERS
     # ///////////////////////////////////////////////////////////////
     def open_dashboard_tab(self): self.open_or_focus_tab("Dashboard", DashboardWidget)
-    def open_pomodoro_tab(self): self.open_or_focus_tab("Pomodoro", PomodoroWidget)
+    #def open_pomodoro_tab(self): self.open_or_focus_tab("Pomodoro", PomodoroWidget)
     def open_checklist_tab(self): self.open_or_focus_tab("Checklist", ChecklistWidget, ChecklistSideMenu)
     def open_settings_tab(self): self.open_or_focus_tab("Configurações", SettingsWidget)
+    def open_perdas_duplas_tab(self): """Abre a aba da ferramenta de Perdas Duplas ETL.""" ; self.open_or_focus_tab("Perdas Duplas ETL", PerdasDuplasWidget)
 
     # SETTINGS
     # ///////////////////////////////////////////////////////////////

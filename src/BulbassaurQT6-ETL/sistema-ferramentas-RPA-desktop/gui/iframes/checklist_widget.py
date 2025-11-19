@@ -1,16 +1,18 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
-    QListWidget, QLineEdit, QListWidgetItem, QLabel
+    QListWidget, QLineEdit, QListWidgetItem
 )
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtGui import QFont
 
 # We need to adjust the import path to find the model
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from model import TodoModel
+
+from app.models.todo_model import TodoModel
+
+#from model import TodoModel
 
 class ChecklistWidget(QWidget):
     def __init__(self, side_menu=None):
