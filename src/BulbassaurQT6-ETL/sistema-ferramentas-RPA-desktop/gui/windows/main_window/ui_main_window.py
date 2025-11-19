@@ -41,7 +41,7 @@ class UI_MainWindow(object):
         
         # LABEL VERSION
         # ///////////////////////////////////////////////////////////////
-        self.left_menu_label_version = QLabel("v9.0.0")
+        self.left_menu_label_version = QLabel("v3.1.1")
         self.left_menu_label_version.setAlignment(Qt.AlignCenter)
         self.left_menu_label_version.setMinimumHeight(30)
         self.left_menu_label_version.setMaximumHeight(30)
@@ -99,7 +99,7 @@ class UI_MainWindow(object):
         self.bottom_bar_layout.setContentsMargins(10,0,10,0)
 
         # Left label
-        self.bottom_label_left = QLabel("Criado por: Pedro Veras (com base em Wanderson M. Pimenta)")
+        self.bottom_label_left = QLabel("Criado por: Pedro Veras")
         self.bottom_bar_layout.addWidget(self.bottom_label_left)
 
         # ADD TO CONTENT LAYOUT

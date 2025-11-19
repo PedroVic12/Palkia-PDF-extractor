@@ -6,7 +6,15 @@ from PySide6.QtGui import QColor
 # ===============================================================
 # CLASSE: Controller (app/controllers/etl_repository.py)
 # ===============================================================
-from app.controllers.etl_repository import ETLController # Importa o Controller
+import pathlib
+import sys
+
+# Adiciona duas pastas acima ao sys.path para importar o controller
+current_path = pathlib.Path(__file__).parent
+parent_path = (current_path / ".." / "..").resolve()
+sys.path.insert(0, str(parent_path))
+
+from app.controllers.etl_repository import ETLController
 
 # ===============================================================
 # CLASSE: ProcessingThread (Thread de processamento em segundo plano)
@@ -35,7 +43,8 @@ class ProcessingThread(QThread):
             
             # Executa o script específico através do controller
             if self.script_type == "contingencias_duplas":
-                result_df = self.etl_controller.process_contingencias_duplas(full_text, self.process_options)
+                result_df = self.etl_controller.process_contingencias_duplas(full_text)
+
             elif self.script_type == "outro_script":
                 result_df = self.etl_controller.process_outro_script(full_text)
             else:
@@ -145,6 +154,11 @@ class PerdasDuplasUIController:
         
         # Coleta as opções de processamento dos checkboxes
         process_options = {
+            'enable_volume_area_extraction': self.widget.cb_enable_volume_area_extraction.isChecked(),
+            'enable_prazo_extraction': self.widget.cb_enable_prazo_extraction.isChecked(),
+            'enable_contingency_identification': self.widget.cb_enable_contingency_identification.isChecked(),
+            'enable_regex_processing': self.widget.cb_regex_processing.isChecked(),
+            'standardize_columns': self.widget.cb_standardize_columns.isChecked(),
             'separar_duplas': self.widget.cb_separar_duplas.isChecked(),
             'adicionar_lt': self.widget.cb_adicionar_lt.isChecked()
         }
@@ -212,7 +226,7 @@ class PerdasDuplasUIController:
         """Exporta o DataFrame atual de resultados para um arquivo Excel."""
         if self.widget.current_df is not None and not self.widget.current_df.empty:
             file_path, _ = QFileDialog.getSaveFileName(
-                self.widget, "Salvar Excel", "contingencias_duplas.xlsx", "Excel Files (*.xlsx)")
+                self.widget, "Salvar Excel", "perdas_duplas_ETL.xlsx", "Excel Files (*.xlsx)")
             
             if file_path:
                 try:
@@ -226,6 +240,20 @@ class PerdasDuplasUIController:
     def export_to_word(self):
         """Exibe uma mensagem informando que a funcionalidade de exportação para Word está em desenvolvimento."""
         QMessageBox.information(self.widget, "Info", "Funcionalidade em desenvolvimento.")
+
+    def _update_and_log_process_options(self):
+        """Coleta o estado atual dos checkboxes, atualiza o controller e imprime no terminal."""
+        current_options = {
+            'enable_volume_area_extraction': self.widget.cb_enable_volume_area_extraction.isChecked(),
+            'enable_prazo_extraction': self.widget.cb_enable_prazo_extraction.isChecked(),
+            'enable_contingency_identification': self.widget.cb_enable_contingency_identification.isChecked(),
+            'enable_regex_processing': self.widget.cb_regex_processing.isChecked(),
+            'standardize_columns': self.widget.cb_standardize_columns.isChecked(),
+            'separar_duplas': self.widget.cb_separar_duplas.isChecked(),
+            'adicionar_lt': self.widget.cb_adicionar_lt.isChecked()
+        }
+        self.etl_controller.process_options.update(current_options)
+        print("Process Options Atualizadas:", self.etl_controller.process_options)
 
 # ===============================================================
 # CLASSE: PerdasDuplasWidget (Iframe da ferramenta de Perdas Duplas)
@@ -331,6 +359,49 @@ class PerdasDuplasWidget(QWidget):
         self.progress_bar.setVisible(False) # Inicialmente invisível
         content_layout.addWidget(self.progress_bar)
         
+
+    def create_options_group(self):
+        """Cria e retorna o widget do grupo de opções de processamento."""
+
+        options_group = QGroupBox("⚙️ Opções de Processamento")
+        options_layout = QVBoxLayout(options_group)
+        
+        # Novos Checkboxes para controle granular
+        self.cb_enable_volume_area_extraction = QCheckBox("➕ 1) Extrair Volume e Área")
+        self.cb_enable_volume_area_extraction.setChecked(True)
+        options_layout.addWidget(self.cb_enable_volume_area_extraction)
+
+        self.cb_enable_prazo_extraction = QCheckBox("⏰ 2) Extrair Prazo")
+        self.cb_enable_prazo_extraction.setChecked(True)
+        options_layout.addWidget(self.cb_enable_prazo_extraction)
+
+        self.cb_enable_contingency_identification = QCheckBox("🔍 3) Identificar Contingências")
+        self.cb_enable_contingency_identification.setChecked(True)
+        options_layout.addWidget(self.cb_enable_contingency_identification)
+
+        self.cb_regex_processing = QCheckBox("⚙️ 4) Processar Regex de Contingências")
+        self.cb_regex_processing.setChecked(True)
+        options_layout.addWidget(self.cb_regex_processing)
+
+
+        # Checkbox para separar contingências duplas
+        self.cb_separar_duplas = QCheckBox("🔀 5) Separar Perdas Duplas")
+        self.cb_separar_duplas.setChecked(True)
+        options_layout.addWidget(self.cb_separar_duplas)
+        
+        # Checkbox para adicionar 'LT' automaticamente
+        self.cb_adicionar_lt = QCheckBox("🏷️ 6) Adicionar 'LT' automaticamente")
+        self.cb_adicionar_lt.setChecked(True)
+        options_layout.addWidget(self.cb_adicionar_lt)
+
+
+        self.cb_standardize_columns = QCheckBox("🔡 7) Padronizar Capitalização")
+        self.cb_standardize_columns.setChecked(True)
+        options_layout.addWidget(self.cb_standardize_columns)
+        
+        
+        return options_group
+
     def create_sidebar(self):
         """Cria e retorna o widget da barra lateral (sidebar) com as opções de controle."""
         sidebar = QFrame()
@@ -366,31 +437,21 @@ class PerdasDuplasWidget(QWidget):
         self.pages_status_label.setWordWrap(True)
         upload_layout.addWidget(self.pages_status_label)
         
-        # Grupo para opções de processamento
-        options_group = QGroupBox("⚙️ Opções de Processamento")
-        options_layout = QVBoxLayout(options_group)
+        #! Adiciona o grupo de opções de processamento
+        options_group = self.create_options_group()
+        upload_layout.addWidget(options_group)
         
-        # Checkbox para separar contingências duplas
-        self.cb_separar_duplas = QCheckBox("🔀 Separar Contingências Duplas")
-        self.cb_separar_duplas.setChecked(True)
-        options_layout.addWidget(self.cb_separar_duplas)
-        
-        # Checkbox para adicionar 'LT' automaticamente
-        self.cb_adicionar_lt = QCheckBox("🏷️ Adicionar 'LT' automaticamente")
-        self.cb_adicionar_lt.setChecked(True)
-        options_layout.addWidget(self.cb_adicionar_lt)
-        
-        # Grupo para scripts RPA
-        scripts_group = QGroupBox("🤖 Scripts RPA")
+        #! Grupo para scripts RPA
+        scripts_group = QGroupBox("🤖 Scripts Python para RPA")
         scripts_layout = QVBoxLayout(scripts_group)
         
         # Botão para iniciar a análise de contingências duplas
-        self.btn_contingencias = QPushButton("⚡ Análise Contingências Duplas")
+        self.btn_contingencias = QPushButton("⚡ Análise Nomes Perdas Duplas")
         self.btn_contingencias.setObjectName("btn_contingencias")
         scripts_layout.addWidget(self.btn_contingencias)
         
         # Botão placeholder para outros scripts
-        self.btn_script2 = QPushButton("🛠️ Script 2 - Em Desenvolvimento")
+        self.btn_script2 = QPushButton("🛠️ Organizador arquivos - Em Desenvolvimento")
         scripts_layout.addWidget(self.btn_script2)
         
         # Grupo para opções de exportação
@@ -423,3 +484,12 @@ class PerdasDuplasWidget(QWidget):
         self.btn_contingencias.clicked.connect(lambda: self.ui_controller.run_script("contingencias_duplas"))
         self.btn_export_excel.clicked.connect(self.ui_controller.export_to_excel)
         self.btn_export_word.clicked.connect(self.ui_controller.export_to_word)
+
+        # Conecta os checkboxes para atualizar e logar as opções de processamento
+        self.cb_enable_volume_area_extraction.stateChanged.connect(self.ui_controller._update_and_log_process_options)
+        self.cb_enable_prazo_extraction.stateChanged.connect(self.ui_controller._update_and_log_process_options)
+        self.cb_enable_contingency_identification.stateChanged.connect(self.ui_controller._update_and_log_process_options)
+        self.cb_regex_processing.stateChanged.connect(self.ui_controller._update_and_log_process_options)
+        self.cb_standardize_columns.stateChanged.connect(self.ui_controller._update_and_log_process_options)
+        self.cb_separar_duplas.stateChanged.connect(self.ui_controller._update_and_log_process_options)
+        self.cb_adicionar_lt.stateChanged.connect(self.ui_controller._update_and_log_process_options)

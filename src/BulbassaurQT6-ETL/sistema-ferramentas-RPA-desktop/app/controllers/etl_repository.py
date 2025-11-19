@@ -70,7 +70,7 @@ class ETLRepository:
                 cleaned_name = cleaned_name[3:].strip() # Remove apenas o primeiro 'LT ' 
         return cleaned_name
 
-    def _parse_contingency_line(self, contingency_raw_line, process_options, prazo_atual, enable_regex_processing=True):
+    def _parse_contingency_line(self, contingency_raw_line, process_options, prazo_atual, enable_regex_processing):
         """
         Processa uma linha de texto bruta identificada como contingência, extraindo os detalhes.
         Encapsula a lógica de identificação e separação de contingências duplas.
@@ -134,10 +134,16 @@ class ETLController:
     """Orquestra as operações de ETL, utilizando o ETLRepository para acesso a dados."""
 
     _DEFAULT_PROCESS_OPTIONS = {
+        'enable_volume_area_extraction': True,
+        'enable_prazo_extraction': True,    
+        'enable_contingency_identification': True,
+
+        'enable_regex_processing': False,
         'separar_duplas': True,
         'adicionar_lt': True,
-        'enable_regex_processing': True,
-        'standardize_columns': True # Nova opção para padronizar colunas
+
+        'standardize_columns': True, 
+
     }
 
     _COLUMN_NAMES = [
@@ -190,68 +196,75 @@ class ETLController:
         Returns:
             pd.DataFrame: Um DataFrame contendo as contingências identificadas e seus atributos.
         """
-        dados = []
-        volume_atual = None
-        area_geoelerica_atual = None
-        prazo_atual = None
+        try:
+            dados = []
+            volume_atual = None
+            area_geoelerica_atual = None
+            prazo_atual = None
 
-        #! 1) Itera sobre cada linha do texto para extrair informações
-        for linha in texto.strip().split('\n'):
-            linha = linha.strip()
-        
-            # Ignora linhas vazias ou marcadores de página
-            if not linha or linha.startswith('--- Página'):
-                print(f"Linha vazia ou marcador de página: {linha}")
-                continue
+            #! 1) Itera sobre cada linha do texto para extrair informações
+            for linha in texto.strip().split('\n'):
+                linha = linha.strip()
             
-            # 2) Identifica Volume e Área Geoelétrica
-            match_volume = re.match(r'(\d+\.\d+)\s+Volume\s+\d+\s*-\s*(.+)', linha)
-            if match_volume:
-                volume_atual = f"Volume {match_volume.group(1)}"
-                area_geoelerica_atual = match_volume.group(2)
-                continue
+                # Ignora linhas vazias ou marcadores de página
+                if not linha or linha.startswith('--- Página'):
+                    print(f"Linha vazia ou marcador de página: {linha}")
+                    continue
+                
+                # 2) Identifica Volume e Área Geoelétrica
+                if self.process_options['enable_volume_area_extraction']:
+                    match_volume = re.match(r'(\d+\.\d+)\s+Volume\s+\d+\s*-\s*(.+)', linha)
+                    if match_volume:
+                        volume_atual = f"Volume {match_volume.group(1)}"
+                        area_geoelerica_atual = match_volume.group(2)
+                        continue
+                
+                # 3) Identifica Prazo (Curto Prazo ou Médio Prazo)
+                if self.process_options['enable_prazo_extraction']:
+                    match_prazo = re.match(r'\d+\.\d+\.\d+\s+(Curto\s+Prazo|Médio\s+Prazo)', linha)
+                    if match_prazo:
+                        prazo_atual = match_prazo.group(1)
+                        continue
+
+                # 4) Identifica perdas duplas marcadas com '•' ou '-'
+                if self.process_options['enable_contingency_identification']:
+                    if linha.startswith('•') or linha.startswith('-'):
+
+                        # Delega o processamento detalhado da linha de contingência ao ETLRepository
+                        contingencias_processadas = self._etl_repository._parse_contingency_line(
+                            linha, self.process_options, prazo_atual, self.process_options['enable_regex_processing']
+                        )
+
+                        for c_data in contingencias_processadas:
+                            # Garante que todos os dados necessários estão presentes e usa nomes de coluna padronizados
+                            dados_linha = {
+                                self._COLUMN_NAMES[0]: volume_atual,
+                                self._COLUMN_NAMES[1]: area_geoelerica_atual,
+                                self._COLUMN_NAMES[2]: c_data['Perda Dupla'],
+                                self._COLUMN_NAMES[3]: prazo_atual,
+                                self._COLUMN_NAMES[4]: c_data['Futura'],
+                                self._COLUMN_NAMES[5]: c_data['Perdas Duplas na mesma contigencia']
+                            }
+                            dados.append(dados_linha)
+                        continue
+
+            # Cria DataFrame a partir dos dados extraídos
+            df = pd.DataFrame(dados)
             
-            # 3) Identifica Prazo (Curto Prazo ou Médio Prazo)
-            match_prazo = re.match(r'\d+\.\d+\.\d+\s+(Curto\s+Prazo|Médio\s+Prazo)', linha)
-            if match_prazo:
-                prazo_atual = match_prazo.group(1)
-                continue
-
-            # 4) Identifica perdas duplas marcadas com '•' ou '-'
-            if linha.startswith('•') or linha.startswith('-'):
-
-                # Delega o processamento detalhado da linha de contingência ao ETLRepository
-                contingencias_processadas = self._etl_repository._parse_contingency_line(
-                    linha, self.process_options, prazo_atual, self.process_options['enable_regex_processing']
-                )
-
-                for c_data in contingencias_processadas:
-                    # Garante que todos os dados necessários estão presentes e usa nomes de coluna padronizados
-                    dados_linha = {
-                        self._COLUMN_NAMES[0]: volume_atual,
-                        self._COLUMN_NAMES[1]: area_geoelerica_atual,
-                        self._COLUMN_NAMES[2]: c_data['Perda Dupla'],
-                        self._COLUMN_NAMES[3]: prazo_atual,
-                        self._COLUMN_NAMES[4]: c_data['Futura'],
-                        self._COLUMN_NAMES[5]: c_data['Perdas Duplas na mesma contigencia']
-                    }
-                    dados.append(dados_linha)
-                continue
-
-        # Cria DataFrame a partir dos dados extraídos
-        df = pd.DataFrame(dados)
-        
-        # Reorganiza e padroniza as colunas do DataFrame
-        colunas = self._COLUMN_NAMES # Usa os nomes de coluna padronizados
-        if not df.empty:
-            df = df[colunas]
+            # Reorganiza e padroniza as colunas do DataFrame
+            colunas = self._COLUMN_NAMES # Usa os nomes de coluna padronizados
+            if not df.empty:
+                df = df[colunas]
+                
+                # Verifica a opção standardize_columns antes de aplicar
+                if self.process_options['standardize_columns']:
+                    # Padroniza a capitalização das colunas de texto usando o método privado
+                    df = self._standardize_dataframe_text_columns(df, [self._COLUMN_NAMES[0], self._COLUMN_NAMES[1], self._COLUMN_NAMES[2], self._COLUMN_NAMES[3]])
             
-            # Verifica a opção standardize_columns antes de aplicar
-            if self.process_options['standardize_columns']:
-                # Padroniza a capitalização das colunas de texto usando o método privado
-                df = self._standardize_dataframe_text_columns(df, [self._COLUMN_NAMES[0], self._COLUMN_NAMES[1], self._COLUMN_NAMES[2], self._COLUMN_NAMES[3]])
-        
-        return df
+            return df
+        except Exception as e:
+            print(f"Erro no processamento de contingências duplas: {e}")
+            return pd.DataFrame({"Erro": [f"Falha no processamento: {e}"]})
 
     def _standardize_dataframe_text_columns(self, df, columns_to_standardize):
         """

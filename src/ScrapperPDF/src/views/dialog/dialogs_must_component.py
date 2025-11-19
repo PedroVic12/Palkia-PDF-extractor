@@ -1,3 +1,43 @@
+
+
+from PySide6.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
+    QLabel, QComboBox, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
+    QHeaderView, QScrollArea, QFrame, QDialog, QTextBrowser, QTabWidget,
+    QProgressBar, QStackedWidget, QMessageBox, QFileDialog
+)
+
+
+try:
+    from ansi2html import Ansi2HTMLConverter
+    ansi_converter = Ansi2HTMLConverter(dark_bg=True, scheme="xterm")
+except ImportError:
+    ansi_converter = None
+
+
+
+# ==============================================================================
+#! ESTILOS CSS
+# Garante que o arquivo styles.py esteja na mesma pasta
+# ==============================================================================
+
+try:
+    #usa pathlib para ir apra raiz do projeto e depois para a pasta src/views/dialog
+    import pathlib
+
+    base_path = pathlib.Path(__file__).parent.parent.parent.parent.parent.parent
+    styles_path = base_path / "styles.py"
+    if styles_path.exists():
+        from styles import STYLESHEET, APP_STYLES
+    else:
+        print("AVISO: 'styles.py' não encontrado. Usando estilos padrão.")
+        STYLESHEET = "QWidget { background-color: #111827; color: white; }"
+        APP_STYLES = STYLESHEET
+except Exception as e:
+    print(f"Erro ao carregar estilos: {e}")
+    STYLESHEET = "QWidget { background-color: #111827; color: white; }"
+    APP_STYLES = STYLESHEET
+
 # ==============================================================================
 # DIÁLOGOS
 # ==============================================================================
