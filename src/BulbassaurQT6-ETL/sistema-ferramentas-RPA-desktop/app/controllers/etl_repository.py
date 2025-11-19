@@ -172,7 +172,8 @@ class ETLController:
         'Perda Dupla',
         'Prazo',
         'Futura',
-        'Perdas Duplas na mesma contigencia'
+        'Perdas Duplas na mesma contigencia',
+        'Página' # Nova coluna para o número da página
     ]
 
     def __init__(self):
@@ -221,21 +222,28 @@ class ETLController:
             volume_atual = None
             area_geoelerica_atual = None
             prazo_atual = None
+            pagina_atual = None # Nova variável para rastrear a página atual
 
             #! 1) Itera sobre cada linha do texto para extrair informações
             for linha in texto.strip().split('\n'):
                 linha = linha.strip()
             
                 # Ignora linhas vazias ou marcadores de página
-                if not linha or linha.startswith('--- Página'):
-                    print(f"Linha vazia ou marcador de página: {linha}")
+                if not linha:
                     continue
+                
+                # 1.1) Detecta o marcador de página e atualiza pagina_atual
+                if linha.startswith('--- Página'):
+                    match_pagina = re.search(r'--- Página (\d+) ---', linha)
+                    if match_pagina:
+                        pagina_atual = int(match_pagina.group(1))
+                    print(f"Marcador de página: {linha}")
+                    continue # Continua para a próxima linha após detectar o marcador de página
                 
                 # 2) Identifica Volume e Área Geoelétrica
                 if self.process_options['enable_volume_area_extraction']:
-                    # Ajuste da regex para capturar o número do Volume e a Área em qualquer parte da linha
-                    # Usando re.search para encontrar o padrão em qualquer lugar da linha
-                    match_volume = re.search(r'Volume\s*(\d+)\s*–\s*(.+)', linha) # Ajustado para re.search
+                    # Ajuste da regex para aceitar tanto hífen quanto traço longo como separador
+                    match_volume = re.search(r'Volume\s*(\d+)\s*[-–]\s*(.+)', linha) # Regex corrigida novamente para [-–]
                     if match_volume:
                         volume_atual = f"Volume {match_volume.group(1)}"
                         area_geoelerica_atual = match_volume.group(2).strip()
@@ -266,7 +274,8 @@ class ETLController:
                                 self._COLUMN_NAMES[2]: c_data['Perda Dupla'],
                                 self._COLUMN_NAMES[3]: prazo_atual,
                                 self._COLUMN_NAMES[4]: c_data['Futura'],
-                                self._COLUMN_NAMES[5]: c_data['Perdas Duplas na mesma contigencia']
+                                self._COLUMN_NAMES[5]: c_data['Perdas Duplas na mesma contigencia'],
+                                self._COLUMN_NAMES[6]: pagina_atual # Adiciona a página atual
                             }
                             dados.append(dados_linha)
                         continue
@@ -317,16 +326,18 @@ def run_etl_perdas_duplas(test_file_path=None):
     print("\n--- Executa um teste da lógica de ETL para perdas duplas a partir de um arquivo TXT ou texto de exemplo. ---")
     etl_controller = ETLController()
 
+
     # Você pode modificar as opções de processamento aqui para testar cenários diferentes
     print("\n--- Opções de processamento ---")
-    print(etl_controller.process_options)
     etl_controller.process_options['enable_volume_area_extraction'] = True
     etl_controller.process_options['enable_prazo_extraction'] = True
     etl_controller.process_options['enable_contingency_identification'] = True
-    etl_controller.process_options['enable_regex_processing'] = True # Alterado para True
-    etl_controller.process_options['separar_duplas'] = True       # Alterado para True
-    etl_controller.process_options['adicionar_lt'] = True         # Alterado para True
+    etl_controller.process_options['enable_regex_processing'] = True  # Alterado
+    etl_controller.process_options['separar_duplas'] = False       # Alterado 
+    etl_controller.process_options['adicionar_lt'] = False         # Alterado 
     etl_controller.process_options['standardize_columns'] = True
+    print(etl_controller.process_options)
+    print("\n")
 
     #! aqui tem que ter uma funcao de setState que atualiza esses status do signal do process_options
 
