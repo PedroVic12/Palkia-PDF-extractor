@@ -110,65 +110,82 @@ class ETLRepository:
         add_lt_enabled = process_options['adicionar_lt']
         separate_duplas_enabled = process_options['separar_duplas']
 
-        if enable_regex_processing:
-            is_contingencia_dupla = re.search(r'contingência dupla', contingencia_base, re.IGNORECASE)
+        print(f"DEBUG _parse_contingency_line: Raw: '{contingency_raw_line}', Base: '{contingencia_base}', LT_Enabled: {add_lt_enabled}, Sep_Enabled: {separate_duplas_enabled}, Regex_Enabled: {enable_regex_processing}")
 
-            if is_contingencia_dupla and separate_duplas_enabled:
-                contingencia_processada = re.sub(r'Contingência Dupla (da|das)?\s*', '', contingencia_base, flags=re.IGNORECASE).strip()
+        try:
+            if enable_regex_processing:
+                is_contingencia_dupla = re.search(r'contingência dupla', contingencia_base, re.IGNORECASE)
 
-                if ' e ' in contingencia_processada:
-                    partes = contingencia_processada.split(' e ')
-                    for i, parte in enumerate(partes):
-                        parte = parte.strip()
-                        prev_part_ends_with_lt = (i > 0 and partes[i-1].strip().endswith('LT'))
-                        
-                        final_part_name = parte
+                if is_contingencia_dupla and separate_duplas_enabled:
+                    contingencia_processada = re.sub(r'Contingência Dupla (da|das)?\s*', '', contingencia_base, flags=re.IGNORECASE).strip()
+                    print(f"DEBUG _parse_contingency_line: É dupla e separar ativado. Processada: '{contingencia_processada}'")
+
+                    if ' e ' in contingencia_processada:
+                        partes = contingencia_processada.split(' e ')
+                        print(f"DEBUG _parse_contingency_line: Partes: {partes}")
+                        for i, parte in enumerate(partes):
+                            parte = parte.strip()
+                            prev_part_ends_with_lt = (i > 0 and partes[i-1].strip().endswith('LT'))
+                            
+                            final_part_name = parte # Valor padrão antes de aplicar a lógica de LT
+                            if add_lt_enabled:
+                                final_part_name = self._clean_contingency_name(parte, True, prev_part_ends_with_lt)
+
+                            if final_part_name:
+                                contingencias_data.append({
+                                    'Perda Dupla': final_part_name,
+                                    'Futura': futura,
+                                    'Perdas Duplas na mesma contigencia': 'SIM'
+                                })
+                    else:
+                        # É uma "Contingência Dupla" mas não tem separador " e ", trata como uma única
+                        final_contingency_name = contingencia_processada
                         if add_lt_enabled:
-                            final_part_name = self._clean_contingency_name(parte, True, prev_part_ends_with_lt)
+                            final_contingency_name = self._clean_contingency_name(contingencia_processada, True)
 
-                        contingencias_data.append({
-                            'Perda Dupla': final_part_name,
-                            'Futura': futura,
-                            'Perdas Duplas na mesma contigencia': 'SIM'
-                        })
+                        if final_contingency_name:
+                            contingencias_data.append({
+                                'Perda Dupla': final_contingency_name,
+                                'Futura': futura,
+                                'Perdas Duplas na mesma contigencia': 'NÃO'
+                            })
                 else:
-                    # É uma "Contingência Dupla" mas não tem separador " e ", trata como uma única
-                    final_contingency_name = contingencia_processada
+                    # Não é uma "Contingência Dupla" ou a opção de separar está desativada
+                    # Trata a linha como uma única contingência, aplicando _clean_contingency_name com add_lt_enabled
+                    final_contingency_name = contingencia_base # Valor padrão antes de aplicar a lógica de LT
+                    print(f"DEBUG _parse_contingency_line: Não é dupla ou separar desativado. Final Contingency Name base: '{final_contingency_name}'")
                     if add_lt_enabled:
-                        final_contingency_name = self._clean_contingency_name(contingencia_processada, True)
+                        final_contingency_name = self._clean_contingency_name(contingencia_base, True)
 
-                    if final_contingency_name: # Adiciona apenas se o nome final não for vazio
+                    if final_contingency_name:
                         contingencias_data.append({
                             'Perda Dupla': final_contingency_name,
                             'Futura': futura,
                             'Perdas Duplas na mesma contigencia': 'NÃO'
                         })
             else:
-                # Não é uma "Contingência Dupla" ou a opção de separar está desativada
-                final_contingency_name = contingencia_base
+                # enable_regex_processing está desativado
+                contingencia_bruta_limpa = contingency_raw_line.replace('•', '').replace('-', '').replace('Contingência dupla da', '').strip()
+                print(f"DEBUG _parse_contingency_line: Regex desativado. Bruta limpa: '{contingencia_bruta_limpa}'")
+                
+                final_contingency_name = contingencia_bruta_limpa # Valor padrão antes de aplicar a lógica de LT
                 if add_lt_enabled:
-                    final_contingency_name = self._clean_contingency_name(contingencia_base, True)
-
-                if final_contingency_name: # Adiciona apenas se o nome final não for vazio
+                    final_contingency_name = self._clean_contingency_name(contingencia_bruta_limpa, True, False)
+                
+                if final_contingency_name:
                     contingencias_data.append({
                         'Perda Dupla': final_contingency_name,
                         'Futura': futura,
                         'Perdas Duplas na mesma contigencia': 'NÃO'
                     })
-        else:
-            # enable_regex_processing está desativado
-            contingencia_bruta_limpa = contingency_raw_line.replace('•', '').replace('-', '').replace('Contingência dupla da', '').strip()
-            
-            final_contingency_name = contingencia_bruta_limpa
-            if add_lt_enabled:
-                final_contingency_name = self._clean_contingency_name(contingencia_bruta_limpa, True, False)
-            
-            if final_contingency_name: # Adiciona apenas se o nome final não for vazio
-                contingencias_data.append({
-                    'Perda Dupla': final_contingency_name,
-                    'Futura': futura,
-                    'Perdas Duplas na mesma contigencia': 'NÃO'
-                })
+        except Exception as e:
+            print(f"ERRO em _parse_contingency_line: {e} para a linha: '{contingency_raw_line}'")
+            # Se houver erro, ainda podemos adicionar uma entrada para não travar o processo principal
+            contingencias_data.append({
+                'Perda Dupla': f"ERRO: {str(e)}", 
+                'Futura': futura, 
+                'Perdas Duplas na mesma contigencia': 'NÃO'
+            })
         
         return contingencias_data
 
