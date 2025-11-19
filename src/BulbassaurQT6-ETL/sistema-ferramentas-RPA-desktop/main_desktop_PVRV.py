@@ -25,7 +25,6 @@ from gui.windows.main_window.ui_main_window import UI_MainWindow
 
 # IMPORT IFRAME WIDGETS (pagina separadas para cada TAB)
 from gui.iframes.dashboard_widget import DashboardWidget
-#from gui.iframes.pomodoro_widget import PomodoroWidget
 from gui.iframes.checklist_widget import ChecklistWidget
 from gui.iframes.settings_widget import SettingsWidget
 
@@ -114,9 +113,9 @@ class MainWindow(QMainWindow):
     def _setup_appbar_links(self):
         links = {
             "🌍 GitHub": "https://github.com/PedroVic12",
-            "⚽ Probabilidades": "https://www.mat.ufmg.br/futebol/classificacao-para-libertadores_seriea/",
+            "Documentação Pyside6 web": "https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineWidgets/QWebEngineView.html#PySide6.QtWebEngineWidgets.QWebEngineView",
+            "Documentação PySide6 QtWidgets": "https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication",
             "📚 Dashboard Atividades SP": "https://dashboard-ons.onrender.com/",
-
             "📚 Habit Tracker": "https://gohann-treinamentos-web-app-one.vercel.app",
             "⚡ SEP para Leigos": "https://electrical-system-simulator.vercel.app/"
         }
@@ -125,7 +124,7 @@ class MainWindow(QMainWindow):
             btn.setToolTip(f"Abrir {url} no navegador")
             btn.clicked.connect(partial(webbrowser.open, url))
             self.ui.top_bar_layout.addWidget(btn)
-            
+
     def open_or_focus_tab(self, tab_name, main_widget_class, side_menu_class=None):
         if tab_name in self.open_tabs:
             self.ui.tabs.setCurrentWidget(self.open_tabs[tab_name])

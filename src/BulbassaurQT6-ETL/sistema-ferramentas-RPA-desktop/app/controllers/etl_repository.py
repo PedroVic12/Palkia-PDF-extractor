@@ -13,6 +13,25 @@ class ETLRepository:
         """Inicializa o ETLRepository."""
         pass
 
+
+    def extract_text_from_txt(self, filename):
+        """
+        Lê todo o texto de um arquivo .txt do caminho especificado e retorna como string.
+
+        Args:
+            filename (str): O caminho do arquivo .txt a ser lido.
+
+        Returns:
+            str: O texto extraído do arquivo.
+        """
+        try:
+            with open(filename, "r", encoding="utf-8") as file:
+                text = file.read()
+            return text
+        except Exception as e:
+            print(f"Erro ao ler o arquivo TXT '{filename}': {e}")
+            return ""
+
     def extract_text_from_pdf(self, pdf_path, page_range=None):
         """
         Extrai texto de um arquivo PDF, opcionalmente limitando a um intervalo de páginas.
@@ -85,7 +104,8 @@ class ETLRepository:
             list: Uma lista de dicionários, onde cada dicionário representa uma contingência extraída.
         """
         contingencias_data = []
-        contingencia = contingency_raw_line.replace('•', '').replace('-', '') # Extração bruta
+        # Removido: .replace('Contingência dupla da', '') -> A regex agora lida com isso
+        contingencia = contingency_raw_line.replace('•', '').replace('-', '').strip() # Garante que a linha bruta seja limpa de marcadores e espaços
         futura = "SIM" if prazo_atual == "Curto Prazo" else "NÃO"
 
         if enable_regex_processing:
@@ -213,22 +233,25 @@ class ETLController:
                 
                 # 2) Identifica Volume e Área Geoelétrica
                 if self.process_options['enable_volume_area_extraction']:
-                    match_volume = re.match(r'(\d+\.\d+)\s+Volume\s+\d+\s*-\s*(.+)', linha)
+                    # Ajuste da regex para capturar o número do Volume e a Área em qualquer parte da linha
+                    # Usando re.search para encontrar o padrão em qualquer lugar da linha
+                    match_volume = re.search(r'Volume\s*(\d+)\s*–\s*(.+)', linha) # Ajustado para re.search
                     if match_volume:
                         volume_atual = f"Volume {match_volume.group(1)}"
-                        area_geoelerica_atual = match_volume.group(2)
+                        area_geoelerica_atual = match_volume.group(2).strip()
                         continue
                 
                 # 3) Identifica Prazo (Curto Prazo ou Médio Prazo)
                 if self.process_options['enable_prazo_extraction']:
-                    match_prazo = re.match(r'\d+\.\d+\.\d+\s+(Curto\s+Prazo|Médio\s+Prazo)', linha)
+                    # Ajuste da regex para capturar Prazo em qualquer parte da linha, case-insensitive
+                    match_prazo = re.search(r'(Curto Prazo|Médio Prazo)', linha, re.IGNORECASE) # Ajustado para re.search
                     if match_prazo:
-                        prazo_atual = match_prazo.group(1)
+                        prazo_atual = match_prazo.group(1).title()
                         continue
 
-                # 4) Identifica perdas duplas marcadas com '•' ou '-'
+                # 4) Identifica perdas duplas marcadas com '•' ou '-' ou 'Contingência dupla da'
                 if self.process_options['enable_contingency_identification']:
-                    if linha.startswith('•') or linha.startswith('-'):
+                    if linha.startswith('•') or linha.startswith('-') or re.search(r'Contingência dupla da', linha, re.IGNORECASE):
 
                         # Delega o processamento detalhado da linha de contingência ao ETLRepository
                         contingencias_processadas = self._etl_repository._parse_contingency_line(
@@ -252,7 +275,7 @@ class ETLController:
             df = pd.DataFrame(dados)
             
             # Reorganiza e padroniza as colunas do DataFrame
-            colunas = self._COLUMN_NAMES # Usa os nomes de coluna padronizados
+            colunas = self._COLUMN_NAMES 
             if not df.empty:
                 df = df[colunas]
                 
@@ -283,5 +306,49 @@ class ETLController:
                 # Aplica a função .title() a cada string na coluna
                 df[col] = df[col].apply(lambda x: x.title() if isinstance(x, str) else x)
         return df
+
+        
+
+
+
+# Função de teste para demonstrar o ETL de perdas duplas a partir de texto/arquivo TXT
+def run_etl_perdas_duplas(test_file_path=None):
+    
+    print("\n--- Executa um teste da lógica de ETL para perdas duplas a partir de um arquivo TXT ou texto de exemplo. ---")
+    etl_controller = ETLController()
+
+    # Você pode modificar as opções de processamento aqui para testar cenários diferentes
+    print("\n--- Opções de processamento ---")
+    print(etl_controller.process_options)
+    etl_controller.process_options['enable_volume_area_extraction'] = True
+    etl_controller.process_options['enable_prazo_extraction'] = True
+    etl_controller.process_options['enable_contingency_identification'] = True
+    etl_controller.process_options['enable_regex_processing'] = True # Alterado para True
+    etl_controller.process_options['separar_duplas'] = True       # Alterado para True
+    etl_controller.process_options['adicionar_lt'] = True         # Alterado para True
+    etl_controller.process_options['standardize_columns'] = True
+
+    #! aqui tem que ter uma funcao de setState que atualiza esses status do signal do process_options
+
+    if test_file_path:
+        print(f"Lendo texto do arquivo: {test_file_path}")
+        file_content = etl_controller._etl_repository.extract_text_from_txt(test_file_path)
+        if file_content:
+            extracted_text = file_content
+        else:
+            print(f"Erro: Não foi possível ler o arquivo TXT {test_file_path}. Usando texto de exemplo.")
+
+
+    # Executa o ETL
+    df_resultados = etl_controller.process_contingencias_duplas(extracted_text)
+    
+    # Exibe os resultados
+    print("\n--- Resultados do ETL ---")
+    print(df_resultados.to_string())
+    print("\n--- Teste concluído ---")
+
+if __name__ == '__main__':
+    run_etl_perdas_duplas(r'C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\GitHub\Palkia-PDF-extractor\src\BulbassaurQT6-ETL\sistema-ferramentas-RPA-desktop\app\controllers\dataset_perdas_duplas.txt')
+
 
 

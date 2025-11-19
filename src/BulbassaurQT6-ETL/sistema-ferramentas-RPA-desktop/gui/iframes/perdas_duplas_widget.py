@@ -2,6 +2,7 @@ import pandas as pd
 from PySide6.QtWidgets import (QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QFileDialog, QTextEdit, QTableWidget, QTableWidgetItem, QLabel, QTabWidget, QGroupBox, QProgressBar, QMessageBox, QCheckBox, QLineEdit, QFrame, QHeaderView)
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtGui import QColor
+import fitz # Importa fitz para lidar com PDFs
 
 # ===============================================================
 # CLASSE: Controller (app/controllers/etl_repository.py)
@@ -34,6 +35,10 @@ class ProcessingThread(QThread):
 
         # Instancia o controller que orquestra a lógica de negócio
         self.etl_controller = ETLController()
+
+    def setState(self, state):
+        self.state = state
+        
     
     def run(self):
         try:
@@ -93,6 +98,7 @@ class PerdasDuplasUIController:
                     pages.append(int(part) - 1) # Adiciona página (base 0)
             
             self.widget.selected_pages = sorted(set(pages)) # Remove duplicatas e ordena
+            print(f"DEBUG: Selected Pages (UI Controller): {self.widget.selected_pages}") # DEBUG PRINT
             
             # Atualiza o status na UI
             pages_str = ", ".join([str(p+1) for p in self.widget.selected_pages]) # Converte para base 1 para exibição
@@ -112,9 +118,14 @@ class PerdasDuplasUIController:
         
         if file_path:
             self.widget.current_pdf_path = file_path
-            self.widget.file_label.setText(f"PDF: {file_path.split('/')[-1]}") # Exibe o nome do arquivo
             
             try:
+                doc = fitz.open(file_path)
+                total_pages = len(doc)
+                doc.close()
+
+                self.widget.file_label.setText(f"PDF: {file_path.split('/')[-1]} ({total_pages} páginas)") # Exibe o nome do arquivo e total de páginas
+                
                 # A extração do texto completo para visualização ainda pode ser feita aqui, se necessário.
                 # Para processamento, usaremos o ETLController.
                 full_text_preview = self.etl_controller.extract_pdf_text(file_path) # Usa o controller para extrair para pré-visualização

@@ -13,6 +13,14 @@ class NavigationMenu(QFrame):
     settings_requested = Signal()
     perdas_duplas_requested = Signal() # Novo sinal para Perdas Duplas ETL
 
+    _NAVIGATION_ITEMS = [
+        {"text": "Dashboard", "icon_path": "icon_home.svg", "signal": "dashboard_requested"},
+        # {"text": "Pomodoro", "icon_path": "icon_widgets.svg", "signal": "pomodoro_requested"}, # Exemplo de item removido
+        {"text": "Checklist", "icon_path": "icon_widgets.svg", "signal": "checklist_requested"},
+        {"text": "Configurações", "icon_path": "icon_settings.svg", "signal": "settings_requested"},
+        {"text": "🤖 Perdas Duplas ETL", "icon_path": "icon_rpa.svg", "signal": "perdas_duplas_requested"},
+    ]
+
     def __init__(self):
         super().__init__()
         self.setObjectName("navigation_menu")
@@ -21,31 +29,23 @@ class NavigationMenu(QFrame):
         self.layout.setContentsMargins(0,0,0,0)
         self.layout.setSpacing(5)
 
-        # Create navigation buttons
-        self.btn_dashboard = PyPushButton(text="Dashboard", icon_path="icon_home.svg")
-        self.btn_pomodoro = PyPushButton(text="Pomodoro", icon_path="icon_widgets.svg")
-        self.btn_checklist = PyPushButton(text="Checklist", icon_path="icon_widgets.svg")
-        self.btn_settings = PyPushButton(text="Configurações", icon_path="icon_settings.svg")
-        self.btn_perdas_duplas = PyPushButton(text="🤖 Perdas Duplas ETL", icon_path="icon_rpa.svg") # Novo botão
-
-        # Add to layout
-        self.layout.addWidget(self.btn_dashboard)
-        self.layout.addWidget(self.btn_pomodoro)
-        self.layout.addWidget(self.btn_checklist)
-        self.layout.addWidget(self.btn_settings)
-        self.layout.addWidget(self.btn_perdas_duplas) # Adiciona o novo botão ao layout
+        self.buttons = {}
+        for item in self._NAVIGATION_ITEMS:
+            btn = PyPushButton(text=item["text"], icon_path=item["icon_path"])
+            setattr(self, f"btn_{item['signal'].replace('_requested', '')}", btn) # Atribui o botão a um atributo (ex: self.btn_dashboard)
+            self.layout.addWidget(btn)
+            self.buttons[item["signal"]] = btn # Armazena para acesso rápido
+            btn.clicked.connect(lambda checked, signal_name=item["signal"]: self._emit_navigation_signal(signal_name))
         
-        # Connect internal clicks to signal emissions
-        self.btn_dashboard.clicked.connect(self.dashboard_requested)
-        self.btn_pomodoro.clicked.connect(self.pomodoro_requested)
-        self.btn_checklist.clicked.connect(self.checklist_requested)
-        self.btn_settings.clicked.connect(self.settings_requested)
-        self.btn_perdas_duplas.clicked.connect(self.perdas_duplas_requested) # Conecta o novo botão ao novo sinal
+    def _emit_navigation_signal(self, signal_name):
+        """Emite o sinal de navegação correspondente ao nome do sinal."""
+        signal = getattr(self, signal_name)
+        if signal:
+            signal.emit()
 
     def set_active_button(self, tab_name):
         """Sets the visual state of the navigation buttons."""
-        self.btn_dashboard.set_active(tab_name == "Dashboard")
-        self.btn_pomodoro.set_active(tab_name == "Pomodoro")
-        self.btn_checklist.set_active(tab_name == "Checklist")
-        self.btn_settings.set_active(tab_name == "Configurações")
-        self.btn_perdas_duplas.set_active(tab_name == "Perdas Duplas ETL") # Atualiza para o novo botão
+        for item in self._NAVIGATION_ITEMS:
+            btn = self.buttons.get(item["signal"])
+            if btn:
+                btn.set_active(item["text"] == tab_name)

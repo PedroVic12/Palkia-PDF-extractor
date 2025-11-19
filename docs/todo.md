@@ -34,17 +34,23 @@
 - [ ] Criação do Executavel com Instalador para abrir o app "pesado" depois de compilar para Windows
 
 - Cada Tab é uma funcionalidade diferente (Palkia GUI, Junta Deck, Organiza Arquivos, MUST Dashboard, Controle e Gestão Fora Ponta com OBS, Deck Builder (com pyautogui simulando no AnaREDE com diagrama do SIN), Gerar Relatorio com análise de contigencia ) 
-- Refatoração Análise de contigencias de Invervenção no SEP com agendamento ótimo (PandaPower + DEAP) com Lancher.py refatorado 
 
-- Modeladem de dados e integração com Dashboard SP com análise de dados
 
+
+
+
+
+
+## Critérios de funcionamento - Novembro
 
 - Deck Builder para Análise de contigencias MUST
 - Scrapy toda segunda e sexta dados do Sharepoint
+- Modeladem de dados e integração com Dashboard SP com análise de dados (excel com localstorage)
+- Palkia GUI - MUST ETL
+- Perdas duplas - ETL
 
+- Refatoração Análise de contigencias de Invervenção no SEP com agendamento ótimo (PandaPower + DEAP) com Lancher.py refatorado 
 
-
-## Critérios de funcionamento - Outubro
 - [x] ETL de arquivos PDF e Excel com pandas e PowerQuery
 - [x] Controle e gestão de Banco de dados de informações de MUST de atividades SP
 - [x] Aprovação com ou sem Ressalvas para criar deck de analise no anaRede e abrir com Pyautogui
@@ -93,3 +99,7 @@
 - [ ] Coluna aprovado - SIM ou NAO
 - [ ] Container de Tabela histórico das análises
 ---
+
+
+
+
