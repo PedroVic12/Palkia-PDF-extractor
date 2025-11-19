@@ -307,10 +307,10 @@ class ETLController:
                     # Padroniza a capitalização das colunas de texto usando o método privado
                     df = self._standardize_dataframe_text_columns(df, [self._COLUMN_NAMES[0], self._COLUMN_NAMES[1], self._COLUMN_NAMES[2], self._COLUMN_NAMES[3]])
             
-                # retirar as linhas em branco que ele leu
-                df = df.dropna(subset=['Perda Dupla'])
+                # retirar as linhas em branco que ele leu (string vazia ou apenas espaços)
+                df = df[df['Perda Dupla'].astype(str).str.strip().astype(bool)]
 
-                print("Dataframe de resultado atualizado por PVRV (após dropna):")
+                print("Dataframe de resultado atualizado por PVRV (após filtragem de Perda Dupla vazia):")
                 
             return df
 
