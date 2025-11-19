@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 
 from app.models.todo_model import TodoModel
 
-#from model import TodoModel
+
 
 class ChecklistWidget(QWidget):
     def __init__(self, side_menu=None):

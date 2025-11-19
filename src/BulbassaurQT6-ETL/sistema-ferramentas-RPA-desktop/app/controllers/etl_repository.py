@@ -70,15 +70,89 @@ class ETLRepository:
                 cleaned_name = cleaned_name[3:].strip() # Remove apenas o primeiro 'LT ' 
         return cleaned_name
 
+    def _parse_contingency_line(self, contingency_raw_line, process_options, prazo_atual, enable_regex_processing=True):
+        """
+        Processa uma linha de texto bruta identificada como contingência, extraindo os detalhes.
+        Encapsula a lógica de identificação e separação de contingências duplas.
+
+        Args:
+            contingency_raw_line (str): A linha de texto da contingência (ex: '• Contingência Dupla LT X e LT Y').
+            process_options (dict): Opções de processamento, como 'separar_duplas' e 'adicionar_lt'.
+            prazo_atual (str): O prazo atual (Curto Prazo ou Médio Prazo).
+            enable_regex_processing (bool, optional): Se True, ativa o processamento de regex para contingências duplas. Defaults to True.
+
+        Returns:
+            list: Uma lista de dicionários, onde cada dicionário representa uma contingência extraída.
+        """
+        contingencias_data = []
+        contingencia = contingency_raw_line.replace('•', '').replace('-', '') # Extração bruta
+        futura = "SIM" if prazo_atual == "Curto Prazo" else "NÃO"
+
+        if enable_regex_processing:
+            if 'Contingência Dupla' in contingencia and process_options['separar_duplas']:
+                contingencia_limpa = re.sub(r'Contingência Dupla (da|das)?\s*', '', contingencia).strip()
+
+                if ' e ' in contingencia_limpa:
+                    partes = contingencia_limpa.split(' e ')
+                    for i, parte in enumerate(partes):
+                        parte = parte.strip()
+                        prev_part_ends_with_lt = (i > 0 and partes[i-1].strip().endswith('LT'))
+                        cleaned_part = self._clean_contingency_name(parte, process_options['adicionar_lt'], prev_part_ends_with_lt)
+                        contingencias_data.append({
+                            'Perda Dupla': cleaned_part,
+                            'Futura': futura,
+                            'Perdas Duplas na mesma contigencia': 'SIM' # Nome da coluna padronizado
+                        })
+                else:
+                    cleaned_contingency = self._clean_contingency_name(contingencia, process_options['adicionar_lt'])
+                    contingencias_data.append({
+                        'Perda Dupla': cleaned_contingency,
+                        'Futura': futura,
+                        'Perdas Duplas na mesma contigencia': 'NÃO' # Nome da coluna padronizado
+                    })
+            else:
+                cleaned_contingency = self._clean_contingency_name(contingencia, process_options['adicionar_lt'])
+                contingencias_data.append({
+                    'Perda Dupla': cleaned_contingency,
+                    'Futura': futura,
+                    'Perdas Duplas na mesma contigencia': 'NÃO' # Nome da coluna padronizado
+                })
+        else:
+            # Retorna a contingência bruta se o processamento de regex estiver desativado
+            contingencias_data.append({
+                'Perda Dupla': contingencia.strip(), # Garante que a versão bruta tenha espaços extras removidos para consistência
+                'Futura': futura,
+                'Perdas Duplas na mesma contigencia': 'NÃO' # Valor padrão, pois não houve processamento de duplas
+            })
+        return contingencias_data
+
 # ===============================================================
 # CLASSE: ETLController (CONTROLLER - Camada de Lógica de Negócio)
 # ===============================================================
 
 class ETLController:
     """Orquestra as operações de ETL, utilizando o ETLRepository para acesso a dados."""
+
+    _DEFAULT_PROCESS_OPTIONS = {
+        'separar_duplas': True,
+        'adicionar_lt': True,
+        'enable_regex_processing': True,
+        'standardize_columns': True # Nova opção para padronizar colunas
+    }
+
+    _COLUMN_NAMES = [
+        'Volume',
+        'Área Geoelétrica',
+        'Perda Dupla',
+        'Prazo',
+        'Futura',
+        'Perdas Duplas na mesma contigencia'
+    ]
+
     def __init__(self):
         """Inicializa o ETLController e seu repositório de dados."""
         self._etl_repository = ETLRepository()
+        self.process_options = self._DEFAULT_PROCESS_OPTIONS.copy()
 
     def extract_pdf_text(self, pdf_path, page_range=None):
         """
@@ -106,118 +180,76 @@ class ETLController:
         """
         return pd.DataFrame({"Exemplo": ["Script 2 em desenvolvimento"]})
 
-    def process_contingencias_duplas(self, texto, process_options=None):
+    def process_contingencias_duplas(self, texto):
         """
         Processa o texto extraído do PDF para identificar e tabular contingências duplas.
 
         Args:
             texto (str): O texto completo extraído do PDF.
-            process_options (dict, optional): Opções de processamento, como 'separar_duplas' e 'adicionar_lt'.
-                                             Defaults to {'separar_duplas': True, 'adicionar_lt': True}.
 
         Returns:
             pd.DataFrame: Um DataFrame contendo as contingências identificadas e seus atributos.
         """
-        if process_options is None:
-            process_options = {'separar_duplas': True, 'adicionar_lt': True}
-
         dados = []
         volume_atual = None
         area_geoelerica_atual = None
         prazo_atual = None
 
-        # Itera sobre cada linha do texto para extrair informações
+        #! 1) Itera sobre cada linha do texto para extrair informações
         for linha in texto.strip().split('\n'):
             linha = linha.strip()
+        
             # Ignora linhas vazias ou marcadores de página
             if not linha or linha.startswith('--- Página'):
+                print(f"Linha vazia ou marcador de página: {linha}")
                 continue
             
-            # Identifica Volume e Área Geoelétrica
+            # 2) Identifica Volume e Área Geoelétrica
             match_volume = re.match(r'(\d+\.\d+)\s+Volume\s+\d+\s*-\s*(.+)', linha)
             if match_volume:
                 volume_atual = f"Volume {match_volume.group(1)}"
                 area_geoelerica_atual = match_volume.group(2)
                 continue
             
-            # Identifica Prazo (Curto Prazo ou Médio Prazo)
+            # 3) Identifica Prazo (Curto Prazo ou Médio Prazo)
             match_prazo = re.match(r'\d+\.\d+\.\d+\s+(Curto\s+Prazo|Médio\s+Prazo)', linha)
             if match_prazo:
                 prazo_atual = match_prazo.group(1)
                 continue
-            
-            # Identifica contingências marcadas com '•' ou '-'
+
+            # 4) Identifica perdas duplas marcadas com '•' ou '-'
             if linha.startswith('•') or linha.startswith('-'):
-                contingencia = linha.replace('•', '').replace('-','').strip()
-                
-                # VERIFICAÇÃO DE CONTINGÊNCIAS DUPLAS
-                if 'Contingência Dupla' in contingencia and process_options['separar_duplas']:
-                    # Processa contingências que contêm o termo "Contingência Dupla"
-                    contingencia_limpa = re.sub(r'Contingência Dupla (da|das)?\s*', '', contingencia).strip()
-                    
-                    # Verifica se há múltiplas contingências separadas por " e "
-                    if ' e ' in contingencia_limpa:
-                        partes = contingencia_limpa.split(' e ')
-                        
-                        # Processa cada parte da contingência individualmente
-                        for i, parte in enumerate(partes):
-                            parte = parte.strip()
-                            
-                            # Determina se a parte anterior terminou com 'LT' para evitar duplicação
-                            prev_part_ends_with_lt = (i > 0 and partes[i-1].strip().endswith('LT'))
-                            # Usa o repositório para limpar o nome da contingência
-                            cleaned_part = self._etl_repository._clean_contingency_name(parte, process_options['adicionar_lt'], prev_part_ends_with_lt)
-                            
-                            futura = "SIM" if prazo_atual == "Curto Prazo" else "NÃO"
-                            
-                            dados.append({
-                                'Volume': volume_atual,
-                                'Área Geoelétrica': area_geoelerica_atual,
-                                'Perda Dupla': cleaned_part,
-                                'Prazo': prazo_atual,
-                                'Futura': futura,
-                                'Contingência Dupla Mesma Linha': 'SIM' # Marcado como contingência dupla na mesma linha
-                            })
-                    else:
-                        # É uma única contingência "dupla" (no termo, mas não separada por " e ")
-                        # Usa o repositório para limpar o nome da contingência
-                        cleaned_contingency = self._etl_repository._clean_contingency_name(contingencia, process_options['adicionar_lt'])
-                        
-                        futura = "SIM" if prazo_atual == "Curto Prazo" else "NÃO"
-                        
-                        dados.append({
-                            'Volume': volume_atual,
-                            'Área Geoelétrica': area_geoelerica_atual,
-                            'Perda Dupla': cleaned_contingency,
-                            'Prazo': prazo_atual,
-                            'Futura': futura,
-                            'Contingência Dupla Mesma Linha': 'NÃO'
-                        })
-                else:
-                    # Não é uma "Contingência Dupla" explícita, processa normalmente
-                    # Usa o repositório para limpar o nome da contingência
-                    cleaned_contingency = self._etl_repository._clean_contingency_name(contingencia, process_options['adicionar_lt'])
-                    
-                    futura = "SIM" if prazo_atual == "Curto Prazo" else "NÃO"
-                    
-                    dados.append({
-                        'Volume': volume_atual,
-                        'Área Geoelétrica': area_geoelerica_atual,
-                        'Perda Dupla': cleaned_contingency,
-                        'Prazo': prazo_atual,
-                        'Futura': futura,
-                        'Contingência Dupla Mesma Linha': 'NÃO'
-                    })
+
+                # Delega o processamento detalhado da linha de contingência ao ETLRepository
+                contingencias_processadas = self._etl_repository._parse_contingency_line(
+                    linha, self.process_options, prazo_atual, self.process_options['enable_regex_processing']
+                )
+
+                for c_data in contingencias_processadas:
+                    # Garante que todos os dados necessários estão presentes e usa nomes de coluna padronizados
+                    dados_linha = {
+                        self._COLUMN_NAMES[0]: volume_atual,
+                        self._COLUMN_NAMES[1]: area_geoelerica_atual,
+                        self._COLUMN_NAMES[2]: c_data['Perda Dupla'],
+                        self._COLUMN_NAMES[3]: prazo_atual,
+                        self._COLUMN_NAMES[4]: c_data['Futura'],
+                        self._COLUMN_NAMES[5]: c_data['Perdas Duplas na mesma contigencia']
+                    }
+                    dados.append(dados_linha)
+                continue
 
         # Cria DataFrame a partir dos dados extraídos
         df = pd.DataFrame(dados)
         
         # Reorganiza e padroniza as colunas do DataFrame
-        colunas = ['Volume', 'Área Geoelétrica', 'Perda Dupla', 'Prazo', 'Futura', 'Contingência Dupla Mesma Linha']
+        colunas = self._COLUMN_NAMES # Usa os nomes de coluna padronizados
         if not df.empty:
             df = df[colunas]
-            # Padroniza a capitalização das colunas de texto usando o método privado
-            df = self._standardize_dataframe_text_columns(df, ['Volume', 'Área Geoelétrica', 'Perda Dupla', 'Prazo'])
+            
+            # Verifica a opção standardize_columns antes de aplicar
+            if self.process_options['standardize_columns']:
+                # Padroniza a capitalização das colunas de texto usando o método privado
+                df = self._standardize_dataframe_text_columns(df, [self._COLUMN_NAMES[0], self._COLUMN_NAMES[1], self._COLUMN_NAMES[2], self._COLUMN_NAMES[3]])
         
         return df
 

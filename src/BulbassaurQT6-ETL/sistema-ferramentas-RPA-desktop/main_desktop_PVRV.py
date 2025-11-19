@@ -8,7 +8,6 @@
 
 # IMPORT MODULES
 import sys
-import os 
 import webbrowser
 from functools import partial
 
@@ -85,6 +84,15 @@ class MainWindow(QMainWindow):
         # --- SHOW APP ---
         self.show()
 
+    #! NAVIGATION HANDLERS TABS FUNCTIONS
+    # ///////////////////////////////////////////////////////////////
+    def open_dashboard_tab(self): self.open_or_focus_tab("Dashboard", DashboardWidget)
+    #def open_pomodoro_tab(self): self.open_or_focus_tab("Pomodoro", PomodoroWidget)
+    def open_checklist_tab(self): self.open_or_focus_tab("Checklist", ChecklistWidget, ChecklistSideMenu)
+    def open_settings_tab(self): self.open_or_focus_tab("Configurações", SettingsWidget)
+    def open_perdas_duplas_tab(self): """Abre a aba da ferramenta de Perdas Duplas ETL.""" ; self.open_or_focus_tab("Perdas Duplas ETL", PerdasDuplasWidget)
+
+    #! CONNECT SIGNALS
     def connect_signals(self):
         # Main Navigation
         self.navigation_menu.dashboard_requested.connect(self.open_dashboard_tab)
@@ -99,10 +107,16 @@ class MainWindow(QMainWindow):
         self.ui.tabs.currentChanged.connect(self.on_tab_changed)
         self.ui.tabs.tabCloseRequested.connect(self.close_tab)
 
+
+
+    # CORE UI LOGIC
+    # ///////////////////////////////////////////////////////////////
     def _setup_appbar_links(self):
         links = {
             "🌍 GitHub": "https://github.com/PedroVic12",
             "⚽ Probabilidades": "https://www.mat.ufmg.br/futebol/classificacao-para-libertadores_seriea/",
+            "📚 Dashboard Atividades SP": "https://dashboard-ons.onrender.com/",
+
             "📚 Habit Tracker": "https://gohann-treinamentos-web-app-one.vercel.app",
             "⚡ SEP para Leigos": "https://electrical-system-simulator.vercel.app/"
         }
@@ -111,9 +125,7 @@ class MainWindow(QMainWindow):
             btn.setToolTip(f"Abrir {url} no navegador")
             btn.clicked.connect(partial(webbrowser.open, url))
             self.ui.top_bar_layout.addWidget(btn)
-
-    # CORE UI LOGIC
-    # ///////////////////////////////////////////////////////////////
+            
     def open_or_focus_tab(self, tab_name, main_widget_class, side_menu_class=None):
         if tab_name in self.open_tabs:
             self.ui.tabs.setCurrentWidget(self.open_tabs[tab_name])
@@ -136,6 +148,8 @@ class MainWindow(QMainWindow):
         
         self.navigation_menu.set_active_button(tab_name)
 
+    #! SETTINGS FUNCTIONS
+    # ///////////////////////////////////////////////////////////////
     @Slot(int)
     def on_tab_changed(self, index):
         current_tab_widget = self.ui.tabs.widget(index)
@@ -160,16 +174,6 @@ class MainWindow(QMainWindow):
             widget.deleteLater()
             self.ui.tabs.removeTab(index)
 
-    # NAVIGATION HANDLERS
-    # ///////////////////////////////////////////////////////////////
-    def open_dashboard_tab(self): self.open_or_focus_tab("Dashboard", DashboardWidget)
-    #def open_pomodoro_tab(self): self.open_or_focus_tab("Pomodoro", PomodoroWidget)
-    def open_checklist_tab(self): self.open_or_focus_tab("Checklist", ChecklistWidget, ChecklistSideMenu)
-    def open_settings_tab(self): self.open_or_focus_tab("Configurações", SettingsWidget)
-    def open_perdas_duplas_tab(self): """Abre a aba da ferramenta de Perdas Duplas ETL.""" ; self.open_or_focus_tab("Perdas Duplas ETL", PerdasDuplasWidget)
-
-    # SETTINGS
-    # ///////////////////////////////////////////////////////////////
     @Slot()
     def apply_settings_from_model(self):
         theme = self.settings_model.get("theme")
