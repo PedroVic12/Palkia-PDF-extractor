@@ -5,4 +5,4 @@ weasyprint
 flask
 pyodbc
 ansi2html
-fitz
+pymupdf
