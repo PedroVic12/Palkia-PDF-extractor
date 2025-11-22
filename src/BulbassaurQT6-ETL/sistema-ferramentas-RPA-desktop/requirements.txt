@@ -6,3 +6,4 @@ flask
 pyodbc
 ansi2html
 pymupdf
+openpyxl
