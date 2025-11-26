@@ -1,9 +1,0 @@
-#!/bin/bash
-CURRENT_DIR="$(dirname "$0")"
-cd "$CURRENT_DIR/src/ScrapperPDF"
-if [ -f "requirements.txt" ]; then
-    echo "Instalando dependências..."
-    pip install -r requirements.txt
-fi
-echo "Iniciando PLC_Controle_Gestao_desktop.py..."
-python PLC_Controle_Gestao_desktop.py
