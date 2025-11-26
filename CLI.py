@@ -59,27 +59,9 @@ PROGRAMS: Dict[str, Dict[str, str]] = {
     },
     "moderno_template": {
         "name": "Moderno Desktop UI Template",
-        "script": "moderno_desktop_ui_template.py",
-        "work_dir": "src/SistemaControleGestaoONS_Desktop_MVC/Pyside6-Desktop-Template",
+        "script": "app_template_desktop.py",
+        "work_dir": "src/NexusPy/Pyside6 - Desktop/pyside6_tab_app",
         "requirements": None,  # no requirements.txt needed
-    },
-    "glass_carousel": {
-        "name": "Glass Cards & Carousel Demo",
-        "script": "glass_carousel_app.py",
-        "work_dir": "src/SistemaControleGestaoONS_Desktop_MVC/Pyside6-Desktop-Template",
-        "requirements": None,
-    },
-    "tree_mvc": {
-        "name": "Tree MVC App",
-        "script": "tree_mvc_app.py",
-        "work_dir": "src/SistemaControleGestaoONS_Desktop_MVC/Pyside6-Desktop-Template",
-        "requirements": None,
-    },
-    "qt6_template": {
-        "name": "Qt6 Desktop Template (Merged)",
-        "script": "Qt6_desktop_template.py",
-        "work_dir": "src/SistemaControleGestaoONS_Desktop_MVC",
-        "requirements": "requirements.txt",
     },
     "organizador": {
         "name": "File Organizer",
