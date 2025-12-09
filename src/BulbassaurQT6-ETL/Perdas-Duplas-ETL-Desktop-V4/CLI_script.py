@@ -202,38 +202,13 @@ class CLIMenu:
 #     "requirements": Path to requirements.txt (relative to work_dir, or None if not needed)
 # }
 
-PROJECTS_ROOT = Path(os.getenv("PROJECTS_ROOT", Path(__file__).parent))
-
-PROGRAMS: Dict[str, Dict[str, str]] = {
-    "palkia_gui": {
-        "name": "Palkia PDF Extractor GUI",
-        "script": "Palkia_GUI.py",
-        "work_dir": "modules/ScrapperPDF",
-        "requirements": "requirements.txt",
-    },
-
-    "switch_VBA_to_python": {
-        "name": "Switch from VBA to Python Script",
-        "script": "demo_automation.py",
-        "work_dir": "modules/switch-from-vba-to-python-example-main",
-        "requirements": "requirements.txt",
-    },
-
-    "ETL_perdas_duplas_desktop": {
-        "name": "ETL Perdas Duplas Desktop App",
-        "script": "main.py",
-        "work_dir": "",
-        "requirements": "requirements.txt",
-    }
-}
-
 
 # ============================================================================
 # FUNCTIONS
 # ============================================================================
 
 
-def resolve_path(relative_or_absolute: str) -> Path:
+def resolve_path(PROJECTS_ROOT: Path, relative_or_absolute: str) -> Path:
     """Resolve a path relative to PROJECTS_ROOT or as absolute."""
     p = Path(relative_or_absolute)
     if p.is_absolute():
@@ -265,10 +240,10 @@ def install_requirements(work_dir: Path, requirements_file: str, menu: CLIMenu) 
         return False
 
 
-def run_program(program_key: str, menu: CLIMenu) -> bool:
+def run_program(PROGRAMS,PROJECTS_ROOT: Path,program_key: str, menu: CLIMenu) -> bool:
     """Run the selected program."""
     program = PROGRAMS[program_key]
-    work_dir = resolve_path(program["work_dir"])
+    work_dir = resolve_path(PROJECTS_ROOT,program["work_dir"])
     script = program["script"]
     script_path = work_dir / script
 
@@ -298,37 +273,4 @@ def run_program(program_key: str, menu: CLIMenu) -> bool:
         menu.display_error_message(program["name"], str(e))
         return False
 
-
-def main():
-    """Main CLI loop."""
-    menu = CLIMenu(PROGRAMS, PROJECTS_ROOT)
-
-    while True:
-        menu.display_header()
-        selected_key = menu.display_menu()
-
-        if selected_key is None:
-            menu.display_goodbye()
-            sys.exit(0)
-
-        program = PROGRAMS[selected_key]
-        menu.display_program_selected(program["name"])
-
-        if run_program(selected_key, menu):
-            menu.display_success_message(program["name"])
-        else:
-            menu.display_error_message(program["name"])
-
-        if not menu.ask_run_another():
-            menu.display_goodbye()
-            sys.exit(0)
-
-
-if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        menu = CLIMenu(PROGRAMS, PROJECTS_ROOT)
-        menu.display_interrupted()
-        sys.exit(0)
-
+#===============================================================
