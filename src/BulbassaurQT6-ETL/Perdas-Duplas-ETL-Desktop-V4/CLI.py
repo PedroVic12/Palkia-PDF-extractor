@@ -6,7 +6,7 @@ from typing import Dict
 
 """CLI Launcher for Multiple Python Projects"""
 
-from CLI_script import CLIMenu, run_program
+from core.CLI_script import CLIMenu, run_program
 
 
 PROJECTS_ROOT = Path(os.getenv("PROJECTS_ROOT", Path(__file__).parent))

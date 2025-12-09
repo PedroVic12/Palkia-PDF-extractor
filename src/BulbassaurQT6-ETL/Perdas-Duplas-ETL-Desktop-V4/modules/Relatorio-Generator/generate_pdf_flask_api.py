@@ -16,6 +16,10 @@ or use other lib like (Windows only)
 
 pip install xhtml2pdf
 
+Flask
+weasyprint
+xhtml2pdf
+requests
 
 """# -*- coding: utf-8 -*-
 # Servidor Flask para conversão de HTML para PDF (v1.1 - CORRIGIDO)

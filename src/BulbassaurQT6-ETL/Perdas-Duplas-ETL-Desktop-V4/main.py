@@ -15,7 +15,7 @@ from functools import partial
 from qt_core import *
 
 # IMPORT STYLES
-from styles import DARK_STYLE, LIGHT_STYLE
+from core.styles import DARK_STYLE, LIGHT_STYLE
 
 # IMPORT MODEL
 from app.models.settings_model import SettingsModel
