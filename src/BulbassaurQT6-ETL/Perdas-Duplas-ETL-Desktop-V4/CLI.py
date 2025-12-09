@@ -53,7 +53,15 @@ PROGRAMS: Dict[str, Dict[str, str]] = {
         "script": "main.py",
         "work_dir": "",
         "requirements": "requirements.txt",
-    }
+    },
+
+    "gerar_relatorio_ons": {
+        "name": "Gerar Relatório ONS Automatizado",
+        "script": "Relatorio_Word_automatizado.py",
+        "work_dir": "src/BulbassaurQT6-ETL/Relatorio_PLC_Automate/scripts",
+        "requirements": "requirements.txt",
+    },
+
 }
 
 
