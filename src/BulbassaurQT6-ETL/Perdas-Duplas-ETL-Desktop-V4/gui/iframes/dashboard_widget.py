@@ -7,11 +7,11 @@ class DashboardWidget(QWidget):
         
         self.layout = QVBoxLayout(self)
         
-        title = QLabel("Dashboard MUST - PLC - ONS")
+        title = QLabel("Sistema de Ferramentas RPA - PLC - ONS")
         title.setAlignment(Qt.AlignCenter)
         title.setStyleSheet("font-size: 24px; font-weight: bold; padding: 20px;")
         
-        subtitle = QLabel("Esta área exibirá gráficos e estatísticas da aplicação.")
+        subtitle = QLabel("-")
         subtitle.setAlignment(Qt.AlignCenter)
         
         self.layout.addWidget(title)

@@ -16,7 +16,7 @@ class NavigationMenu(QFrame):
     _NAVIGATION_ITEMS = [
         {"text": "Dashboard", "icon_path": "icon_home.svg", "signal": "dashboard_requested"},
         # {"text": "Pomodoro", "icon_path": "icon_widgets.svg", "signal": "pomodoro_requested"}, # Exemplo de item removido
-        {"text": "Checklist", "icon_path": "icon_widgets.svg", "signal": "checklist_requested"},
+        #{"text": "Checklist", "icon_path": "icon_widgets.svg", "signal": "checklist_requested"},
         {"text": "Configurações", "icon_path": "icon_settings.svg", "signal": "settings_requested"},
         {"text": "🤖 Perdas Duplas ETL", "icon_path": "icon_rpa.svg", "signal": "perdas_duplas_requested"},
     ]

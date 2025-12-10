@@ -34,7 +34,7 @@ from gui.iframes.perdas_duplas_widget import PerdasDuplasWidget
 
 # IMPORT SIDE MENU WIDGETS
 from gui.side_menus.navigation_menu import NavigationMenu
-from gui.side_menus.checklist_sidemenu import ChecklistSideMenu
+#from gui.side_menus.checklist_sidemenu import ChecklistSideMenu
 from gui.side_menus.default_sidemenu import DefaultSideMenu
 
 # IMPORT CUSTOM WIDGETS
@@ -87,7 +87,7 @@ class MainWindow(QMainWindow):
     # ///////////////////////////////////////////////////////////////
     def open_dashboard_tab(self): self.open_or_focus_tab("Dashboard", DashboardWidget)
     #def open_pomodoro_tab(self): self.open_or_focus_tab("Pomodoro", PomodoroWidget)
-    def open_checklist_tab(self): self.open_or_focus_tab("Checklist", ChecklistWidget, ChecklistSideMenu)
+    #def open_checklist_tab(self): self.open_or_focus_tab("Checklist", ChecklistWidget, ChecklistSideMenu)
     def open_settings_tab(self): self.open_or_focus_tab("Configurações", SettingsWidget)
     def open_perdas_duplas_tab(self): """Abre a aba da ferramenta de Perdas Duplas ETL.""" ; self.open_or_focus_tab("Perdas Duplas ETL", PerdasDuplasWidget)
 
@@ -96,7 +96,9 @@ class MainWindow(QMainWindow):
         # Main Navigation
         self.navigation_menu.dashboard_requested.connect(self.open_dashboard_tab)
         #self.navigation_menu.pomodoro_requested.connect(self.open_pomodoro_tab)
-        self.navigation_menu.checklist_requested.connect(self.open_checklist_tab)
+        #self.navigation_menu.checklist_requested.connect(self.open_checklist_tab)
+        
+        
         self.navigation_menu.settings_requested.connect(self.open_settings_tab)
         self.navigation_menu.perdas_duplas_requested.connect(self.open_perdas_duplas_tab) # Conecta o sinal do NavigationMenu
         

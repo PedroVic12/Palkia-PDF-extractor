@@ -41,7 +41,7 @@ class UI_MainWindow(object):
         
         # LABEL VERSION
         # ///////////////////////////////////////////////////////////////
-        self.left_menu_label_version = QLabel("v3.1.1")
+        self.left_menu_label_version = QLabel("v4.1.3")
         self.left_menu_label_version.setAlignment(Qt.AlignCenter)
         self.left_menu_label_version.setMinimumHeight(30)
         self.left_menu_label_version.setMaximumHeight(30)
@@ -71,7 +71,7 @@ class UI_MainWindow(object):
         self.top_bar_layout.setContentsMargins(10,0,10,0)
 
         # Left side of AppBar
-        self.toggle_button = PyPushButton(text="Ocultar Menu", icon_path="icon_menu.svg")
+        self.toggle_button = PyPushButton(text="Menu", icon_path="icon_menu.svg")
         self.toggle_button.setToolTip("Ocultar/Mostrar Menu Lateral")
         
         # Spacer
