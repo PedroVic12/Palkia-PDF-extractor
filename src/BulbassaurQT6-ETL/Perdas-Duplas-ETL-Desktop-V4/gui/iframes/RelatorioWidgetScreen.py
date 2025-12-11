@@ -9,15 +9,17 @@ from docx import Document
 from docx.shared import RGBColor, Cm
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
+from docx2pdf import convert
 
 from PySide6.QtWidgets import (
     QApplication, QFrame, QWidget, QLabel, QVBoxLayout, QHBoxLayout,
     QPushButton, QFileDialog, QLineEdit, QTextEdit, QMessageBox,
     QGroupBox, QSpinBox, QTabWidget, QScrollArea, QTableWidget,
-    QTableWidgetItem, QHeaderView, QFormLayout, QComboBox
+    QTableWidgetItem, QHeaderView, QFormLayout, QComboBox, QProgressBar
 )
 from PySide6.QtCore import Qt, QThread, Signal, Slot
 from PySide6.QtGui import QPixmap, QFont
+from PySide6.QtWebEngineWidgets import QWebEngineView
 
 # =======================================================
 #  UTILITÁRIOS DE FORMATAÇÃO DOCX
@@ -150,7 +152,7 @@ class DocumentPreview(QWidget):
 def listar_estilos_de_tabela(template_path):
     try:
         doc = Document(template_path)
-        estilos = [s.name for s in doc.styles if s.type == WD_STYLE_TYPE.TABLE]
+        estilos = [s.name for s in doc.styles]
         # garantir alguns estilos padrão caso o template não traga
         defaults = ["Table Grid", "Light Shading", "Medium Shading 1", "List Table 1 - Accent 1"]
         for d in defaults:
