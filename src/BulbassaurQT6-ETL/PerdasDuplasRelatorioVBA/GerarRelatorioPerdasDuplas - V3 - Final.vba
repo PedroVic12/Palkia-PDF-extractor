@@ -35,9 +35,9 @@ Public Const LARGURA_HORIZONTE As Double = 4.0
 Public Const LARGURA_PADRAO As Double = 5.0
 
 ' Cores condicionais para Horizonte
-Public Const COR_CURTO_PRAZO As Long = 25600    ' Verde: RGB(0, 100, 0)
+Public Const COR_CURTO_PRAZO As Long = 25600    ' Verde escuro: RGB(0, 100, 0)
 Public Const COR_MEDIO_PRAZO As Long = 42495    ' Laranja: RGB(255, 140, 0)
-Public Const COR_LONGO_PRAZO As Long = 11674146 ' Vermelho: RGB(178, 34, 34)
+Public Const COR_LONGO_PRAZO As Long = 11674146 ' Vermelho tijolo: RGB(178, 34, 34)
 
 ' ======================
 ' CLASSE PARA LOGS (EXEMPLO DE CLASSE)
@@ -487,5 +487,3 @@ Sub TesteRapido()
     
     MsgBox msg, vbInformation, "Configurações do Sistema"
 End Sub
-
-'============================================

@@ -1,5 +1,5 @@
 '============================================
-' GERADOR DE RELATÓRIOS PERDAS DUPLAS - VERSÃO FINAL
+' GERADOR DE RELATÓRIOS WORD/PDF de LTs PERDAS DUPLAS PLC ONS - VERSÃO 15/12/2025
 '============================================
 Option Explicit
 

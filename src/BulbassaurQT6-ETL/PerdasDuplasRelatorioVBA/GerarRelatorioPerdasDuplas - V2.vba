@@ -1,83 +1,7 @@
 '============================================
-' GERADOR DE RELATÓRIOS PERDAS DUPLAS ETL V3 - VERSÃO 16/12/2025
+' GERADOR DE RELATÓRIOS PERDAS DUPLAS - VERSÃO 2 - 16/12/2025
 '============================================
 Option Explicit
-
-' ======================
-' CONFIGURAÇÕES GLOBAIS
-' ======================
-' Configurações de Formatação
-Public Const CABECALHO_AZUL As Boolean = False  ' True: Azul Claro Template | False: Cabeçalho padrão (negrito e fonte 14)
-Public Const DEBUG_MODE As Boolean = False     ' True: Mostra MsgBox de debug | False: Silencioso
-Public Const CONVERTER_PDF As Boolean = False  ' True: Converte automaticamente para PDF
-
-' Configurações de Fonte
-Public Const FONTE_CABECALHO As String = "Calibri"
-Public Const TAMANHO_CABECALHO As Integer = 14
-Public Const FONTE_DADOS As String = "Calibri"
-Public Const TAMANHO_DADOS As Integer = 10
-
-' Configurações de Tabela
-Public Const ALTURA_LINHA As Integer = 20      ' Altura mínima das linhas (pontos)
-Public Const ESPESSURA_BORDA As Integer = 1    ' Espessura das bordas (1=fininha)
-Public Const REPETIR_CABECALHO As Boolean = True  ' Repete cabeçalho em todas páginas
-
-' Cores (formato RGB)
-Public Const COR_AZUL_ONS As Long = 10092543   ' RGB(68, 114, 196)
-Public Const COR_TEXTO_BRANCO As Long = 16777215 ' RGB(255, 255, 255)
-Public Const COR_TEXTO_PRETO As Long = 0       ' RGB(0, 0, 0)
-
-' Larguras das colunas (em centímetros)
-Public Const LARGURA_VOLUME As Double = 2.5
-Public Const LARGURA_AREA As Double = 8.0
-Public Const LARGURA_CONTINGENCIA As Double = 12.0
-Public Const LARGURA_HORIZONTE As Double = 4.0
-Public Const LARGURA_PADRAO As Double = 5.0
-
-' Cores condicionais para Horizonte
-Public Const COR_CURTO_PRAZO As Long = 25600    ' Verde: RGB(0, 100, 0)
-Public Const COR_MEDIO_PRAZO As Long = 42495    ' Laranja: RGB(255, 140, 0)
-Public Const COR_LONGO_PRAZO As Long = 11674146 ' Vermelho: RGB(178, 34, 34)
-
-' ======================
-' CLASSE PARA LOGS (EXEMPLO DE CLASSE)
-' ======================
-' Para usar esta classe: 
-' 1. No VBA, vá em Inserir > Classe, nomeie como "clsLogger"
-' 2. Cole o código abaixo na classe
-' 3. No módulo principal, declare: Dim logger As New clsLogger
-' 4. Use: logger.Log "Mensagem"
-
-' --- Código da classe clsLogger (em arquivo separado) ---
-' Option Explicit
-'
-' Private pDebugMode As Boolean
-'
-' Public Property Get DebugMode() As Boolean
-'     DebugMode = pDebugMode
-' End Property
-'
-' Public Property Let DebugMode(ByVal valor As Boolean)
-'     pDebugMode = valor
-' End Property
-'
-' Public Sub Log(msg As String)
-'     Debug.Print Format(Now, "dd/mm/yyyy hh:mm:ss") & " - " & msg
-'     
-'     If pDebugMode Then
-'         MsgBox msg, vbInformation, "DEBUG"
-'     End If
-' End Sub
-'
-' Public Sub LogErro(erroDesc As String, Optional erroNum As Long = 0)
-'     Dim msg As String
-'     msg = "ERRO " & erroNum & ": " & erroDesc
-'     Log msg
-' End Sub
-
-' ======================
-' MÓDULO PRINCIPAL (MÉTODOS)
-' ======================
 
 ' ======================
 ' SUB PRINCIPAL - BOTÃO
@@ -87,23 +11,15 @@ Sub GerarRelatorioPerdasDuplasETL()
     
     Dim templateWord As String
     Dim pagina As Long
-    
-    ' Declarar logger (se estiver usando a classe)
-    ' Dim logger As New clsLogger
-    ' logger.DebugMode = DEBUG_MODE
-    
-    ' Log simples (sem classe)
-    Call Log("Iniciando geração de relatório")
+    Dim incluirTeste As Boolean
+    Dim converterPDF As Boolean
     
     ' 1. ESCOLHER ARQUIVO WORD
     templateWord = Application.GetOpenFilename( _
         FileFilter:="Arquivos Word (*.docx; *.doc), *.docx; *.doc", _
         Title:="Selecione o Template Word")
     
-    If templateWord = "False" Then
-        Call Log("Usuário cancelou seleção do template")
-        Exit Sub
-    End If
+    If templateWord = "False" Then Exit Sub
     
     ' 2. PERGUNTAR NÚMERO DA PÁGINA
     Dim respostaPagina As String
@@ -111,10 +27,7 @@ Sub GerarRelatorioPerdasDuplasETL()
                             "Digite um número (ex: 1, 2, 3...):", _
                             "Número da Página", "1")
     
-    If respostaPagina = "" Then
-        Call Log("Usuário cancelou operação")
-        Exit Sub
-    End If
+    If respostaPagina = "" Then Exit Sub
     
     If Not IsNumeric(respostaPagina) Then
         MsgBox "Por favor, digite um número válido!", vbExclamation
@@ -122,22 +35,29 @@ Sub GerarRelatorioPerdasDuplasETL()
     End If
     
     pagina = CLng(respostaPagina)
-    Call Log("Página selecionada: " & pagina)
     
-    ' 3. EXECUTAR FUNÇÃO PRINCIPAL
-    Call CriarRelatorioCorrigido(templateWord, pagina, CONVERTER_PDF)
+    ' 3. PERGUNTAR SE INCLUI TABELA DE TESTE
+    incluirTeste = (MsgBox("Deseja incluir tabela de teste de formatação?", _
+                           vbYesNo + vbQuestion, "Tabela de Teste") = vbYes)
+    
+    ' 4. PERGUNTAR SE CONVERTE PARA PDF
+    converterPDF = (MsgBox("Deseja converter para PDF após gerar?", _
+                          vbYesNo + vbQuestion, "Converter para PDF") = vbYes)
+    
+    ' 5. EXECUTAR FUNÇÃO PRINCIPAL
+    Call CriarRelatorioCorrigido(templateWord, pagina, incluirTeste, converterPDF)
     
     Exit Sub
     
 ErroHandler:
-    Call LogErro(Err.Description, Err.Number)
-    MsgBox "❌ ERRO: " & Err.Description, vbCritical, "Erro no Processamento"
+    MsgBox "? ERRO: " & Err.Description, vbCritical, "Erro no Processamento"
 End Sub
 
 ' ======================
 ' FUNÇÃO PRINCIPAL CORRIGIDA
 ' ======================
-Sub CriarRelatorioCorrigido(caminhoWord As String, pagina As Long, converterPDF As Boolean)
+Sub CriarRelatorioCorrigido(caminhoWord As String, pagina As Long, _
+                           incluirTeste As Boolean, converterPDF As Boolean)
     
     ' Declaração de variáveis
     Dim wordApp As Object, wordDoc As Object
@@ -150,8 +70,6 @@ Sub CriarRelatorioCorrigido(caminhoWord As String, pagina As Long, converterPDF 
     
     On Error GoTo ErroHandler
     
-    Call Log("Iniciando função principal")
-    
     ' ========== VALIDAÇÃO INICIAL ==========
     If Dir(caminhoWord) = "" Then
         MsgBox "Arquivo Word não encontrado!", vbExclamation
@@ -163,23 +81,18 @@ Sub CriarRelatorioCorrigido(caminhoWord As String, pagina As Long, converterPDF 
     Set ws = ThisWorkbook.Worksheets("Contingências Duplas")
     If ws Is Nothing Then
         Set ws = ThisWorkbook.Worksheets(1)
-        Call Log("Aba 'Contingências Duplas' não encontrada. Usando: " & ws.Name)
+        MsgBox "Aba 'Contingências Duplas' não encontrada. Usando primeira aba: " & ws.Name, vbExclamation
     End If
     On Error GoTo ErroHandler
     
-    ' Obter dimensões dos dados
+    ' VERIFICAÇÃO CRÍTICA: Mostrar informações da planilha
     ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
     ultimaColuna = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
     
-    Call Log("Dimensões - Linhas: " & ultimaLinha & ", Colunas: " & ultimaColuna)
-    
-    ' Exibir debug se ativado
-    If DEBUG_MODE Then
-        MsgBox "DEBUG INFO:" & vbCrLf & _
-               "Planilha: " & ws.Name & vbCrLf & _
-               "Última linha: " & ultimaLinha & vbCrLf & _
-               "Última coluna: " & ultimaColuna, vbInformation, "Verificação"
-    End If
+    MsgBox "DEBUG INFO:" & vbCrLf & _
+           "Planilha: " & ws.Name & vbCrLf & _
+           "Última linha: " & ultimaLinha & vbCrLf & _
+           "Última coluna: " & ultimaColuna, vbInformation, "Verificação"
     
     If ultimaLinha < 2 Then
         MsgBox "Não há dados na planilha! Apenas cabeçalho encontrado.", vbExclamation
@@ -191,37 +104,23 @@ Sub CriarRelatorioCorrigido(caminhoWord As String, pagina As Long, converterPDF 
         InitialFileName:="Relatorio_Perdas_Duplas_" & Format(Now, "ddmmyyyy_hhmm") & ".docx", _
         FileFilter:="Documentos Word (*.docx), *.docx")
     
-    If caminhoSalvar = "False" Then
-        Call Log("Usuário cancelou salvamento")
-        Exit Sub
-    End If
+    If caminhoSalvar = "False" Then Exit Sub
     
     ' Garantir extensão .docx
     If LCase(Right(caminhoSalvar, 5)) <> ".docx" Then
         caminhoSalvar = caminhoSalvar & ".docx"
     End If
     
-    Call Log("Caminho para salvar: " & caminhoSalvar)
-    
     ' ========== INICIAR WORD ==========
     Application.StatusBar = "Abrindo Microsoft Word..."
-    Call Log("Criando aplicação Word")
-    
     Set wordApp = CreateObject("Word.Application")
-    wordApp.Visible = True
+    wordApp.Visible = True ' IMPORTANTE: Deixar visível para debug
     
-    ' CORREÇÃO DO BUG: Criar novo documento se não existir
-    If caminhoWord = "" Or Dir(caminhoWord) = "" Then
-        Call Log("Criando novo documento Word")
-        Set wordDoc = wordApp.Documents.Add
-    Else
-        Call Log("Abrindo template existente: " & caminhoWord)
-        Set wordDoc = wordApp.Documents.Open(caminhoWord)
-    End If
+    ' Abrir template
+    Set wordDoc = wordApp.Documents.Open(caminhoWord)
     
     ' ========== INSERIR DADOS PRINCIPAIS ==========
     Application.StatusBar = "Criando tabela principal..."
-    Call Log("Criando tabela com " & ultimaLinha & " linhas e " & ultimaColuna & " colunas")
     
     ' Ir para o final do documento para inserir a tabela
     wordApp.Selection.EndKey Unit:=6 ' wdStory
@@ -230,111 +129,113 @@ Sub CriarRelatorioCorrigido(caminhoWord As String, pagina As Long, converterPDF 
     wordApp.Selection.TypeText "RELATÓRIO DE PERDAS DUPLAS" & vbCrLf
     wordApp.Selection.TypeText "Gerado em: " & Format(Now, "dd/mm/yyyy HH:MM") & vbCrLf & vbCrLf
     
-    ' Criar tabela principal
+    ' Criar tabela principal (DEBUG: Mostrar dimensões)
+    MsgBox "Criando tabela com:" & vbCrLf & _
+           "Linhas: " & ultimaLinha & vbCrLf & _
+           "Colunas: " & ultimaColuna, vbInformation, "Criando Tabela"
+    
+    ' ? CHECKPOINT 1: Criar tabela
     Set tabela = wordDoc.Tables.Add(wordApp.Selection.Range, ultimaLinha, ultimaColuna)
     
     ' ========== CONFIGURAR LARGURAS DAS COLUNAS ==========
     Application.StatusBar = "Configurando larguras das colunas..."
     
+    ' ? CHECKPOINT 2: Configurar larguras
     For j = 1 To ultimaColuna
         Dim cabecalho As String
         cabecalho = LCase(Trim(ws.Cells(1, j).Value))
         Dim larguraCm As Double
         
-        ' Definir larguras específicas usando constantes
+        ' Definir larguras específicas
         If InStr(cabecalho, "volume") > 0 Then
-            larguraCm = LARGURA_VOLUME
+            larguraCm = 2.5 ' cm
         ElseIf InStr(cabecalho, "área") > 0 Or InStr(cabecalho, "area") > 0 Then
-            larguraCm = LARGURA_AREA
+            larguraCm = 8#  ' cm
         ElseIf InStr(cabecalho, "contingência") > 0 Or InStr(cabecalho, "contingencia") > 0 Then
-            larguraCm = LARGURA_CONTINGENCIA
+            larguraCm = 12#  ' cm
         ElseIf InStr(cabecalho, "horizonte") > 0 Then
-            larguraCm = LARGURA_HORIZONTE
+            larguraCm = 4#  ' cm
         Else
-            larguraCm = LARGURA_PADRAO
+            larguraCm = 5#  ' Largura padrão
         End If
         
         ' Aplicar largura (1 cm = 28.35 pontos)
         tabela.Columns(j).Width = larguraCm * 28.35
-        Call Log("Coluna " & j & " - Largura: " & larguraCm & " cm")
     Next j
     
     ' ========== CONFIGURAR FORMATAÇÃO DA TABELA ==========
     Application.StatusBar = "Configurando formatação da tabela..."
     
-    ' Bordas leves (1px)
+    ' ? CHECKPOINT 3: Bordas leves (1px)
     On Error Resume Next
     With tabela.Borders
         .InsideLineStyle = 1  ' wdLineStyleSingle
         .OutsideLineStyle = 1
-        .InsideLineWidth = ESPESSURA_BORDA
-        .OutsideLineWidth = ESPESSURA_BORDA
+        .InsideLineWidth = 1  ' wdLineWidth025pt
+        .OutsideLineWidth = 1
     End With
     
-    ' Altura das linhas ajustada
+    ' ? CHECKPOINT 4: Altura das linhas ajustada
     For i = 1 To ultimaLinha
         tabela.Rows(i).HeightRule = 0  ' wdRowHeightAuto
-        tabela.Rows(i).Height = ALTURA_LINHA
+        tabela.Rows(i).Height = 20 ' 20 pontos de altura mínima
     Next i
     
-    ' Cabeçalho que se repete
-    If REPETIR_CABECALHO Then
-        tabela.Rows(1).HeadingFormat = True
-    End If
+    ' ? CHECKPOINT 5: Cabeçalho que se repete
+    tabela.Rows(1).HeadingFormat = True
     
     ' ========== PREENCHER CABEÇALHO ==========
     Application.StatusBar = "Preenchendo cabeçalho..."
     
+    ' ? CHECKPOINT 6: Preencher e formatar cabeçalho
     For j = 1 To ultimaColuna
         Dim cabecalhoTexto As String
         cabecalhoTexto = Trim(ws.Cells(1, j).Value)
         
-        Call Log("Preenchendo cabeçalho coluna " & j & ": " & cabecalhoTexto)
+        ' DEBUG: Mostrar cabeçalho sendo preenchido
+        Debug.Print "Preenchendo cabeçalho coluna " & j & ": " & cabecalhoTexto
+        
         tabela.Cell(1, j).Range.Text = cabecalhoTexto
         
-        ' Formatação do cabeçalho (usando constantes globais)
+        ' ? CHECKPOINT 7: Formatação ONS (azul no cabeçalho)
         With tabela.Cell(1, j).Range
             .Bold = True
-            .Font.Name = FONTE_CABECALHO
-            .Font.Size = TAMANHO_CABECALHO
+            .Font.Color = RGB(255, 255, 255)  ' Texto branco
+            .Shading.BackgroundPatternColor = RGB(68, 114, 196)  ' Azul ONS
             .ParagraphFormat.Alignment = 1  ' Centralizado
-            
-            If CABECALHO_AZUL Then
-                .Font.Color = COR_TEXTO_BRANCO
-                .Shading.BackgroundPatternColor = COR_AZUL_ONS
-            Else
-                .Font.Color = COR_TEXTO_PRETO
-                .Font.Bold = True
-                ' Sem cor de fundo
-            End If
+            .Font.Size = 10
+            .Font.Name = "Calibri"
         End With
     Next j
     
     ' ========== PREENCHER DADOS ==========
     Application.StatusBar = "Preenchendo dados..."
     
+    ' ? CHECKPOINT 8: Preencher dados das células
     For i = 2 To ultimaLinha
         For j = 1 To ultimaColuna
             Dim valorCelula As String
             valorCelula = Trim(ws.Cells(i, j).Text)
             
-            If valorCelula = "" Then valorCelula = "-"
+            If valorCelula = "" Then
+                valorCelula = "-"
+            End If
             
-            ' DEBUG: Mostrar primeiras linhas
-            If DEBUG_MODE And i <= 3 Then
-                Call Log("Linha " & i & ", Coluna " & j & ": " & valorCelula)
+            ' DEBUG: Mostrar dados sendo preenchidos
+            If i <= 3 Then ' Apenas mostrar as primeiras linhas
+                Debug.Print "Linha " & i & ", Coluna " & j & ": " & valorCelula
             End If
             
             tabela.Cell(i, j).Range.Text = valorCelula
             
             ' Formatação básica das células
             With tabela.Cell(i, j).Range
-                .Font.Name = FONTE_DADOS
-                .Font.Size = TAMANHO_DADOS
+                .Font.Name = "Calibri"
+                .Font.Size = 9
                 .ParagraphFormat.Alignment = 0  ' Alinhar à esquerda
             End With
             
-            ' Cores condicionais para Horizonte
+            ' ? CHECKPOINT 9: Cores condicionais para Horizonte
             Dim cabecalhoColuna As String
             cabecalhoColuna = LCase(Trim(ws.Cells(1, j).Value))
             
@@ -352,23 +253,18 @@ Sub CriarRelatorioCorrigido(caminhoWord As String, pagina As Long, converterPDF 
     
     ' ========== SALVAR DOCUMENTO ==========
     Application.StatusBar = "Salvando documento..."
-    Call Log("Salvando documento em: " & caminhoSalvar)
     
     On Error Resume Next
     wordDoc.SaveAs2 caminhoSalvar
     If Err.Number <> 0 Then
-        Call LogErro("Erro ao salvar: " & Err.Description)
         MsgBox "Erro ao salvar: " & Err.Description, vbCritical
         GoTo Limpeza
     End If
     On Error GoTo 0
     
-    Call Log("Documento salvo com sucesso")
-    
     ' ========== CONVERTER PARA PDF ==========
     If converterPDF Then
         Application.StatusBar = "Convertendo para PDF..."
-        Call Log("Convertendo para PDF")
         
         Dim pdfPath As String
         pdfPath = Left(caminhoSalvar, InStrRev(caminhoSalvar, ".")) & "pdf"
@@ -376,12 +272,10 @@ Sub CriarRelatorioCorrigido(caminhoWord As String, pagina As Long, converterPDF 
         On Error Resume Next
         wordDoc.SaveAs2 pdfPath, 17  ' wdFormatPDF
         If Err.Number = 0 Then
-            Call Log("PDF gerado com sucesso: " & pdfPath)
-            MsgBox "✅ PDF gerado com sucesso!" & vbCrLf & _
+            MsgBox "? PDF gerado com sucesso!" & vbCrLf & _
                    "Local: " & pdfPath, vbInformation
         Else
-            Call LogErro("Falha ao converter PDF: " & Err.Description)
-            MsgBox "⚠️ Não foi possível converter para PDF." & vbCrLf & _
+            MsgBox "?? Não foi possível converter para PDF." & vbCrLf & _
                    "Arquivo Word salvo em: " & caminhoSalvar, vbExclamation
         End If
         On Error GoTo 0
@@ -391,7 +285,7 @@ Sub CriarRelatorioCorrigido(caminhoWord As String, pagina As Long, converterPDF 
     sucesso = True
     Application.StatusBar = False
     
-    MsgBox "✅ Relatório gerado com sucesso!" & vbCrLf & _
+    MsgBox "? Relatório gerado com sucesso!" & vbCrLf & _
            "Arquivo salvo em: " & caminhoSalvar, vbInformation, "Concluído"
     
 Limpeza:
@@ -408,20 +302,20 @@ Limpeza:
         Set wordApp = Nothing
     End If
     
-    Call Log("Processo concluído - Limpeza realizada")
     Exit Sub
     
 ErroHandler:
     Application.StatusBar = False
-    Call LogErro(Err.Description & " (Linha: " & Erl & ")", Err.Number)
     
+    ' ? CHECKPOINT 10: Tratamento de erros completo
     Dim erroMsg As String
-    erroMsg = "❌ ERRO DETALHADO:" & vbCrLf & vbCrLf
+    erroMsg = "? ERRO DETALHADO:" & vbCrLf & vbCrLf
     erroMsg = erroMsg & "Descrição: " & Err.Description & vbCrLf
     erroMsg = erroMsg & "Número: " & Err.Number & vbCrLf
     erroMsg = erroMsg & "Linha aproximada: " & Erl
     
     MsgBox erroMsg, vbCritical, "Erro"
+    
     Resume Limpeza
 End Sub
 
@@ -437,55 +331,105 @@ Private Sub FormatarCelulaHorizonte(celula As Object, valor As String)
     ' Centralizar texto
     celula.Range.ParagraphFormat.Alignment = 1  ' Centralizado
     
-    ' Aplicar cores condicionais usando constantes
+    ' Aplicar cores condicionais
     Select Case horizonte
         Case "curto prazo"
-            celula.Range.Font.Color = COR_CURTO_PRAZO
+            celula.Range.Font.Color = RGB(0, 100, 0)   ' Verde escuro
             celula.Range.Bold = True
             
         Case "médio prazo", "medio prazo"
-            celula.Range.Font.Color = COR_MEDIO_PRAZO
+            celula.Range.Font.Color = RGB(255, 140, 0)  ' Laranja
             celula.Range.Bold = True
             
         Case "longo prazo"
-            celula.Range.Font.Color = COR_LONGO_PRAZO
+            celula.Range.Font.Color = RGB(178, 34, 34)  ' Vermelho tijolo
             celula.Range.Bold = True
     End Select
 End Sub
 
 ' ======================
-' MÉTODOS DE LOG (SIMPLIFICADOS)
+' FUNÇÃO PARA TESTE SIMPLES
 ' ======================
-Private Sub Log(msg As String)
-    ' Imprime no Immediate Window (Ctrl+G para ver)
-    Debug.Print Format(Now, "dd/mm/yyyy hh:mm:ss") & " - " & msg
+Sub TestarPreenchimentoSimples()
+    ' Teste simples para verificar se os dados estão sendo lidos corretamente
     
-    ' Mostra MsgBox se DEBUG_MODE estiver ativado
-    If DEBUG_MODE Then
-        MsgBox msg, vbInformation, "DEBUG"
+    Dim ws As Worksheet
+    On Error Resume Next
+    Set ws = ThisWorkbook.Worksheets("Contingências Duplas")
+    If ws Is Nothing Then
+        Set ws = ThisWorkbook.Worksheets(1)
     End If
-End Sub
-
-Private Sub LogErro(erroDesc As String, Optional erroNum As Long = 0)
-    Dim msg As String
-    msg = "ERRO " & erroNum & ": " & erroDesc
-    Log msg
-End Sub
-
-' ======================
-' FUNÇÃO PARA TESTE RÁPIDO
-' ======================
-Sub TesteRapido()
-    ' Testa as configurações atuais
-    Dim msg As String
-    msg = "CONFIGURAÇÕES ATUAIS:" & vbCrLf & vbCrLf
-    msg = msg & "Cabeçalho Azul: " & CABECALHO_AZUL & vbCrLf
-    msg = msg & "Modo Debug: " & DEBUG_MODE & vbCrLf
-    msg = msg & "Converter PDF: " & CONVERTER_PDF & vbCrLf
-    msg = msg & "Fonte Cabeçalho: " & FONTE_CABECALHO & " " & TAMANHO_CABECALHO & "pt" & vbCrLf
-    msg = msg & "Fonte Dados: " & FONTE_DADOS & " " & TAMANHO_DADOS & "pt"
+    On Error GoTo 0
     
-    MsgBox msg, vbInformation, "Configurações do Sistema"
+    Dim ultimaLinha As Long, ultimaColuna As Long
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    ultimaColuna = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
+    
+    Dim msg As String
+    msg = "TESTE DE PREENCHIMENTO:" & vbCrLf & vbCrLf
+    msg = msg & "Planilha: " & ws.Name & vbCrLf
+    msg = msg & "Linhas: " & ultimaLinha & vbCrLf
+    msg = msg & "Colunas: " & ultimaColuna & vbCrLf & vbCrLf
+    
+    ' Mostrar primeiras 3 linhas
+    Dim i As Long, j As Long
+    For i = 1 To Application.Min(3, ultimaLinha)
+        msg = msg & "Linha " & i & ": "
+        For j = 1 To Application.Min(5, ultimaColuna)
+            msg = msg & ws.Cells(i, j).Text & " | "
+        Next j
+        msg = msg & vbCrLf
+    Next i
+    
+    MsgBox msg, vbInformation, "Teste de Preenchimento"
 End Sub
 
-'============================================
+' ======================
+' FUNÇÃO PARA DEBUG DETALHADO
+' ======================
+Sub DebugDetalhado()
+    ' Mostra informações detalhadas para debug
+    
+    Dim ws As Worksheet
+    On Error Resume Next
+    Set ws = ThisWorkbook.Worksheets("Contingências Duplas")
+    If ws Is Nothing Then
+        Set ws = ThisWorkbook.Worksheets(1)
+        MsgBox "Usando planilha: " & ws.Name, vbInformation
+    End If
+    On Error GoTo 0
+    
+    ' Verificar dados
+    Dim ultimaLinha As Long, ultimaColuna As Long
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    ultimaColuna = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
+    
+    ' Criar relatório de debug
+    Dim debugInfo As String
+    debugInfo = "DEBUG DETALHADO:" & vbCrLf & vbCrLf
+    debugInfo = debugInfo & "=== INFORMAÇÕES DA PLANILHA ===" & vbCrLf
+    debugInfo = debugInfo & "Nome: " & ws.Name & vbCrLf
+    debugInfo = debugInfo & "Linhas totais: " & ultimaLinha & vbCrLf
+    debugInfo = debugInfo & "Colunas totais: " & ultimaColuna & vbCrLf & vbCrLf
+    
+    debugInfo = debugInfo & "=== CABEÇALHOS ===" & vbCrLf
+    For j = 1 To ultimaColuna
+        debugInfo = debugInfo & "Coluna " & j & ": " & ws.Cells(1, j).Value & vbCrLf
+    Next j
+    
+    debugInfo = debugInfo & vbCrLf & "=== AMOSTRA DE DADOS (3 primeiras linhas) ===" & vbCrLf
+    For i = 1 To Application.Min(3, ultimaLinha)
+        debugInfo = debugInfo & "Linha " & i & ": "
+        For j = 1 To ultimaColuna
+            debugInfo = debugInfo & "'" & ws.Cells(i, j).Text & "' "
+        Next j
+        debugInfo = debugInfo & vbCrLf
+    Next i
+    
+    ' Mostrar em caixa de mensagem
+    MsgBox debugInfo, vbInformation, "Debug Detalhado"
+    
+    ' Também imprimir na Janela Imediata
+    Debug.Print debugInfo
+End Sub
+
