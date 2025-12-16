@@ -6,7 +6,7 @@ import plotly.io as pio
 pio.renderers.default = 'browser'  # Abre no navegador
 
 
-from AnaliseContigenciasPyPlot import AnalisadorContingencias
+from AnaliseContigenciasPyPlot import AnalisadorContingenciasPlotly
 
 df_perdas_duplas = pd.read_excel(r"C:\Users\pedrovictor.veras\OneDrive - Operador Nacional do Sistema Eletrico\Documentos\ESTAGIO_ONS_PVRV_2025\GitHub\Palkia-PDF-extractor\src\BulbassaurQT6-ETL\Perdas-Duplas-ETL-Desktop-V4\app\assets\planilhas_PLC\perdas_duplas_ETL.xlsx")
 
@@ -29,7 +29,7 @@ def AgruparVolumePorAreaGeoeletrica(df):
 
 # Criar instância do analisador
 print("🔧 Criando analisador de contingências...")
-analisador = AnalisadorContingencias(df_perdas_duplas)
+analisador = AnalisadorContingenciasPlotly(df_perdas_duplas)
 
 # 1. ANÁLISE DE INSIGHTS
 print("\n📊 OBTENDO INSIGHTS...")
