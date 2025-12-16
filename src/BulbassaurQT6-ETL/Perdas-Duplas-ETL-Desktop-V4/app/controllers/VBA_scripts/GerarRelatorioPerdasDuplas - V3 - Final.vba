@@ -35,48 +35,12 @@ Public Const LARGURA_HORIZONTE As Double = 4.0
 Public Const LARGURA_PADRAO As Double = 5.0
 
 ' Cores condicionais para Horizonte
-Public Const COR_CURTO_PRAZO As Long = 25600    ' Verde: RGB(0, 100, 0)
+Public Const COR_CURTO_PRAZO As Long = 25600    ' Verde escuro: RGB(0, 100, 0)
 Public Const COR_MEDIO_PRAZO As Long = 42495    ' Laranja: RGB(255, 140, 0)
-Public Const COR_LONGO_PRAZO As Long = 11674146 ' Vermelho: RGB(178, 34, 34)
+Public Const COR_LONGO_PRAZO As Long = 11674146 ' Vermelho tijolo: RGB(178, 34, 34)
 
 ' ======================
-' CLASSE PARA LOGS (EXEMPLO DE CLASSE)
-' ======================
-' Para usar esta classe: 
-' 1. No VBA, vá em Inserir > Classe, nomeie como "clsLogger"
-' 2. Cole o código abaixo na classe
-' 3. No módulo principal, declare: Dim logger As New clsLogger
-' 4. Use: logger.Log "Mensagem"
-
-' --- Código da classe clsLogger (em arquivo separado) ---
-' Option Explicit
-'
-' Private pDebugMode As Boolean
-'
-' Public Property Get DebugMode() As Boolean
-'     DebugMode = pDebugMode
-' End Property
-'
-' Public Property Let DebugMode(ByVal valor As Boolean)
-'     pDebugMode = valor
-' End Property
-'
-' Public Sub Log(msg As String)
-'     Debug.Print Format(Now, "dd/mm/yyyy hh:mm:ss") & " - " & msg
-'     
-'     If pDebugMode Then
-'         MsgBox msg, vbInformation, "DEBUG"
-'     End If
-' End Sub
-'
-' Public Sub LogErro(erroDesc As String, Optional erroNum As Long = 0)
-'     Dim msg As String
-'     msg = "ERRO " & erroNum & ": " & erroDesc
-'     Log msg
-' End Sub
-
-' ======================
-' MÓDULO PRINCIPAL (MÉTODOS)
+' MÓDULO 1 PRINCIPAL (MÉTODOS)
 ' ======================
 
 ' ======================
@@ -135,7 +99,7 @@ ErroHandler:
 End Sub
 
 ' ======================
-' FUNÇÃO PRINCIPAL CORRIGIDA
+' FUNÇÃO PRINCIPAL 
 ' ======================
 Sub CriarRelatorioCorrigido(caminhoWord As String, pagina As Long, converterPDF As Boolean)
     
@@ -447,14 +411,14 @@ Private Sub FormatarCelulaHorizonte(celula As Object, valor As String)
             celula.Range.Font.Color = COR_MEDIO_PRAZO
             celula.Range.Bold = True
             
-        Case "longo prazo"
-            celula.Range.Font.Color = COR_LONGO_PRAZO
-            celula.Range.Bold = True
+        'Case "longo prazo"
+        '    celula.Range.Font.Color = COR_LONGO_PRAZO
+        '    celula.Range.Bold = True
     End Select
 End Sub
 
 ' ======================
-' MÉTODOS DE LOG (SIMPLIFICADOS)
+' MÉTODOS DE LOG 
 ' ======================
 Private Sub Log(msg As String)
     ' Imprime no Immediate Window (Ctrl+G para ver)
@@ -473,7 +437,7 @@ Private Sub LogErro(erroDesc As String, Optional erroNum As Long = 0)
 End Sub
 
 ' ======================
-' FUNÇÃO PARA TESTE RÁPIDO
+' FUNÇÃO PARA TESTE VBA
 ' ======================
 Sub TesteRapido()
     ' Testa as configurações atuais
@@ -487,5 +451,3 @@ Sub TesteRapido()
     
     MsgBox msg, vbInformation, "Configurações do Sistema"
 End Sub
-
-'============================================

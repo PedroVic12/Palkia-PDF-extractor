@@ -1,8 +1,8 @@
 # ///////////////////////////////////////////////////////////////
 #
-# BY: Pedro Victor Rodrigues Veras (based on Wanderson M. Pimenta)
-# PROJECT MADE WITH: Qt Designer and PySide6
-# V: 10.0.0 (Final Architecture)
+# BY: Pedro Victor Rodrigues Veras 
+# PROJECT MADE WITH: Qt Designer and PySide6 for a app template Pyside6 with IFrames, Widgets, Dark/Light Mode, Settings and more!
+# VERSÃO: 4.1.2
 #
 # ///////////////////////////////////////////////////////////////
 
@@ -16,10 +16,10 @@ from functools import partial
 from qt_core import *
 
 # IMPORT STYLES
-from styles import DARK_STYLE, LIGHT_STYLE
+from core.styles import DARK_STYLE, LIGHT_STYLE
 
 # IMPORT MODEL
-from settings_model import SettingsModel
+from app.models.settings_model import SettingsModel
 
 # IMPORT MAIN WINDOW
 from gui.windows.main_window.ui_main_window import UI_MainWindow
@@ -29,6 +29,10 @@ from gui.iframes.dashboard_widget import DashboardWidget
 from gui.iframes.pomodoro_widget import PomodoroWidget
 from gui.iframes.checklist_widget import ChecklistWidget
 from gui.iframes.settings_widget import SettingsWidget
+
+# IMPORT IFRAME WIDGETS (pagina separadas para cada TAB)
+from gui.iframes.perdas_duplas_widget import PerdasDuplasWidget 
+
 
 # IMPORT SIDE MENU WIDGETS
 from gui.side_menus.navigation_menu import NavigationMenu
