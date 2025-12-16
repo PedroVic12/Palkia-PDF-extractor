@@ -1,6 +1,6 @@
 # Palkia-ScrapperPDF V3.1.1
 
-- script para rodar a automação: `run.py`
+- script para rodar a automação: `CLI.py`
 - Lancher do ETL de arquivos MUST: `Palkia_GUI.py`
 - PySide6 Controle e Gestão MUST: `desktop_Dashboard_app.py`
 
