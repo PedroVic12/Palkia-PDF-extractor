@@ -1,8 +1,7 @@
 # ///////////////////////////////////////////////////////////////
 #
 # BY: Pedro Victor Rodrigues Veras 
-# PROJECT MADE WITH: Qt Designer and PySide6 for a app template Pyside6 with IFrames, Widgets, Dark/Light Mode, Settings and more!
-# VERSÃO: 3.1.4
+# Perdas Duplas ETL - Desktop Application v4.1.1
 #
 # ///////////////////////////////////////////////////////////////
 
