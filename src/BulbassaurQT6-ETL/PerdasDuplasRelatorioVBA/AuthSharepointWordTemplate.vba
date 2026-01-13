@@ -7,10 +7,6 @@ Option Explicit
 '            Resolve problemas de autenticação moderna/MFA.
 ' ==============================================================================
 
-' ## Sprint Atual 13/01/26 (Requisitos atuais)
-' - [x] VBA Perdas duplas
-' - [x] Auth do sharepoint correto e baixar para pasta /downloads
-' - [x] Data Atual correta no nome do arquivo (word_template_yy_mm_dd.docx)
 
 ' ============================================
 ' CONFIGURAÇÕES GLOBAIS
