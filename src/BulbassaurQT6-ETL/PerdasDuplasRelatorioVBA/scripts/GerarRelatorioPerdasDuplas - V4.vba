@@ -17,46 +17,51 @@
 ' - [x] Implementação da funcao que coloca a revisão e data correta no relatório
 
 
-
-
 Option Explicit
 
 ' ======================
 ' CONFIGURAÇÕES GLOBAIS
 ' ======================
 
-' Configurações de Formatação
-Public Const CABECALHO_AZUL As Boolean = False  ' True: Azul Claro Template | False: Cabeçalho padrão (negrito e fonte 14)
-Public Const DEBUG_MODE As Boolean = False     ' True: Mostra MsgBox de debug | False: Silencioso
-Public Const CONVERTER_PDF As Boolean = False  ' True: Converte automaticamente para PDF
+' --- Configurações do SharePoint ---
+Public Const URL_SHAREPOINT_TEMPLATE As String = "https://onsbr.sharepoint.com/sites/soumaisons/OnsIntranetCentralArquivos/PL/19%20Diretrizes%20para%20Opera%C3%A7%C3%A3o/00%20Padroniza%C3%A7%C3%A3o/Lista%20de%20Conting%C3%AAncias%20Duplas%20Analisadas_Modelo.docx"
 
-' Configurações de Fonte
+' --- DADOS VARIÁVEIS (O que será substituído na CAPA) ---
+' Data:
+Public Const TAG_DATA_ANTIGA As String = "DEZEMBRO 2025"
+Public Const TEXTO_DATA_NOVO As String = "JANEIRO 2026"
+
+' Revisão:
+Public Const TAG_REVISAO_ANTIGA As String = "REVISÃO 9"
+' A nova revisão será calculada automaticamente do nome do arquivo Excel.
+
+' --- Configurações Gerais ---
+Public Const AJUSTAR_QUEBRA_LINHA As Boolean = True
+Public Const REPETIR_CABECALHO As Boolean = True
+Public Const DEBUG_MODE As Boolean = False
+Public Const CABECALHO_AZUL As Boolean = False
+
+' --- Configurações Visuais ---
 Public Const FONTE_CABECALHO As String = "Calibri"
 Public Const TAMANHO_CABECALHO As Integer = 14
 Public Const FONTE_DADOS As String = "Calibri"
 Public Const TAMANHO_DADOS As Integer = 10
+Public Const ALTURA_LINHA As Integer = 20
+Public Const ESPESSURA_BORDA As Integer = 1
 
-' Configurações de Tabela
-Public Const ALTURA_LINHA As Integer = 20      ' Altura mínima das linhas (pontos)
-Public Const ESPESSURA_BORDA As Integer = 1    ' Espessura das bordas (1=fininha)
-Public Const REPETIR_CABECALHO As Boolean = True  ' Repete cabeçalho em todas páginas
+' Cores
+Public Const COR_CURTO_PRAZO As Long = 25600    ' Verde escuro: RGB(0, 100, 0)
+Public Const COR_MEDIO_PRAZO As Long = 42495    ' Laranja: RGB(255, 140, 0)
+Public Const COR_AZUL_ONS As Long = 10092543
+Public Const COR_TEXTO_BRANCO As Long = 16777215
+Public Const COR_TEXTO_PRETO As Long = 0
 
-' Cores (formato RGB)
-Public Const COR_AZUL_ONS As Long = 10092543   ' RGB(68, 114, 196)
-Public Const COR_TEXTO_BRANCO As Long = 16777215 ' RGB(255, 255, 255)
-Public Const COR_TEXTO_PRETO As Long = 0       ' RGB(0, 0, 0)
-
-' Larguras das colunas (em centímetros)
+' Larguras (cm)
 Public Const LARGURA_VOLUME As Double = 2.5
 Public Const LARGURA_AREA As Double = 8.0
 Public Const LARGURA_CONTINGENCIA As Double = 12.0
 Public Const LARGURA_HORIZONTE As Double = 4.0
 Public Const LARGURA_PADRAO As Double = 5.0
-
-' Cores condicionais para Horizonte
-Public Const COR_CURTO_PRAZO As Long = 25600    ' Verde escuro: RGB(0, 100, 0)
-Public Const COR_MEDIO_PRAZO As Long = 42495    ' Laranja: RGB(255, 140, 0)
-Public Const COR_LONGO_PRAZO As Long = 11674146 ' Vermelho tijolo: RGB(178, 34, 34)
 
 ' ======================
 ' MÓDULO 1 PRINCIPAL (MÉTODOS)
@@ -65,62 +70,59 @@ Public Const COR_LONGO_PRAZO As Long = 11674146 ' Vermelho tijolo: RGB(178, 34, 
 ' ======================
 ' Rotina Principal - Colocando o Word template já baixado na pasta de downloads
 ' ======================
-Sub GerarRelatorioPerdasDuplasETL()
+Sub Main_GerarRelatorioPerdasDuplasETL()
     On Error GoTo ErroHandler
     
-    Dim templateWord As String
+    Dim caminhoTemplate As String
     Dim pagina As Long
+    Dim txtRevisaoNova As String
     
-    ' Declarar logger (se estiver usando a classe)
-    ' Dim logger As New clsLogger
-    ' logger.DebugMode = DEBUG_MODE
+    Call Log("=== INICIANDO GERAÇÃO DE RELATÓRIO ===")
     
-    ' Log simples (sem classe)
-    Call Log("Iniciando geração de relatório")
+    ' 1. CALCULAR REVISÃO AUTOMÁTICA (Do nome do arquivo Excel)
+    txtRevisaoNova = GerarStringRevisaoDoExcel()
+    If txtRevisaoNova = "ERRO" Then
+        If MsgBox("Não foi possível identificar a revisão no nome do arquivo Excel (ex: _Rev10.xlsm)." & vbCrLf & _
+               "O sistema não substituirá a revisão na capa. Continuar?", vbYesNo + vbExclamation) = vbNo Then Exit Sub
+    Else
+        Call Log("Revisão detectada: " & txtRevisaoNova)
+    End If
     
-    ' 1. ESCOLHER ARQUIVO WORD
-    templateWord = Application.GetOpenFilename( _
-        FileFilter:="Arquivos Word (*.docx; *.doc), *.docx; *.doc", _
-        Title:="Selecione o Template Word")
+    ' 2. BAIXAR TEMPLATE DO SHAREPOINT (Automático)
+    ' A função agora retorna o caminho onde salvou
+    caminhoTemplate = BaixarTemplateDoSharePoint()
     
-    If templateWord = "False" Then
-        Call Log("Usuário cancelou seleção do template")
+    If caminhoTemplate = "" Then
+        Call Log("Falha no download do template. Abortando.")
         Exit Sub
     End If
     
-    ' 2. PERGUNTAR NÚMERO DA PÁGINA
+    ' 3. PERGUNTAR PÁGINA
     Dim respostaPagina As String
-    respostaPagina = InputBox("Em qual página deseja inserir a tabela?" & vbCrLf & _
-                            "Digite um número (ex: 1, 2, 3...):", _
-                            "Número da Página", "1")
+    respostaPagina = InputBox("Em qual página deseja inserir a TABELA PRINCIPAL?" & vbCrLf & _
+                            "Digite um número (Recomendado: 6):", _
+                            "Configuração do Relatório", "6")
     
-    If respostaPagina = "" Then
-        Call Log("Usuário cancelou operação")
+    If respostaPagina = "" Or Not IsNumeric(respostaPagina) Then
+        Call Log("Operação cancelada pelo usuário")
         Exit Sub
     End If
-    
-    If Not IsNumeric(respostaPagina) Then
-        MsgBox "Por favor, digite um número válido!", vbExclamation
-        Exit Sub
-    End If
-    
     pagina = CLng(respostaPagina)
-    Call Log("Página selecionada: " & pagina)
     
-    ' 3. EXECUTAR FUNÇÃO PRINCIPAL
-    Call CriarRelatorioCorrigido(templateWord, pagina, CONVERTER_PDF)
+    ' 4. EXECUTAR FUNÇÃO PRINCIPAL (Passando todos os parâmetros)
+    Call CriarRelatorioCorrigido(caminhoTemplate, pagina, txtRevisaoNova, CONVERTER_PDF)
     
     Exit Sub
     
 ErroHandler:
     Call LogErro(Err.Description, Err.Number)
-    MsgBox "❌ ERRO: " & Err.Description, vbCritical, "Erro no Processamento"
+    MsgBox "❌ ERRO FATAL: " & Err.Description, vbCritical
 End Sub
 
 ' ======================
 ' FUNÇÃO Para criar o relatório
 ' ======================
-Sub CriarRelatorioCorrigido(caminhoWord As String, pagina As Long, converterPDF As Boolean)
+Sub CriarRelatorioCorrigido(caminhoWord As String, pagina As Long, novaRevisao As String, converterPDF As Boolean)
     
     ' Declaração de variáveis
     Dim wordApp As Object, wordDoc As Object
@@ -412,7 +414,7 @@ End Sub
 ' ============================================
 ' FUNÇÃO DE DOWNLOAD DO TEMPLATE WORD DIRETO DO SHAREPOINT
 ' ============================================
-Sub ExecutarDownloadAutenticado()
+Function BaixarTemplateDoSharePoint() As String
     Dim urlDestino As String
     Dim caminhoLocal As String
     Dim nomeArquivo As String

@@ -1,29 +1,49 @@
 '==============================================================================
-' GERADOR DE RELATÓRIOS PERDAS DUPLAS - V9 (ESTÁVEL + ENTREGA)
+' GERADOR DE RELATÓRIOS PERDAS DUPLAS ETL V6 - Versão Final Estável (13/01/2026)
 '==============================================================================
+
+
+' Controle de versão:
+' V3: 16/12/2025
+' - [x] Configuração de formatação do relatório por variáveis globais
+' - [x] Implementação da função de log
+' - [x] Implementação da função de erro
+' - [x] Implementação da função de teste rápido
+' - [x] Implementação da função de formatação de células horizonte, volume, área, contingência
+' V4: 12/01/2026
+' - [x] Implementação da função de download do template Word direto do sharepoint
+' - [x] Mesma versão do V3, mas com o template Word já baixado na pasta de downloads e usando as funcoes corretas
+' V5: 13/01/2026
+' - [x] Organizacao do codigo em modulos para facilitar a leitura e manutencao e debug em VBA
+' V6: 13/01/2026
+' - [x] Implementação da função que pega as informações da aba Modificações do excel
+' - [x] Implementação da funcao que coloca a revisão e data correta no relatório
+' - [ ] Formatacao da tabela principal corretamente sem texto negrito e altura das linhas corretamente pelo tamanho do texto
+' - [ ] Formtação correta da aba Modificações para aparecer corretamente no relatório como Seção do documento
+
+
+
 Option Explicit
 
-' ==============================================================================
-' [SEÇÃO 1] CONFIGURAÇÕES
-' ==============================================================================
+' ======================
+' CONFIGURAÇÕES GLOBAIS
+' ======================
 
 ' --- Configurações do SharePoint ---
 Public Const URL_SHAREPOINT_TEMPLATE As String = "https://onsbr.sharepoint.com/sites/soumaisons/OnsIntranetCentralArquivos/PL/19%20Diretrizes%20para%20Opera%C3%A7%C3%A3o/00%20Padroniza%C3%A7%C3%A3o/Lista%20de%20Conting%C3%AAncias%20Duplas%20Analisadas_Modelo.docx"
 
-' --- DADOS VARIÁVEIS (O que será substituído na CAPA) ---
-' Data:
+' --- DADOS VARIÁVEIS (Capa) ---
 Public Const TAG_DATA_ANTIGA As String = "DEZEMBRO 2025"
 Public Const TEXTO_DATA_NOVO As String = "JANEIRO 2026"
 
-' Revisão:
 Public Const TAG_REVISAO_ANTIGA As String = "REVISÃO 9"
-' A nova revisão será calculada automaticamente do nome do arquivo Excel.
 
 ' --- Configurações Gerais ---
 Public Const AJUSTAR_QUEBRA_LINHA As Boolean = True
 Public Const REPETIR_CABECALHO As Boolean = True
-Public Const DEBUG_MODE As Boolean = False
+Public Const DEBUG_MODE As Boolean = False ' Ativado para ver qual linha exata trava
 Public Const CABECALHO_AZUL As Boolean = False
+Public Const CONVERTER_PDF As Boolean = False
 
 ' --- Configurações Visuais ---
 Public Const FONTE_CABECALHO As String = "Calibri"
@@ -48,193 +68,238 @@ Public Const LARGURA_HORIZONTE As Double = 4.0
 Public Const LARGURA_PADRAO As Double = 5.0
 
 ' ==============================================================================
-' [SEÇÃO 2] ORQUESTRADOR PRINCIPAL
+' [MÓDULO 1] ORQUESTRADOR PRINCIPAL
 ' ==============================================================================
 
-Sub Main_GerarRelatorio()
-    On Error GoTo ErroGeral
+Sub GerarRelatorioPerdasDuplasETL()
+    On Error GoTo ErroHandler
     
     Dim caminhoTemplate As String
-    Dim paginaDestino As Long
-    Dim respostaPagina As String
+    Dim pagina As Long
     Dim txtRevisaoNova As String
     
-    ' 1. Calcular a Nova Revisão (do nome do arquivo Excel)
+    Call Log("=== INICIANDO GERAÇÃO DE RELATÓRIO V6 ===")
+    
+    ' 1. REVISÃO
     txtRevisaoNova = GerarStringRevisaoDoExcel()
     If txtRevisaoNova = "ERRO" Then
-        If MsgBox("Não foi possível identificar a revisão no nome do arquivo Excel (ex: _Rev10.xlsm)." & vbCrLf & _
-               "O sistema não substituirá a revisão na capa. Continuar?", vbYesNo + vbExclamation) = vbNo Then Exit Sub
+        If MsgBox("Aviso: Revisão não detectada no nome do Excel. Continuar?", vbYesNo + vbExclamation) = vbNo Then Exit Sub
+    Else
+        Call Log("Revisão detectada: " & txtRevisaoNova)
     End If
     
-    ' 2. Baixar Template
+    ' 2. DOWNLOAD
     caminhoTemplate = BaixarTemplateDoSharePoint()
     If caminhoTemplate = "" Then Exit Sub
     
-    ' 3. Input do Usuário
-    respostaPagina = InputBox("Em qual página do Word deseja inserir a tabela PRINCIPAL?", "Configuração", "4")
-    If Not IsNumeric(respostaPagina) Then Exit Sub
-    paginaDestino = CLng(respostaPagina)
+    ' 3. PÁGINA
+    Dim respostaPagina As String
+    respostaPagina = InputBox("Em qual página deseja inserir a TABELA PRINCIPAL?", "Configuração", "4")
+    If respostaPagina = "" Or Not IsNumeric(respostaPagina) Then Exit Sub
+    pagina = CLng(respostaPagina)
+    If pagina < 1 Then pagina = 1
     
-    ' 4. Processar Relatório
-    Call ProcessarRelatorioWord(caminhoTemplate, paginaDestino, txtRevisaoNova)
+    ' 4. EXECUTAR
+    Call CriarRelatorioCorrigido(caminhoTemplate, pagina, txtRevisaoNova, CONVERTER_PDF)
     
     Exit Sub
-
-ErroGeral:
-    MsgBox "Erro fatal: " & Err.Description, vbCritical
+    
+ErroHandler:
+    Call LogErro(Err.Description, Err.Number)
+    MsgBox "❌ ERRO FATAL: " & Err.Description, vbCritical
 End Sub
 
 ' ==============================================================================
-' [SEÇÃO 3] PROCESSAMENTO (Lógica Estável V3)
+' [MÓDULO 2] FUNÇÃO CORE (GERA O WORD)
 ' ==============================================================================
 
-Sub ProcessarRelatorioWord(caminhoTemplate As String, paginaPrincipal As Long, novaRevisao As String)
+Sub CriarRelatorioCorrigido(caminhoWord As String, paginaPrincipal As Long, novaRevisao As String, converterPDF As Boolean)
+    
     Dim wordApp As Object, wordDoc As Object, tabela As Object
-    Dim wsPrincipal As Worksheet
-    Dim ultLin As Long, ultCol As Long, i As Long, j As Long
+    Dim ws As Worksheet
+    Dim ultimaLinha As Long, ultimaColuna As Long
+    Dim i As Long, j As Long
     Dim caminhoSalvar As String
+    Dim sucesso As Boolean
     
-    On Error GoTo ErroProcessamento
+    On Error GoTo ErroHandler
     
-    ' --- 1. Preparação Excel ---
-    Set wsPrincipal = ThisWorkbook.Worksheets("Contingências Duplas")
-    ultLin = wsPrincipal.Cells(wsPrincipal.Rows.Count, "A").End(xlUp).Row
-    ultCol = wsPrincipal.Cells(1, wsPrincipal.Columns.Count).End(xlToLeft).Column
+    Call Log("Iniciando processamento...")
     
-    caminhoSalvar = Application.GetSaveAsFilename(InitialFileName:="Relatorio_Final.docx", FileFilter:="Word (*.docx), *.docx")
+    ' --- A. PREPARAÇÃO DO EXCEL ---
+    On Error Resume Next
+    Set ws = ThisWorkbook.Worksheets("Contingências Duplas")
+    If ws Is Nothing Then Set ws = ThisWorkbook.Worksheets(1)
+    On Error GoTo ErroHandler
+    
+    ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    ultimaColuna = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
+    
+    ' SEGURANÇA: Limite do Word é 63 colunas. Proteção contra colunas fantasmas.
+    If ultimaColuna > 63 Then
+        Call Log("AVISO: Excel tem " & ultimaColuna & " colunas. Word limita a 63. Ajustando.")
+        ultimaColuna = 63
+    End If
+    
+    Call Log("Dimensões Validadas: " & ultimaLinha & " Linhas x " & ultimaColuna & " Colunas")
+    
+    If ultimaLinha < 2 Then MsgBox "Planilha vazia!", vbExclamation: Exit Sub
+    
+    ' --- B. SALVAR COMO ---
+    caminhoSalvar = Application.GetSaveAsFilename(InitialFileName:="Relatorio_Perdas_" & Format(Now, "ddmm_hhmm") & ".docx", FileFilter:="Word (*.docx), *.docx")
     If caminhoSalvar = "False" Then Exit Sub
     
+    ' --- C. ABRIR WORD ---
     Application.StatusBar = "Abrindo Word..."
     Set wordApp = CreateObject("Word.Application")
     wordApp.Visible = True
-    Set wordDoc = wordApp.Documents.Open(caminhoTemplate)
+    Set wordDoc = wordApp.Documents.Open(caminhoWord)
     
-    ' --- 2. Atualizar Capa (Find & Replace) ---
+    ' --- D. CAPA E MODIFICAÇÕES ---
     Call Log("Atualizando Capa...")
     Call SubstituirTextoNoWord(wordDoc, TAG_DATA_ANTIGA, TEXTO_DATA_NOVO)
+    If novaRevisao <> "ERRO" Then Call SubstituirTextoNoWord(wordDoc, TAG_REVISAO_ANTIGA, novaRevisao)
     
-    If novaRevisao <> "ERRO" Then
-        Call SubstituirTextoNoWord(wordDoc, TAG_REVISAO_ANTIGA, novaRevisao)
-    End If
-    
-    ' --- 3. Inserir Modificações (Pág 3) ---
     Call Log("Inserindo Modificações...")
     Call InserirTabelaModificacoes(wordDoc, wordApp)
     
-    ' --- 4. Inserir Tabela Principal ---
-    Call Log("Configurando Tabela Principal...")
+    ' --- F. INSERIR TABELA PRINCIPAL (NAVEGAÇÃO SEGURA) ---
+    Call Log("Navegando para página " & paginaPrincipal)
     
-    ' Navegar para a página correta
-    If paginaPrincipal > wordDoc.ComputeStatistics(2) Then
+    wordDoc.Repaginate ' Força atualização da paginação
+    
+    Dim totalPaginas As Long
+    On Error Resume Next
+    totalPaginas = wordDoc.ComputeStatistics(2) ' wdStatisticPages
+    If Err.Number <> 0 Then totalPaginas = 1
+    On Error GoTo ErroHandler
+    
+    If paginaPrincipal > totalPaginas Then
         wordApp.Selection.EndKey Unit:=6
     Else
+        On Error Resume Next
         wordApp.Selection.GoTo What:=1, Which:=1, Count:=paginaPrincipal
+        If Err.Number <> 0 Then wordApp.Selection.EndKey Unit:=6
+        On Error GoTo ErroHandler
     End If
     
-    wordApp.Selection.TypeText "RELATÓRIO DE PERDAS DUPLAS" & vbCrLf
-    wordApp.Selection.TypeText "Gerado em: " & Format(Now, "dd/mm/yyyy HH:MM") & vbCrLf & vbCrLf
+    ' Adicionar título e data do relatório para DEBUG
+    If DEBUG_MODE Then
+        Call Log("Adicionando título e data do relatório para DEBUG...")
+        wordApp.Selection.TypeText "RELATÓRIO DE PERDAS DUPLAS" & vbCrLf
+        wordApp.Selection.TypeText "Gerado em: " & Format(Now, "dd/mm/yyyy HH:MM") & vbCrLf & vbCrLf
+    End If
+
+    ' --- CRIAR TABELA ---
+    Call Log("Criando Tabela (" & ultimaLinha & "x" & ultimaColuna & ")...")
+    Set tabela = wordDoc.Tables.Add(wordApp.Selection.Range, ultimaLinha, ultimaColuna)
     
-    ' CRIAR TABELA
-    Set tabela = wordDoc.Tables.Add(wordApp.Selection.Range, ultLin, ultCol)
+    ' --- G. FORMATAÇÃO E PREENCHIMENTO (LOOP SEGURO) ---
+    ' O erro acontecia aqui pois tentava iterar mais colunas/linhas do que existiam na tabela criada
     
-    ' A. Configurar Larguras (Loop separado para clareza)
-    For j = 1 To ultCol
+    Dim maxLinhasTbl As Long, maxColsTbl As Long
+    maxLinhasTbl = tabela.Rows.Count
+    maxColsTbl = tabela.Columns.Count
+    
+    ' G1. Larguras (Loop Seguro)
+    Call Log("Formatando Larguras...")
+    For j = 1 To maxColsTbl
         Dim cabecalho As String, larguraCm As Double
-        cabecalho = LCase(Trim(wsPrincipal.Cells(1, j).Value))
+        
+        ' Pega cabeçalho do Excel com segurança
+        If j <= ultimaColuna Then
+            cabecalho = LCase(Trim(ws.Cells(1, j).Value))
+        Else
+            cabecalho = ""
+        End If
         
         larguraCm = LARGURA_PADRAO
         If InStr(cabecalho, "volume") > 0 Then larguraCm = LARGURA_VOLUME
-        If InStr(cabecalho, "area") > 0 Or InStr(cabecalho, "área") > 0 Then larguraCm = LARGURA_AREA
+        If InStr(cabecalho, "área") > 0 Or InStr(cabecalho, "area") > 0 Then larguraCm = LARGURA_AREA
         If InStr(cabecalho, "contingencia") > 0 Or InStr(cabecalho, "contingência") > 0 Then larguraCm = LARGURA_CONTINGENCIA
         If InStr(cabecalho, "horizonte") > 0 Then larguraCm = LARGURA_HORIZONTE
         
         tabela.Columns(j).Width = larguraCm * 28.35
     Next j
     
-    ' B. Configurar Alturas e Bordas
-    With tabela.Borders
-        .InsideLineStyle = 1: .OutsideLineStyle = 1
-        .InsideLineWidth = ESPESSURA_BORDA: .OutsideLineWidth = ESPESSURA_BORDA
-    End With
+    ' G2. Bordas
+    tabela.Borders.InsideLineStyle = 1: tabela.Borders.OutsideLineStyle = 1
     
-    For i = 1 To ultLin
-        tabela.Rows(i).HeightRule = IIf(AJUSTAR_QUEBRA_LINHA, 1, 2) ' 1=Auto/Min, 2=Exato
+    ' G3. Preenchimento Dados (Loop Seguro: Usa limites da tabela criada)
+    Application.StatusBar = "Preenchendo tabela..."
+    Call Log("Iniciando preenchimento...")
+    
+    For i = 1 To maxLinhasTbl
+        ' Altura
+        tabela.Rows(i).HeightRule = IIf(AJUSTAR_QUEBRA_LINHA, 1, 2)
         tabela.Rows(i).Height = ALTURA_LINHA
+        
+        For j = 1 To maxColsTbl
+            ' Verifica se estamos dentro dos limites do Excel antes de ler
+            Dim txt As String
+            If i <= ultimaLinha And j <= ultimaColuna Then
+                txt = Trim(ws.Cells(i, j).Text)
+                If txt = "" Then txt = "-"
+            Else
+                txt = "-"
+            End If
+            
+            tabela.Cell(i, j).Range.Text = txt
+            
+            ' Formatação
+            If i = 1 Then
+                tabela.Cell(i, j).Range.Bold = True
+                tabela.Cell(i, j).Range.ParagraphFormat.Alignment = 1
+                If CABECALHO_AZUL Then tabela.Cell(i, j).Range.Shading.BackgroundPatternColor = COR_AZUL_ONS
+            Else
+                tabela.Cell(i, j).Range.ParagraphFormat.Alignment = 0
+                tabela.Cell(i, j).Range.Font.Size = TAMANHO_DADOS
+                
+                ' Cor Horizonte (com segurança)
+                If j <= ultimaColuna Then
+                    If InStr(LCase(ws.Cells(1, j).Text), "horizonte") > 0 Then
+                        Call FormatarCelulaHorizonte(tabela.Cell(i, j), txt)
+                    End If
+                End If
+            End If
+        Next j
+        If i Mod 10 = 0 Then DoEvents
     Next i
     
     If REPETIR_CABECALHO Then tabela.Rows(1).HeadingFormat = True
     
-    ' --- 5. Preenchimento (LÓGICA V3 ESTÁVEL - SEPARADA) ---
-    
-    ' Passo 5.1: Apenas Cabeçalho (Linha 1)
-    Application.StatusBar = "Preenchendo Cabeçalho..."
-    For j = 1 To ultCol
-        tabela.Cell(1, j).Range.Text = Trim(wsPrincipal.Cells(1, j).Value)
-        
-        With tabela.Cell(1, j).Range
-            .Bold = True
-            .Font.Name = FONTE_CABECALHO
-            .Font.Size = TAMANHO_CABECALHO
-            .ParagraphFormat.Alignment = 1 ' Centro
-            If CABECALHO_AZUL Then
-                .Font.Color = COR_TEXTO_BRANCO
-                .Shading.BackgroundPatternColor = COR_AZUL_ONS
-            Else
-                .Font.Color = COR_TEXTO_PRETO
-            End If
-        End With
-    Next j
-    
-    ' Passo 5.2: Dados (Linha 2 até Fim)
-    Application.StatusBar = "Preenchendo Dados..."
-    For i = 2 To ultLin
-        For j = 1 To ultCol
-            Dim texto As String
-            texto = Trim(wsPrincipal.Cells(i, j).Text)
-            If texto = "" Then texto = "-"
-            
-            tabela.Cell(i, j).Range.Text = texto
-            
-            ' Formatação
-            With tabela.Cell(i, j).Range
-                .Font.Name = FONTE_DADOS
-                .Font.Size = TAMANHO_DADOS
-                .ParagraphFormat.Alignment = 0 ' Esquerda
-            End With
-            
-            ' Formatação Condicional
-            If InStr(LCase(wsPrincipal.Cells(1, j).Text), "horizonte") > 0 Then
-                AplicarCorHorizonte tabela.Cell(i, j), texto
-            End If
-        Next j
-        If i Mod 20 = 0 Then DoEvents
-    Next i
-    
-    ' --- 6. Finalizar ---
+    ' --- H. FINALIZAR ---
     wordDoc.SaveAs2 caminhoSalvar
-    MsgBox "Relatório gerado com sucesso!", vbInformation
+    If converterPDF Then wordDoc.SaveAs2 Left(caminhoSalvar, InStrRev(caminhoSalvar, ".")) & "pdf", 17
+    
+    sucesso = True
+    MsgBox "✅ Relatório gerado com sucesso!", vbInformation
+    
+Limpeza:
+    On Error Resume Next
+    If Not wordDoc Is Nothing Then If Not sucesso Then wordDoc.Close False
+    If Not wordApp Is Nothing Then If Not sucesso Then wordApp.Quit
+    Set wordDoc = Nothing: Set wordApp = Nothing
     Application.StatusBar = False
     Exit Sub
 
-ErroProcessamento:
-    Application.StatusBar = False
-    MsgBox "Erro no processamento (Linha " & Erl & "): " & Err.Description, vbCritical
-    If Not wordDoc Is Nothing Then wordDoc.Close False
-    If Not wordApp Is Nothing Then wordApp.Quit
+ErroHandler:
+    sucesso = False
+    Call LogErro(Err.Description, Err.Number)
+    MsgBox "❌ ERRO: " & Err.Description, vbCritical
+    Resume Limpeza
 End Sub
 
 ' ==============================================================================
-' [SEÇÃO 4] FUNÇÕES AUXILIARES
+' [MÓDULO 3] FUNÇÕES AUXILIARES
 ' ==============================================================================
 
 Function BaixarTemplateDoSharePoint() As String
     Dim wordApp As Object, wordDoc As Object
     Dim caminhoLocal As String, nomeArquivo As String
-    Dim dataHoje As String
     On Error GoTo ErroDownload
     
-    dataHoje = Format(Date, "yy_mm_dd")
-    nomeArquivo = "word_template_" & dataHoje & ".docx"
+    nomeArquivo = "word_template_" & Format(Date, "yy_mm_dd") & ".docx"
     caminhoLocal = Environ("USERPROFILE") & "\Downloads\" & nomeArquivo
     If Dir(caminhoLocal) <> "" Then Kill caminhoLocal
     
@@ -243,25 +308,21 @@ Function BaixarTemplateDoSharePoint() As String
     Set wordDoc = wordApp.Documents.Open(FileName:=Replace(URL_SHAREPOINT_TEMPLATE, "?web=1", ""), ReadOnly:=True, Visible:=False)
     wordDoc.SaveAs2 FileName:=caminhoLocal, FileFormat:=16
     wordDoc.Close False: wordApp.Quit
-    
     BaixarTemplateDoSharePoint = caminhoLocal
     Set wordDoc = Nothing: Set wordApp = Nothing
     Exit Function
 ErroDownload:
-    MsgBox "Erro download: " & Err.Description, vbCritical
-    If Not wordApp Is Nothing Then wordApp.Quit
+    Call LogErro("Download Falhou: " & Err.Description)
+    MsgBox "Erro no Download.", vbCritical: If Not wordApp Is Nothing Then wordApp.Quit
     BaixarTemplateDoSharePoint = ""
 End Function
 
 Function GerarStringRevisaoDoExcel() As String
-    ' Extrai numero depois de "Rev" no nome do arquivo Excel atual
     Dim nome As String, pos As Integer, i As Integer, num As String
     nome = ThisWorkbook.Name
     pos = InStr(1, nome, "Rev", vbTextCompare)
     If pos = 0 Then GerarStringRevisaoDoExcel = "ERRO": Exit Function
-    
-    Dim resto As String
-    resto = Mid(nome, pos + 3) ' Pega tudo depois de Rev
+    Dim resto As String: resto = Mid(nome, pos + 3)
     For i = 1 To Len(resto)
         If IsNumeric(Mid(resto, i, 1)) Then num = num & Mid(resto, i, 1) Else Exit For
     Next i
@@ -269,24 +330,20 @@ Function GerarStringRevisaoDoExcel() As String
 End Function
 
 Sub SubstituirTextoNoWord(doc As Object, antigo As String, novo As String)
-    Dim rng As Object
-    Set rng = doc.Content
-    With rng.Find
-        .ClearFormatting: .Text = antigo: .Replacement.Text = novo
-        .Forward = True: .Wrap = 1: .Execute Replace:=2
-    End With
+    Dim rng As Object: Set rng = doc.Content
+    With rng.Find: .ClearFormatting: .Text = antigo: .Replacement.Text = novo: .Forward = True: .Wrap = 1: .Execute Replace:=2: End With
 End Sub
 
 Sub InserirTabelaModificacoes(doc As Object, app As Object)
     Dim ws As Worksheet, tbl As Object
     Dim ultL As Long, ultC As Long, i As Long, j As Long
-    On Error Resume Next
-    Set ws = ThisWorkbook.Worksheets("Modificações")
-    On Error GoTo 0
+    On Error Resume Next: Set ws = ThisWorkbook.Worksheets("Modificações"): On Error GoTo 0
     If ws Is Nothing Then Exit Sub
     
     ultL = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
     ultC = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
+    If ultL < 1 Then ultL = 1
+    If ultC < 1 Then ultC = 1
     
     app.Selection.HomeKey Unit:=6
     With app.Selection.Find: .Text = "Revisões do relatório": .Execute: End With
@@ -298,8 +355,7 @@ Sub InserirTabelaModificacoes(doc As Object, app As Object)
     
     Set tbl = doc.Tables.Add(app.Selection.Range, ultL, ultC)
     tbl.Borders.InsideLineStyle = 1: tbl.Borders.OutsideLineStyle = 1
-    tbl.Rows(1).Range.Font.Bold = True
-    tbl.Rows(1).Range.Shading.BackgroundPatternColor = 14277081
+    tbl.Rows(1).Range.Font.Bold = True: tbl.Rows(1).Range.Shading.BackgroundPatternColor = 14277081
     
     For i = 1 To ultL
         For j = 1 To ultC: tbl.Cell(i, j).Range.Text = ws.Cells(i, j).Text: Next j
@@ -307,13 +363,18 @@ Sub InserirTabelaModificacoes(doc As Object, app As Object)
     app.Selection.EndKey Unit:=6
 End Sub
 
-Sub AplicarCorHorizonte(celula As Object, valor As String)
-    valor = LCase(Trim(valor))
-    celula.Range.Bold = True: celula.Range.ParagraphFormat.Alignment = 1
-    If valor = "curto prazo" Then celula.Range.Font.Color = COR_VERDE_CURTO
-    If InStr(valor, "médio") > 0 Or InStr(valor, "medio") > 0 Then celula.Range.Font.Color = COR_LARANJA_MEDIO
+Private Sub FormatarCelulaHorizonte(celula As Object, valor As String)
+    On Error Resume Next: Dim h As String: h = LCase(Trim(valor))
+    celula.Range.ParagraphFormat.Alignment = 1: celula.Range.Bold = True
+    If h = "curto prazo" Then celula.Range.Font.Color = COR_VERDE_CURTO
+    If InStr(h, "médio") > 0 Or InStr(h, "medio") > 0 Then celula.Range.Font.Color = COR_LARANJA_MEDIO
 End Sub
 
-Sub Log(msg As String)
+Private Sub Log(msg As String)
     Debug.Print "[" & Format(Now, "hh:mm:ss") & "] " & msg
+    If DEBUG_MODE Then MsgBox msg, vbInformation, "DEBUG"
+End Sub
+
+Private Sub LogErro(erroDesc As String, Optional erroNum As Long = 0)
+    Log "ERRO " & erroNum & ": " & erroDesc
 End Sub
