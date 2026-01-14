@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Corporativo ONS</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        .bg-pattern {
+            background-color: #f8fafc;
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Scrollbar customizada para tabelas */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Classe PowerPlantRepository: Criei uma classe que gerencia os dados brutos que você forneceu.
+
+        Dados Reais (Amostra): Converti uma parte significativa da sua lista (Usinas como Itaipu, Furnas, Ilha Solteira, etc.) para um formato JSON estruturado dentro do código.
+
+        Abas Dinâmicas: Agora, cada aba ("Visão Geral", "Indicadores", "MPO", etc.) renderiza um conteúdo diferente baseado nos cálculos feitos pelo Repository. -->
+
+    <div id="app" class="flex flex-col min-h-screen"></div>
+
+    <script>
+        // ==========================================
+        // 1. DATA LAYER & REPOSITORY (Model)
+        // ==========================================
+
+        // Dados brutos processados da sua lista
+        const RAW_PLANT_DATA = [
+            { id: 1501, name: "Itutinga", mw: 56, type: "Reservatório", state: "MG", basin: "Rio Grande", dispatch: 27, percent: 48 },
+            { id: 45363, name: "Camargos", mw: 46, type: "Reservatório", state: "MG", basin: "Rio Grande", dispatch: 23, percent: 50 },
+            { id: 4044, name: "Funil Grande", mw: 180, type: "Fio d'água", state: "MG", basin: "Rio Grande", dispatch: 88, percent: 49 },
+            { id: 16, name: "Furnas", mw: 1216, type: "Reservatório", state: "MG", basin: "Rio Grande", dispatch: 596, percent: 49 },
+            { id: 22, name: "Mascarenhas de Moraes", mw: 312, type: "Reservatório", state: "MG", basin: "Rio Grande", dispatch: 153, percent: 49 },
+            { id: 12, name: "Luís Carlos Barreto", mw: 1048, type: "Fio d'água", state: "MG/SP", basin: "Rio Grande", dispatch: 514, percent: 49 },
+            { id: 301, name: "Jaguara", mw: 400, type: "Fio d'água", state: "MG/SP", basin: "Rio Grande", dispatch: 196, percent: 49 },
+            { id: 343, name: "Igarapava", mw: 210, type: "Fio d'água", state: "MG/SP", basin: "Rio Grande", dispatch: 103, percent: 49 },
+            { id: 305, name: "Volta Grande", mw: 380, type: "Fio d'água", state: "MG/SP", basin: "Rio Grande", dispatch: 186, percent: 49 },
+            { id: 28, name: "Porto Colômbia", mw: 328, type: "Fio d'água", state: "MG/SP", basin: "Rio Grande", dispatch: 161, percent: 49 },
+            { id: 20, name: "Marimbondo", mw: 1488, type: "Reservatório", state: "MG/SP", basin: "Rio Grande", dispatch: 729, percent: 49 },
+            { id: 500, name: "Água Vermelha", mw: 1396, type: "Reservatório", state: "SP", basin: "Rio Grande", dispatch: 684, percent: 49 },
+            { id: 501, name: "Ilha Solteira", mw: 3430, type: "Reservatório", state: "SP", basin: "Rio Paraná", dispatch: 1618, percent: 47 },
+            { id: 502, name: "Jupiá", mw: 1551, type: "Fio d'água", state: "SP", basin: "Rio Paraná", dispatch: 759, percent: 49 },
+            { id: 1107, name: "Itaipu 60Hz", mw: 7200, type: "Fio d'água", state: "PR", basin: "Rio Paraná", dispatch: 6300, percent: 88 },
+            { id: 1100, name: "Itaipu 50Hz", mw: 7500, type: "Fio d'água", state: "PR", basin: "Rio Paraná", dispatch: 6812, percent: 91 },
+            { id: 303, name: "São Simão", mw: 1680, type: "Reservatório", state: "MG/GO", basin: "Rio Paranaíba", dispatch: 823, percent: 49 },
+            { id: 18, name: "Itumbiara", mw: 2280, type: "Reservatório", state: "MG/GO", basin: "Rio Paranaíba", dispatch: 1117, percent: 49 },
+            { id: 300, name: "Emborcação", mw: 1192, type: "Reservatório", state: "MG/GO", basin: "Rio Paranaíba", dispatch: 584, percent: 49 },
+            { id: 510, name: "Porto Primavera", mw: 1540, type: "Reservatório", state: "SP", basin: "Rio Paraná", dispatch: 755, percent: 49 },
+            { id: 520, name: "Três Irmãos", mw: 807, type: "Reservatório", state: "SP", basin: "Rio Tietê", dispatch: 420, percent: 52 },
+            { id: 516, name: "Barra Bonita", mw: 140, type: "Reservatório", state: "SP", basin: "Rio Tietê", dispatch: 69, percent: 49 },
+            { id: 507, name: "Capivara", mw: 619, type: "Reservatório", state: "SP", basin: "Rio Paranapanema", dispatch: 303, percent: 49 },
+            { id: 514, name: "Chavantes", mw: 414, type: "Reservatório", state: "SP/PR", basin: "Rio Paranapanema", dispatch: 203, percent: 49 },
+            { id: 983, name: "Mauá", mw: 358, type: "Reservatório", state: "PR", basin: "Rio Paranapanema", dispatch: 215, percent: 60 }
+        ];
+
+        class PowerPlantRepository {
+            constructor(data) {
+                this.data = data;
+            }
+
+            getAll() {
+                return this.data;
+            }
+
+            // Retorna totais para os Cards de Indicadores
+            getSummaryStats() {
+                const totalMW = this.data.reduce((acc, curr) => acc + curr.mw, 0);
+                const currentDispatch = this.data.reduce((acc, curr) => acc + curr.dispatch, 0);
+                const averageLoad = (currentDispatch / totalMW) * 100;
+                
+                return {
+                    totalMW: totalMW.toLocaleString('pt-BR'),
+                    currentDispatch: currentDispatch.toLocaleString('pt-BR'),
+                    averageLoad: averageLoad.toFixed(1),
+                    totalPlants: this.data.length
+                };
+            }
+
+            // Agrupa por Bacia para Gráficos
+            getByBasin() {
+                const basins = {};
+                this.data.forEach(plant => {
+                    if (!basins[plant.basin]) basins[plant.basin] = 0;
+                    basins[plant.basin] += plant.mw;
+                });
+                return Object.entries(basins).map(([name, value]) => ({ name, value }));
+            }
+
+            // Retorna usinas operando acima de 80% (Alerta/Alta carga)
+            getHighLoadPlants() {
+                return this.data.filter(p => p.percent >= 80);
+            }
+
+            // Filtro simples
+            filterByState(stateCode) {
+                return this.data.filter(p => p.state.includes(stateCode));
+            }
+        }
+
+        // Instancia o Repository
+        const repository = new PowerPlantRepository(RAW_PLANT_DATA);
+
+
+        // ==========================================
+        // 2. CONFIGURATION & STATE
+        // ==========================================
+        
+        const CONFIG = {
+            colors: {
+                primary: 'bg-emerald-900',
+                secondary: 'bg-slate-800',
+                accent: 'bg-amber-500',
+                accentHover: 'hover:bg-amber-600',
+            }
+        };
+
+        const NAV_DATA = {
+            topBarLinks: [
+                { label: 'Portal Corporativo', action: 'home' },
+                { label: 'Transparência', action: 'services' },
+                { label: 'Carreiras', action: 'contact' },
+            ],
+            mainNavItems: [
+                { label: "Início", action: "home" },
+                { label: "Serviços", action: "services" },
+                { label: "Sobre Nós", action: "about" },
+                { label: "Contato", action: "contact" }
+            ],
+            subNavItems: ["Visão Geral", "Indicadores", "Relatórios", "Regulamentação", "MPO"],
+            footerLinks: ["Política de Privacidade", "Termos de Uso", "Mapa do Site"],
+        };
+
+        const state = {
+            currentView: "home", 
+            activeSubTab: "Visão Geral",
+            user: null,
+            modal: { visible: false, type: 'success', message: '' }
+        };
+
+        // ==========================================
+        // 3. CONTROLLER
+        // ==========================================
+
+        const Controller = {
+            init: () => {
+                renderApp();
+            },
+
+            navigate: (viewName) => {
+                state.currentView = viewName;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                renderApp();
+            },
+
+            setSubTab: (tabName) => {
+                state.activeSubTab = tabName;
+                renderApp();
+            },
+
+            login: (e) => {
+                e.preventDefault();
+                state.modal = { visible: true, type: 'loading', message: 'Acessando base de dados...' };
+                renderApp();
+                setTimeout(() => {
+                    state.user = { name: "Operador N1", role: "Admin" };
+                    state.modal = { visible: false };
+                    Controller.navigate('home');
+                }, 800);
+            },
+
+            logout: () => {
+                state.user = null;
+                Controller.navigate('home');
+            },
+
+            closeModal: () => {
+                state.modal.visible = false;
+                renderApp();
+            }
+        };
+
+        // ==========================================
+        // 4. VIEWS
+        // ==========================================
+
+        const Views = {
+            Icon: (name, size=20, classes='') => {
+                return `<i data-lucide="${name}" width="${size}" height="${size}" class="${classes}"></i>`;
+            },
+
+            // --- Componentes de Layout ---
+            
+            Modal: () => {
+                if (!state.modal.visible) return '';
+                const { type, message } = state.modal;
+                const icon = type === 'loading' ? 'loader-2' : 'check-circle';
+                const anim = type === 'loading' ? 'animate-spin' : '';
+                return `
+                    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 fade-in">
+                        <div class="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center">
+                            <div class="${anim} text-emerald-600 mb-3">${Views.Icon(icon, 32)}</div>
+                            <p class="font-semibold text-slate-700">${message}</p>
+                        </div>
+                    </div>
+                `;
+            },
+
+            TopBar: () => `
+                <div class="${CONFIG.colors.secondary} text-slate-300 text-xs py-2 px-4 hidden lg:block">
+                    <div class="max-w-7xl mx-auto flex justify-between items-center">
+                        <div class="flex space-x-6">
+                            ${NAV_DATA.topBarLinks.map(link => `<button onclick="Controller.navigate('${link.action}')" class="hover:text-white transition">${link.label}</button>`).join('')}
+                        </div>
+                        <div class="flex items-center gap-4">
+                            ${state.user 
+                                ? `<span class="text-emerald-400 font-semibold flex items-center gap-2">${Views.Icon('user', 14)} ${state.user.name}</span>
+                                   <button onclick="Controller.logout()" class="hover:text-white underline">Sair</button>`
+                                : `<button onclick="Controller.navigate('login')" class="flex items-center gap-2 hover:text-white font-semibold transition">
+                                     ${Views.Icon('log-in', 14)} Área Restrita
+                                   </button>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `,
+
+            Header: () => `
+                <header class="${CONFIG.colors.primary} shadow-lg sticky top-0 z-40">
+                    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+                        <div class="flex items-center gap-4 cursor-pointer" onclick="Controller.navigate('home')">
+                            <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm border border-white/10">
+                                ${Views.Icon('zap', 28, 'text-amber-400')}
+                            </div>
+                            <div>
+                                <h1 class="text-2xl font-bold text-white tracking-tight leading-none">ONS<span class="text-emerald-400">.gov</span></h1>
+                                <p class="text-[10px] text-emerald-100 uppercase tracking-widest opacity-80">Operador Nacional</p>
+                            </div>
+                        </div>
+                        <nav class="hidden md:flex items-center gap-1"> 
+                            ${NAV_DATA.mainNavItems.map(item => `
+                                <button onclick="Controller.navigate('${item.action}')"
+                                    class="px-4 py-2 rounded-md text-sm font-medium transition ${state.currentView === item.action ? 'bg-emerald-800 text-white' : 'text-emerald-100 hover:bg-emerald-800/50'}">
+                                    ${item.label}
+                                </button>
+                            `).join('')}
+                        </nav>
+                    </div>
+                </header>
+            `,
+
+            // --- Conteúdo Específico das Abas (Logica do Repository aplicada aqui) ---
+
+            TabOverview: () => {
+                const plants = repository.getAll();
+                const stats = repository.getSummaryStats();
+                
+                return `
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 fade-in">
+                        <div class="bg-white p-4 rounded border border-slate-200 shadow-sm">
+                            <p class="text-xs text-slate-500 font-bold uppercase">Geração Total (MW)</p>
+                            <p class="text-2xl font-bold text-emerald-700">${stats.totalMW}</p>
+                        </div>
+                        <div class="bg-white p-4 rounded border border-slate-200 shadow-sm">
+                            <p class="text-xs text-slate-500 font-bold uppercase">Despacho Atual</p>
+                            <p class="text-2xl font-bold text-blue-600">${stats.currentDispatch}</p>
+                        </div>
+                        <div class="bg-white p-4 rounded border border-slate-200 shadow-sm">
+                            <p class="text-xs text-slate-500 font-bold uppercase">Carga Média</p>
+                            <p class="text-2xl font-bold text-amber-600">${stats.averageLoad}%</p>
+                        </div>
+                        <div class="bg-white p-4 rounded border border-slate-200 shadow-sm">
+                            <p class="text-xs text-slate-500 font-bold uppercase">Usinas Monitoradas</p>
+                            <p class="text-2xl font-bold text-slate-700">${stats.totalPlants}</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden fade-in">
+                        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                            <h3 class="font-bold text-slate-700">Monitoramento em Tempo Real</h3>
+                            <div class="flex gap-2">
+                                <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded">Operação Normal</span>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-slate-50 text-slate-500 font-semibold uppercase text-xs">
+                                    <tr>
+                                        <th class="px-6 py-3">Usina / ID</th>
+                                        <th class="px-6 py-3">Tipo</th>
+                                        <th class="px-6 py-3">Bacia / Estado</th>
+                                        <th class="px-6 py-3 text-right">Capacidade (MW)</th>
+                                        <th class="px-6 py-3 text-right">Despacho (MW)</th>
+                                        <th class="px-6 py-3 text-center">Carga (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    ${plants.map(p => `
+                                        <tr class="hover:bg-slate-50 transition">
+                                            <td class="px-6 py-3 font-medium text-slate-700">
+                                                ${p.name}
+                                                <span class="block text-xs text-slate-400 font-normal">ID: ${p.id}</span>
+                                            </td>
+                                            <td class="px-6 py-3">
+                                                <span class="px-2 py-1 rounded-full text-[10px] font-bold 
+                                                    ${p.type === 'Reservatório' ? 'bg-blue-50 text-blue-600' : 'bg-teal-50 text-teal-600'}">
+                                                    ${p.type}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-3 text-slate-600">
+                                                ${p.basin}
+                                                <span class="block text-xs text-slate-400">${p.state}</span>
+                                            </td>
+                                            <td class="px-6 py-3 text-right font-mono text-slate-600">${p.mw.toLocaleString()}</td>
+                                            <td class="px-6 py-3 text-right font-mono font-bold text-slate-800">${p.dispatch.toLocaleString()}</td>
+                                            <td class="px-6 py-3 text-center">
+                                                <div class="flex items-center justify-center gap-2">
+                                                    <span class="text-xs font-bold ${p.percent > 80 ? 'text-red-500' : 'text-emerald-600'}">${p.percent}%</span>
+                                                    <div class="w-12 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                                        <div class="h-full ${p.percent > 80 ? 'bg-red-500' : 'bg-emerald-500'}" style="width: ${p.percent}%"></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            },
+
+            TabIndicators: () => {
+                const highLoad = repository.getHighLoadPlants();
+                const basins = repository.getByBasin();
+                
+                return `
+                    <div class="fade-in space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Card de Alerta -->
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-l-4 ${highLoad.length > 0 ? 'border-l-amber-500' : 'border-l-emerald-500'}">
+                                <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                                    ${Views.Icon('alert-triangle', 20, highLoad.length > 0 ? 'text-amber-500' : 'text-emerald-500')}
+                                    Usinas com Alta Demanda (>80%)
+                                </h3>
+                                ${highLoad.length > 0 ? `
+                                    <ul class="space-y-3">
+                                        ${highLoad.map(p => `
+                                            <li class="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
+                                                <span class="font-medium text-slate-700">${p.name}</span>
+                                                <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">${p.percent}% Carga</span>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                ` : `<p class="text-slate-500 text-sm">Todas as usinas operando dentro das margens de segurança.</p>`}
+                            </div>
+
+                            <!-- Distribuição por Bacia (Simulado visualmente) -->
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                                <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                                    ${Views.Icon('pie-chart', 20, 'text-blue-500')}
+                                    Capacidade por Bacia Hidrográfica
+                                </h3>
+                                <div class="space-y-4">
+                                    ${basins.map(b => {
+                                        const percent = (b.value / 32000 * 100).toFixed(0); // 32000 é aprox total da amostra
+                                        return `
+                                        <div>
+                                            <div class="flex justify-between text-xs mb-1">
+                                                <span class="font-medium text-slate-600">${b.name}</span>
+                                                <span class="text-slate-400">${b.value.toLocaleString()} MW</span>
+                                            </div>
+                                            <div class="w-full bg-slate-100 rounded-full h-2">
+                                                <div class="bg-blue-600 h-2 rounded-full" style="width: ${percent}%"></div>
+                                            </div>
+                                        </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            TabReports: () => `
+                <div class="fade-in bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+                    <h3 class="font-bold text-lg text-slate-800 mb-4">Relatórios Operacionais Disponíveis</h3>
+                    <div class="space-y-2">
+                        ${['Boletim Diário de Operação (BDO)', 'Programa Mensal de Operação (PMO)', 'Relatório de Análise de Perturbação (RAP)', 'Dados Hidrológicos Consolidados'].map(r => `
+                            <div class="flex items-center justify-between p-3 hover:bg-slate-50 rounded border border-transparent hover:border-slate-100 transition group cursor-pointer">
+                                <div class="flex items-center gap-3">
+                                    <div class="bg-red-50 text-red-600 p-2 rounded group-hover:bg-red-100 transition">${Views.Icon('file-text', 20)}</div>
+                                    <div>
+                                        <p class="font-medium text-slate-700">${r}</p>
+                                        <p class="text-xs text-slate-400">PDF • Atualizado hoje às 08:00</p>
+                                    </div>
+                                </div>
+                                ${Views.Icon('download', 18, 'text-slate-300 group-hover:text-emerald-600')}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `,
+
+            TabRegulations: () => `
+                <div class="fade-in space-y-4">
+                     <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r shadow-sm">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                ${Views.Icon('alert-circle', 20, 'text-amber-500')}
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-amber-700">
+                                    Nova resolução normativa (REN 1002/2025) sobre despacho de usinas intermitentes entra em vigor em 01/02.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+                        <h3 class="font-bold text-slate-800 mb-4">Procedimentos de Rede</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${['Submódulo 2.1 - Planejamento', 'Submódulo 4.2 - Programação', 'Submódulo 5.3 - Operação', 'Submódulo 6.1 - Pós-Operação'].map(item => `
+                                <div class="border border-slate-200 p-4 rounded hover:border-emerald-500 hover:shadow-md transition cursor-pointer bg-slate-50">
+                                    <h4 class="font-bold text-slate-700 text-sm">${item}</h4>
+                                    <p class="text-xs text-slate-500 mt-2">Última revisão: Dez/2024</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `,
+
+            TabMPO: () => `
+                <div class="fade-in bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-lg text-slate-800">Planejamento Mensal de Operação (MPO)</h3>
+                        <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">Ciclo: Jan/2026</span>
+                    </div>
+                    
+                    <div class="relative border-l border-slate-200 ml-3 space-y-8">
+                        <div class="mb-8 ml-6">
+                            <span class="absolute flex items-center justify-center w-6 h-6 bg-emerald-100 rounded-full -left-3 ring-8 ring-white">
+                                ${Views.Icon('check', 14, 'text-emerald-600')}
+                            </span>
+                            <h3 class="flex items-center mb-1 text-lg font-semibold text-slate-900">Semana 1</h3>
+                            <time class="block mb-2 text-sm font-normal leading-none text-slate-400">01 - 07 Janeiro</time>
+                            <p class="text-base font-normal text-slate-500">Previsão de afluência acima da média na bacia do Rio Grande. Despacho térmico reduzido.</p>
+                        </div>
+                        <div class="mb-8 ml-6">
+                            <span class="absolute flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full -left-3 ring-8 ring-white">
+                                ${Views.Icon('clock', 14, 'text-blue-600')}
+                            </span>
+                            <h3 class="flex items-center mb-1 text-lg font-semibold text-slate-900">Semana 2 (Atual)</h3>
+                            <time class="block mb-2 text-sm font-normal leading-none text-slate-400">08 - 14 Janeiro</time>
+                            <p class="text-base font-normal text-slate-500">Manutenção programada na LT 500kV Itumbiara-Rio Verde. Redespacho local necessário.</p>
+                        </div>
+                        <div class="ml-6">
+                            <span class="absolute flex items-center justify-center w-6 h-6 bg-slate-100 rounded-full -left-3 ring-8 ring-white">
+                                ${Views.Icon('calendar', 14, 'text-slate-500')}
+                            </span>
+                            <h3 class="flex items-center mb-1 text-lg font-semibold text-slate-900">Semana 3</h3>
+                            <time class="block mb-2 text-sm font-normal leading-none text-slate-400">15 - 21 Janeiro</time>
+                            <p class="text-base font-normal text-slate-500">Previsão de entrada em operação comercial da nova unidade de Belo Monte.</p>
+                        </div>
+                    </div>
+                </div>
+            `,
+
+            // --- Home View Principal com Switch de Abas ---
+
+            HomeView: () => `
+                <div class="bg-white border-b border-slate-200 shadow-sm sticky top-[72px] z-30">
+                    <div class="max-w-7xl mx-auto px-4">
+                        <div class="flex overflow-x-auto space-x-6 py-3 no-scrollbar">
+                            ${NAV_DATA.subNavItems.map(item => `
+                                <button onclick="Controller.setSubTab('${item}')"
+                                    class="text-sm font-medium whitespace-nowrap transition-colors duration-200 pb-1 border-b-2 
+                                    ${state.activeSubTab === item ? 'border-emerald-600 text-emerald-800' : 'border-transparent text-slate-500 hover:text-emerald-700 hover:border-emerald-200'}">
+                                    ${item}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <main class="flex-grow bg-pattern py-8 px-4">
+                    <div class="max-w-7xl mx-auto">
+                        <h2 class="text-2xl font-bold text-emerald-900 mb-6">${state.activeSubTab}</h2>
+                        
+                        <!-- Conteúdo Dinâmico Baseado na Aba -->
+                        ${state.activeSubTab === 'Visão Geral' ? Views.TabOverview() : ''}
+                        ${state.activeSubTab === 'Indicadores' ? Views.TabIndicators() : ''}
+                        ${state.activeSubTab === 'Relatórios' ? Views.TabReports() : ''}
+                        ${state.activeSubTab === 'Regulamentação' ? Views.TabRegulations() : ''}
+                        ${state.activeSubTab === 'MPO' ? Views.TabMPO() : ''}
+                    </div>
+                </main>
+            `,
+
+            // --- Outras Views Simples ---
+            LoginView: () => `<div class="flex items-center justify-center h-full p-20"><div class="text-center"><button onclick="Controller.login(event)" class="bg-emerald-600 text-white px-6 py-3 rounded">Simular Login</button></div></div>`,
+            ServicesView: () => `<div class="p-20 text-center"><h1 class="text-2xl font-bold text-slate-700">Página de Serviços</h1><p class="mt-4 text-slate-500">Exibição de serviços corporativos...</p></div>`,
+            ContactView: () => `<div class="p-20 text-center"><h1 class="text-2xl font-bold text-slate-700">Fale Conosco</h1><p class="mt-4 text-slate-500">Formulário de contato...</p></div>`,
+            AboutView: () => `<div class="p-20 text-center"><h1 class="text-2xl font-bold text-slate-700">Sobre o ONS</h1><p class="mt-4 text-slate-500">Histórico institucional...</p></div>`,
+            Footer: () => `<footer class="bg-slate-900 text-slate-400 py-6 mt-auto text-center text-sm border-t border-slate-800"><p>&copy; 2026 Operador Nacional do Sistema Elétrico.</p></footer>`
+        };
+
+        // ==========================================
+        // 5. MAIN RENDERER
+        // ==========================================
+
+        function renderApp() {
+            const app = document.getElementById('app');
+            let html = Views.Modal() + Views.TopBar() + Views.Header();
+
+            switch(state.currentView) {
+                case 'home': html += Views.HomeView(); break;
+                case 'login': html += Views.LoginView(); break;
+                case 'services': html += Views.ServicesView(); break;
+                case 'contact': html += Views.ContactView(); break;
+                case 'about': html += Views.AboutView(); break;
+                default: html += Views.HomeView();
+            }
+
+            html += Views.Footer();
+            app.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        Controller.init();
+
+    </script>
+</body>
+</html>
