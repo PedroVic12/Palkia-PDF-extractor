@@ -21,15 +21,19 @@ except ImportError:
     ansi_converter = None
     print("AVISO: 'ansi2html' não está instalado. Os logs não serão coloridos.")
 
-# Tenta importar o script run.py principal coma  automação do ETL
+# Tenta importar o script run.py principal coma  automação do ETL na pasta src
 try:
     import run as run_script
+
+    # Importa o CSS 
+    from src.styles import APP_STYLES
+
+
 except ImportError as e:
-    print(f"ERRO CRÍTICO: Não foi possível importar 'run.py'. Verifique se ele está na mesma pasta. Detalhes: {e}")
+    print(f"ERRO CRÍTICO: Não foi possível importar 'run.py' ou styles. Verifique se ele está na mesma pasta. Detalhes: {e}")
     sys.exit(1)
 
-# Importa o CSS 
-from styles import APP_STYLES
+
 
 class PandasModel(QAbstractTableModel):
     def __init__(self, data):
@@ -133,6 +137,42 @@ class LoadingOverlay(QWidget):
     def set_message(self, message):
         self.loading_label.setText(message)
 
+
+class NotificationManager(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.BypassWindowManagerHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setGeometry(parent.width() - 320, 20, 300, 60) # Posição inicial (canto superior direito)
+
+        layout = QVBoxLayout(self)
+        self.label = QLabel()
+        self.label.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px; border-radius: 5px; font-weight: bold;")
+        self.label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.label)
+
+        self.animation = QPropertyAnimation(self, b"windowOpacity")
+        self.animation.setDuration(500) # Duração da animação de fade
+        self.animation.setStartValue(0.0)
+        self.animation.setEndValue(1.0)
+
+        self.hide_timer = QTimer(self)
+        self.hide_timer.setSingleShot(True)
+        self.hide_timer.timeout.connect(self.hide_notification)
+
+    def show_notification(self, message, duration=3000):
+        self.label.setText(message)
+        self.setWindowOpacity(0.0)
+        self.show()
+        self.animation.setDirection(QPropertyAnimation.Direction.Forward) # Fade in
+        self.animation.start()
+        self.hide_timer.start(duration)
+
+    def hide_notification(self):
+        self.animation.setDirection(QPropertyAnimation.Direction.Backward) # Fade out
+        self.animation.start()
+        self.animation.finished.connect(self.hide) # Oculta o widget após o fade out
+
 class PalkiaWindowGUI(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -220,6 +260,14 @@ class PalkiaWindowGUI(QMainWindow):
         # Configuração do overlay de carregamento
         self.loading_overlay = LoadingOverlay(self) # Instancia o overlay
         self.loading_overlay.hide() # Começa oculto
+
+        # Gerenciador de notificações
+        self.notification_manager = NotificationManager(self)
+        self.notification_manager.hide()
+
+        # Variáveis para rastrear o estado da tabela
+        self.last_row_count = -1
+        self.last_col_count = -1
 
     def select_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Selecione a pasta com os PDFs")
@@ -408,6 +456,10 @@ class PalkiaWindowGUI(QMainWindow):
         input_folder = self.current_task_info.get("input_folder")
         if not pd: return
         df_to_display = None
+        
+        current_row_count = 0
+        current_col_count = 0
+
         if task_name == "extract_tables":
             df_to_display = self.load_latest_excel(os.path.join(input_folder, "tabelas_extraidas"))
         elif task_name == "extract_text":
@@ -422,8 +474,18 @@ class PalkiaWindowGUI(QMainWindow):
             self.results_tabs.setCurrentIndex(1)
             self.export_button.setEnabled(True)
             self.append_log("✅ Tabela carregada com sucesso!")
+            
+            current_row_count = df_to_display.shape[0]
+            current_col_count = df_to_display.shape[1]
         else:
             self.append_log("ℹ️ Nenhuma tabela para exibir.")
+
+        # Verifica se houve mudança no tamanho da tabela
+        if current_row_count != self.last_row_count or current_col_count != self.last_col_count:
+            message = f"Tabela Atualizada! Linhas: {current_row_count}, Colunas: {current_col_count}"
+            self.notification_manager.show_notification(message)
+            self.last_row_count = current_row_count
+            self.last_col_count = current_col_count
 
     def load_latest_excel(self, output_folder):
         latest_file_path = self.find_latest_file(output_folder, '.xlsx')
@@ -484,6 +546,18 @@ class PalkiaWindowGUI(QMainWindow):
         self.run_consolidate_button.setEnabled(enabled)
         self.run_database_button.setEnabled(enabled) # Habilita/desabilita o novo botão
         self.folder_button.setEnabled(enabled)
+
+    def resizeEvent(self, event):
+        # Redimensiona o overlay de carregamento para cobrir a janela toda
+        self.loading_overlay.resize(self.size())
+        # Reposiciona a notificação no canto superior direito
+        self.notification_manager.setGeometry(
+            self.width() - self.notification_manager.width() - 20, # 20px de margem
+            20, # 20px de margem superior
+            self.notification_manager.width(),
+            self.notification_manager.height()
+        )
+        super().resizeEvent(event)
 
     def closeEvent(self, event):
         if self.thread and self.thread.isRunning():
