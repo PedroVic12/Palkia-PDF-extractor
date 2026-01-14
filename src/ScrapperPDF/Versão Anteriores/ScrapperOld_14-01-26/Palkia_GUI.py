@@ -2,15 +2,14 @@ import sys
 import os
 import re
 from io import StringIO
-import subprocess # Para abrir PDFs localmente
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QFileDialog, QMessageBox, QLabel, QLineEdit, QTextEdit,
-    QGroupBox, QTabWidget, QTableView, QCheckBox, QScrollArea, QProgressDialog
+    QGroupBox, QTabWidget, QTableView
 )
-from PySide6.QtCore import QThread, QObject, Signal, QAbstractTableModel, Qt, QSize, QPropertyAnimation, QTimer
-from PySide6.QtGui import QFont, QMovie
+from PySide6.QtCore import QThread, QObject, Signal, QAbstractTableModel, Qt
+from PySide6.QtGui import QFont
 import pandas as pd
 
 
@@ -47,21 +46,6 @@ class PandasModel(QAbstractTableModel):
             if orientation == Qt.Orientation.Vertical: return str(self._data.index[section])
         return None
 
-class ExplanationWidget(QGroupBox):
-    def __init__(self, parent=None):
-        super().__init__("Guia de Uso e Configuração", parent)
-        self.setLayout(QVBoxLayout())
-        self.setStyleSheet("QGroupBox { font-weight: bold; margin-top: 10px; } QGroupBox::title { subcontrol-origin: margin; subcontrol-position: top left; padding: 0 5px; }")
-
-        self.layout().addWidget(QLabel("<b>1. Intervalos de Páginas:</b>"))
-        self.layout().addWidget(QLabel("   - Deixe o campo vazio ou digite ' * ' para processar <b>todas as páginas</b> do PDF."))
-        self.layout().addWidget(QLabel("   - Digite ' 8* ' para processar <b>da página 8 em diante</b>."))
-        self.layout().addWidget(QLabel("   - Use o formato ' 8-16, 20-25 ' para intervalos de páginas específicos, separados por vírgula."))
-
-        self.layout().addWidget(QLabel("<br><b>2. Extração de Tabelas MUST:</b>"))
-        self.layout().addWidget(QLabel("   - Este aplicativo foi otimizado para extrair as tabelas de <b>1 a 7</b> dos documentos MUST, identificadas pelo título da tabela."))
-        self.layout().addWidget(QLabel("   - Certifique-se de que os PDFs contêm essas tabelas para resultados precisos."))
-
 class Worker(QObject):
     progress = Signal(str)
     finished = Signal()
@@ -92,47 +76,6 @@ class Worker(QObject):
             error_details = f"❌ Erro na execução da tarefa: {e}\n{traceback.format_exc()}"
             self.error.emit(error_details)
 
-
-class LoadingOverlay(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setStyleSheet("background-color: rgba(0, 0, 0, 150);") # Fundo semi-transparente
-        
-        layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignCenter)
-
-        self.loading_label = QLabel("Carregando... Por favor, aguarde.")
-        self.loading_label.setStyleSheet("color: white; font-size: 20px; font-weight: bold;")
-        self.loading_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.loading_label)
-
-        # Adiciona um GIF de loading (certifique-se de ter um arquivo 'loading.gif' na pasta ou ajuste o caminho)
-        self.movie_label = QLabel()
-        self.movie_label.setAlignment(Qt.AlignCenter)
-        self.movie = QMovie("assets/loading.gif") # Caminho para o GIF
-        if not self.movie.isValid():
-            print("AVISO: O arquivo 'assets/loading.gif' não foi encontrado ou é inválido.")
-            self.loading_label.setText("Carregando... (GIF não encontrado)")
-        else:
-            self.movie.setScaledSize(QSize(100, 100)) # Ajusta o tamanho do GIF
-            self.movie_label.setMovie(self.movie)
-            self.movie.start()
-            layout.addWidget(self.movie_label)
-
-    def showEvent(self, event):
-        if self.movie.isValid():
-            self.movie.start()
-        super().showEvent(event)
-
-    def hideEvent(self, event):
-        if self.movie.isValid():
-            self.movie.stop()
-        super().hideEvent(event)
-
-    def set_message(self, message):
-        self.loading_label.setText(message)
-
 class PalkiaWindowGUI(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -153,22 +96,14 @@ class PalkiaWindowGUI(QMainWindow):
         folder_layout.addWidget(self.folder_label, 1)
         folder_layout.addWidget(self.folder_button)
         config_layout.addLayout(folder_layout)
-        
-        # Área para listagem de PDFs com checkboxes e campos de intervalo
-        pdf_selection_group = QGroupBox("Seleção de PDFs e Intervalos")
-        pdf_selection_layout = QVBoxLayout(pdf_selection_group)
-        self.pdf_list_scroll_area = QScrollArea()
-        self.pdf_list_scroll_area.setWidgetResizable(True)
-        self.pdf_list_container = QWidget()
-        self.pdf_list_layout = QVBoxLayout(self.pdf_list_container)
-        self.pdf_list_scroll_area.setWidget(self.pdf_list_container)
-        pdf_selection_layout.addWidget(self.pdf_list_scroll_area)
-
-        config_layout.addWidget(pdf_selection_group)
+        intervals_layout = QVBoxLayout()
+        intervals_label = QLabel("Intervalos de Páginas (separados por vírgula):")
+        self.intervals_input = QLineEdit()
+        self.intervals_input.setPlaceholderText('Ex: "8-16", "8-24", "7-10"')
+        intervals_layout.addWidget(intervals_label)
+        intervals_layout.addWidget(self.intervals_input)
+        config_layout.addLayout(intervals_layout)
         main_layout.addWidget(config_group)
-        
-        self.explanation_widget = ExplanationWidget() # Instancia o novo widget de explicação
-        main_layout.addWidget(self.explanation_widget) # Adiciona ao layout principal
 
         actions_group = QGroupBox("Ações de Extração e Pós-Processamento")
         actions_layout = QHBoxLayout(actions_group)
@@ -178,16 +113,12 @@ class PalkiaWindowGUI(QMainWindow):
         self.run_text_button.setObjectName("run_button")
         self.run_consolidate_button = QPushButton("3) Consolidar Resultados")
         self.run_consolidate_button.setObjectName("run_button")
-        self.run_database_button = QPushButton("4) Carregar no Banco de Dados")
-        self.run_database_button.setObjectName("run_button")
         self.run_tables_button.clicked.connect(lambda: self.run_task("extract_tables"))
         self.run_text_button.clicked.connect(lambda: self.run_task("extract_text"))
         self.run_consolidate_button.clicked.connect(lambda: self.run_task("consolidate"))
-        self.run_database_button.clicked.connect(lambda: self.run_task("load_database"))
         actions_layout.addWidget(self.run_tables_button)
         actions_layout.addWidget(self.run_text_button)
         actions_layout.addWidget(self.run_consolidate_button)
-        actions_layout.addWidget(self.run_database_button) # Adiciona o novo botão
         main_layout.addWidget(actions_group)
 
         results_tabs = QTabWidget()
@@ -209,17 +140,11 @@ class PalkiaWindowGUI(QMainWindow):
         table_layout.addWidget(self.table_view)
         table_layout.addWidget(self.export_button)
         results_tabs.addTab(table_widget, "📊 Resultado da Tabela")
-
         self.results_tabs = results_tabs
         self.input_folder = None
         self.current_task_info = {}
         self.thread = None
         self.worker = None
-        self.pdf_widgets = {} # Dicionário para armazenar {"nome_pdf": {"checkbox": obj, "interval_input": obj}}
-
-        # Configuração do overlay de carregamento
-        self.loading_overlay = LoadingOverlay(self) # Instancia o overlay
-        self.loading_overlay.hide() # Começa oculto
 
     def select_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Selecione a pasta com os PDFs")
@@ -228,77 +153,29 @@ class PalkiaWindowGUI(QMainWindow):
             self.folder_label.setText(f"Pasta de Entrada: ...{os.path.basename(folder)}")
             self.log_output.clear()
             self.append_log(f"Pasta selecionada: {folder}\n")
-            self.populate_pdf_list(folder) # Popula a nova área de listagem de PDFs
-    def populate_pdf_list(self, folder):
-        # Limpa o layout anterior
-        for i in reversed(range(self.pdf_list_layout.count())):
-            widget = self.pdf_list_layout.itemAt(i).widget()
-            if widget: widget.setParent(None)
-
-        self.pdf_widgets = {}
-        pdf_files = sorted([f for f in os.listdir(folder) if f.lower().endswith('.pdf')])
-
-        if not pdf_files:
-            no_pdf_label = QLabel("Nenhum arquivo PDF encontrado nesta pasta.")
-            self.pdf_list_layout.addWidget(no_pdf_label)
-            return
-
-        for pdf_file in pdf_files:
-            pdf_h_layout = QHBoxLayout()
-            checkbox = QCheckBox(pdf_file)
-            checkbox.setChecked(True) # Por padrão, todos os PDFs são selecionados
-            interval_input = QLineEdit()
-            interval_input.setPlaceholderText('Ex: "8-16", "8-24"')
-            
-            # Armazena os widgets para acesso futuro
-            self.pdf_widgets[pdf_file] = {"checkbox": checkbox, "interval_input": interval_input}
-            pdf_h_layout.addWidget(checkbox)
-            pdf_h_layout.addWidget(interval_input)
-            
-            # Adicionar um botão para abrir o PDF
-            open_pdf_button = QPushButton("Abrir")
-            open_pdf_button.clicked.connect(lambda _, file=pdf_file: self.open_pdf_local(file))
-            pdf_h_layout.addWidget(open_pdf_button)
-
-            self.pdf_list_layout.addLayout(pdf_h_layout)
-
-        self.pdf_list_layout.addStretch(1) # Para empurrar os itens para o topo
-
-    def open_pdf_local(self, pdf_name):
-        if not self.input_folder:
-            QMessageBox.warning(self, "Aviso", "Selecione uma pasta de entrada primeiro.")
-            return
-
-        pdf_path = os.path.join(self.input_folder, pdf_name)
-        if not os.path.exists(pdf_path):
-            QMessageBox.critical(self, "Erro", f"Arquivo PDF não encontrado: {pdf_path}")
-            return
-
-        try:
-            if sys.platform == "win32":
-                os.startfile(pdf_path)
-            elif sys.platform == "darwin":
-                subprocess.call(["open", pdf_path])
-            else:
-                subprocess.call(["xdg-open", pdf_path])
-            self.append_log(f"<font color=\"#9CCC65\">Abrindo PDF: {pdf_name}</font>")
-        except Exception as e:
-            QMessageBox.critical(self, "Erro", f"Não foi possível abrir o PDF {pdf_name}: {e}")
-
+            try:
+                pdf_files = sorted([f for f in os.listdir(folder) if f.lower().endswith('.pdf')])
+                if pdf_files:
+                    self.log_output.append('<font color="#26A69A"><b>Arquivos PDF encontrados:</b></font>')
+                    for pdf_file in pdf_files:
+                        self.log_output.append(f'<font color="#9CCC65">  - {pdf_file}</font>')
+                else:
+                    self.log_output.append('<font color="#FFCA28"><b>AVISO:</b> Nenhum arquivo PDF foi encontrado.</font>')
+            except Exception as e:
+                self.log_output.append(f'<font color="#EF5350"><b>ERRO:</b> Não foi possível ler a pasta: {e}</font>')
 
     def run_task(self, task_name):
         if not self.input_folder:
             QMessageBox.warning(self, "Aviso", "Por favor, selecione uma pasta de entrada primeiro.")
             return
+        intervals = self.intervals_input.text()
+        if task_name == "extract_tables" and not intervals:
+            QMessageBox.warning(self, "Aviso", "Por favor, forneça os intervalos de páginas para extrair tabelas.")
+            return
         self.log_output.clear()
         self.set_buttons_enabled(False)
         self.table_view.setModel(None)
         self.export_button.setEnabled(False)
-        
-        # Mostra o overlay de carregamento
-        self.loading_overlay.show()
-        self.loading_overlay.set_message(f"Executando tarefa: {task_name.replace('_', ' ').title()}... Por favor, aguarde.")
-
         self.current_task_info = {"name": task_name, "input_folder": self.input_folder}
         try:
             run_script.input_folder = self.input_folder
@@ -309,64 +186,22 @@ class PalkiaWindowGUI(QMainWindow):
             return
         if task_name == "extract_tables":
             try:
-                intervals_list_for_run = []
-                selected_pdf_files = []
-                for pdf_file, widgets in self.pdf_widgets.items():
-                    if widgets["checkbox"].isChecked():
-                        interval = widgets["interval_input"].text().strip()
-                        if not interval:
-                            QMessageBox.warning(self, "Aviso", f"Por favor, forneça os intervalos de páginas para o PDF selecionado: {pdf_file}")
-                            self.set_buttons_enabled(True)
-                            return
-                        selected_pdf_files.append(pdf_file)
-                        intervals_list_for_run.append(interval)
-
-                if not selected_pdf_files:
-                    QMessageBox.warning(self, "Aviso", "Por favor, selecione pelo menos um PDF para extrair tabelas.")
-                    self.set_buttons_enabled(True)
-                    return
-
-                # Atualiza run_script.pdf_files e run_script.intervalos_paginas com os valores selecionados
-                # Supondo que run_script.run_extract_PDF_tables pode aceitar uma lista de arquivos e uma lista de intervalos
-                # Pode ser necessário ajustar run.py para aceitar esses novos parâmetros.
-                run_script.pdf_files_to_process = selected_pdf_files # Novo atributo para run.py
-                run_script.intervalos_paginas_to_process = intervals_list_for_run # Novo atributo para run.py
-
+                intervals_list = [interval.strip().strip('"\'') for interval in intervals.split(',')]
                 target_function = run_script.run_extract_PDF_tables
-                args = (self.input_folder, selected_pdf_files, intervals_list_for_run, "folder") # Passa a lista de arquivos e intervalos
+                args = (intervals_list, "folder")
             except Exception as e:
-                QMessageBox.critical(self, "Erro de Formato", f"Formato de intervalos inválido ou erro ao preparar a lista: {e}")
+                QMessageBox.critical(self, "Erro de Formato", f"Formato de intervalos inválido: {e}")
                 self.set_buttons_enabled(True)
                 return
         elif task_name == "extract_text":
-            # Adaptação para extract_text_from_must_tables
-            selected_pdf_files = []
-            for pdf_file, widgets in self.pdf_widgets.items():
-                if widgets["checkbox"].isChecked():
-                    selected_pdf_files.append(pdf_file)
-            
-            if not selected_pdf_files:
-                QMessageBox.warning(self, "Aviso", "Por favor, selecione pelo menos um PDF para extrair anotações.")
-                self.set_buttons_enabled(True)
-                return
-            
-            run_script.pdf_files_to_process = selected_pdf_files
             target_function = run_script.extract_text_from_must_tables
-            args = (self.input_folder, selected_pdf_files, "folder",)
+            args = ("folder",)
         elif task_name == "consolidate":
             if hasattr(run_script, 'consolidate_and_merge_results'):
                 target_function = run_script.consolidate_and_merge_results
-                args = (self.input_folder,)
+                args = ()
             else:
                 QMessageBox.critical(self, "Erro", "A função 'consolidate_and_merge_results' não foi encontrada em 'run.py'.")
-                self.set_buttons_enabled(True)
-                return
-        elif task_name == "load_database":
-            if hasattr(run_script, 'run_database_load_process'):
-                target_function = run_script.run_database_load_process
-                args = (self.input_folder,)
-            else:
-                QMessageBox.critical(self, "Erro", "A função 'run_database_load_process' não foi encontrada em 'run.py'.")
                 self.set_buttons_enabled(True)
                 return
         else:
@@ -389,19 +224,17 @@ class PalkiaWindowGUI(QMainWindow):
             html_text = ansi_converter.convert(text, full=False)
             self.log_output.append(html_text)
         else:
-            clean_text = re.sub(r'\x1B(?:[@-Z\-_]|\[0-?]*[ -/]*[@-~])', '', text)
+            clean_text = re.sub(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])', '', text)
             self.log_output.append(clean_text)
 
     def on_task_finished(self):
         self.append_log("\n✅ Tarefa concluída com sucesso!")
         self.display_results()
         self.cleanup_thread()
-        self.loading_overlay.hide() # Oculta o overlay de carregamento
 
     def on_task_error(self, error_message):
         self.append_log(f"\n{error_message}")
         self.cleanup_thread()
-        self.loading_overlay.hide() # Oculta o overlay de carregamento
 
     def display_results(self):
         task_name = self.current_task_info.get("name")
@@ -482,7 +315,6 @@ class PalkiaWindowGUI(QMainWindow):
         self.run_tables_button.setEnabled(enabled)
         self.run_text_button.setEnabled(enabled)
         self.run_consolidate_button.setEnabled(enabled)
-        self.run_database_button.setEnabled(enabled) # Habilita/desabilita o novo botão
         self.folder_button.setEnabled(enabled)
 
     def closeEvent(self, event):

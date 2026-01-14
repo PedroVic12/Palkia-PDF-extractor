@@ -1,5 +1,5 @@
 '==============================================================================
-' GERADOR DE RELATÓRIOS PERDAS DUPLAS ETL V6 - Versão Final Estável (13/01/2026)
+' GERADOR DE RELATÓRIOS PERDAS DUPLAS ETL V6 - Versão Final Estável (14/01/2026)
 '==============================================================================
 
 
@@ -22,6 +22,8 @@
 ' - [ ] Formtação correta da aba Modificações para aparecer corretamente no relatório como Seção do documento
 
 
+' 14/01/2026 - Correção da aba modificações e altura das linhas corretamente pelo tamanho do texto. 3 graficos na mesma planilha
+
 
 Option Explicit
 
@@ -34,23 +36,23 @@ Public Const URL_SHAREPOINT_TEMPLATE As String = "https://onsbr.sharepoint.com/s
 
 ' --- DADOS VARIÁVEIS (Capa) ---
 Public Const TAG_DATA_ANTIGA As String = "DEZEMBRO 2025"
-Public Const TEXTO_DATA_NOVO As String = "JANEIRO 2026"
+Public Const TEXTO_DATA_NOVO As String = "JANEIRO 2026 - 14/01/2026"
 
 Public Const TAG_REVISAO_ANTIGA As String = "REVISÃO 9"
 
 ' --- Configurações Gerais ---
 Public Const AJUSTAR_QUEBRA_LINHA As Boolean = True
 Public Const REPETIR_CABECALHO As Boolean = True
-Public Const DEBUG_MODE As Boolean = False ' Ativado para ver qual linha exata trava
+Public Const DEBUG_MODE As Boolean = False '! Ativado para ver qual linha exata trava
 Public Const CABECALHO_AZUL As Boolean = False
 Public Const CONVERTER_PDF As Boolean = False
 
 ' --- Configurações Visuais ---
 Public Const FONTE_CABECALHO As String = "Calibri"
-Public Const TAMANHO_CABECALHO As Integer = 14
+Public Const TAMANHO_CABECALHO As Integer = 16
 Public Const FONTE_DADOS As String = "Calibri"
 Public Const TAMANHO_DADOS As Integer = 10
-Public Const ALTURA_LINHA As Integer = 20
+Public Const ALTURA_LINHA As Integer = 16
 Public Const ESPESSURA_BORDA As Integer = 1
 
 ' Cores

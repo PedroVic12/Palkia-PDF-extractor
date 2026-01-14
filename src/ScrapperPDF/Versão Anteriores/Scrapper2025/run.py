@@ -142,7 +142,7 @@ def extract_text_from_must_tables(input_folder, pdf_files_to_process, mode = "fo
 
     # Pasta para salvar os resultados
     output_folder = os.path.join(input_folder, "anotacoes_extraidas")
-    os.makedirs(output_folder, exist_ok=True) # Garante que a pasta exista
+    os.makedirs(output_folder, exist_ok=True)
 
     # Execução para os arquivos selecionados
     for pdf_file_name in pdf_files_to_process:
