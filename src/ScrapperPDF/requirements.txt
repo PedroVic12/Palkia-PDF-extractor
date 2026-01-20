@@ -1,2 +1,6 @@
 PySide6
 PymuPDF
+rich
+pandas
+openpyxl
+camelot
