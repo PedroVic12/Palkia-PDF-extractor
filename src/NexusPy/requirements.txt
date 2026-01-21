@@ -7,3 +7,6 @@ pyodbc
 ansi2html
 pymupdf
 openpyxl
+numpy
+matplotlib
+pandapower

@@ -46,13 +46,13 @@ PROJECTS_ROOT = Path(os.getenv("PROJECTS_ROOT", Path(__file__).parent))
 
 PROGRAMS: Dict[str, Dict[str, str]] = {
     "desktop_dashboard": {
-        "name": "Desktop Dashboard (SP Atividades)",
-        "script": "desktop_Dashboard_app.py",
+        "name": "Desktop Dashboard (SP Atividades + MUST)",
+        "script": "app.py",
         "work_dir": "src/ScrapperPDF",
         "requirements": "requirements.txt",
     },
     "palkia_gui": {
-        "name": "Palkia PDF Extractor GUI",
+        "name": "Palkia PDF Extractor IFrame GUI",
         "script": "Palkia_GUI.py",
         "work_dir": "src/ScrapperPDF",
         "requirements": "requirements.txt",
@@ -64,7 +64,7 @@ PROGRAMS: Dict[str, Dict[str, str]] = {
         "requirements": None,  # no requirements.txt needed
     },
     "organizador": {
-        "name": "File Organizer",
+        "name": "File Organizer Project",
         "script": "organizador_arquivos.py",
         "work_dir": ".",
         "requirements": None,

@@ -3,4 +3,6 @@ PymuPDF
 rich
 pandas
 openpyxl
-camelot
+camelot-py
+pyodbc
+PyPDF2

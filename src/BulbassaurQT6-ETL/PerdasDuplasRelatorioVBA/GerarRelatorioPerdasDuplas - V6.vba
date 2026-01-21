@@ -70,7 +70,7 @@ Public Const LARGURA_HORIZONTE As Double = 4.0
 Public Const LARGURA_PADRAO As Double = 5.0
 
 ' ==============================================================================
-' [MÓDULO 1] ORQUESTRADOR PRINCIPAL
+' [MÓDULO 1] Função Principal
 ' ==============================================================================
 
 Sub GerarRelatorioPerdasDuplasETL()
@@ -80,9 +80,9 @@ Sub GerarRelatorioPerdasDuplasETL()
     Dim pagina As Long
     Dim txtRevisaoNova As String
     
-    Call Log("=== INICIANDO GERAÇÃO DE RELATÓRIO V6 ===")
+    Call Log("=== INICIANDO GERAÇÃO DE RELATÓRIO DE PERDAS DUPLAS V6 ===")
     
-    ' 1. REVISÃO
+    ' 1. TEXTO DO NÚMERO DE REVISÃO
     txtRevisaoNova = GerarStringRevisaoDoExcel()
     If txtRevisaoNova = "ERRO" Then
         If MsgBox("Aviso: Revisão não detectada no nome do Excel. Continuar?", vbYesNo + vbExclamation) = vbNo Then Exit Sub
@@ -90,18 +90,18 @@ Sub GerarRelatorioPerdasDuplasETL()
         Call Log("Revisão detectada: " & txtRevisaoNova)
     End If
     
-    ' 2. DOWNLOAD
+    ' 2. DOWNLOAD DO WORD NO SHAREPOINT
     caminhoTemplate = BaixarTemplateDoSharePoint()
     If caminhoTemplate = "" Then Exit Sub
     
-    ' 3. PÁGINA
+    ' 3. PÁGINA DA TABELA
     Dim respostaPagina As String
-    respostaPagina = InputBox("Em qual página deseja inserir a TABELA PRINCIPAL?", "Configuração", "4")
+    respostaPagina = InputBox("Em qual página deseja inserir a TABELA PRINCIPAL?", "Configuração", "7")
     If respostaPagina = "" Or Not IsNumeric(respostaPagina) Then Exit Sub
     pagina = CLng(respostaPagina)
     If pagina < 1 Then pagina = 1
     
-    ' 4. EXECUTAR
+    ' 4. EXECUTAR PARA CRIAR O RELATÓRIO 
     Call CriarRelatorioCorrigido(caminhoTemplate, pagina, txtRevisaoNova, CONVERTER_PDF)
     
     Exit Sub
@@ -112,7 +112,7 @@ ErroHandler:
 End Sub
 
 ' ==============================================================================
-' [MÓDULO 2] FUNÇÃO CORE (GERA O WORD)
+' [MÓDULO 2] FUNÇÃO CORE (GERA O RELATÓRIO EM WORD)
 ' ==============================================================================
 
 Sub CriarRelatorioCorrigido(caminhoWord As String, paginaPrincipal As Long, novaRevisao As String, converterPDF As Boolean)
@@ -137,6 +137,8 @@ Sub CriarRelatorioCorrigido(caminhoWord As String, paginaPrincipal As Long, nova
     ultimaLinha = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
     ultimaColuna = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
     
+
+    ' ! Rever esta parte
     ' SEGURANÇA: Limite do Word é 63 colunas. Proteção contra colunas fantasmas.
     If ultimaColuna > 63 Then
         Call Log("AVISO: Excel tem " & ultimaColuna & " colunas. Word limita a 63. Ajustando.")
@@ -162,7 +164,8 @@ Sub CriarRelatorioCorrigido(caminhoWord As String, paginaPrincipal As Long, nova
     Call SubstituirTextoNoWord(wordDoc, TAG_DATA_ANTIGA, TEXTO_DATA_NOVO)
     If novaRevisao <> "ERRO" Then Call SubstituirTextoNoWord(wordDoc, TAG_REVISAO_ANTIGA, novaRevisao)
     
-    Call Log("Inserindo Modificações...")
+    ' TODO 21/01 AQUI
+    Call Log("Inserindo Informações na Aba de Modificações...")
     Call InserirTabelaModificacoes(wordDoc, wordApp)
     
     ' --- F. INSERIR TABELA PRINCIPAL (NAVEGAÇÃO SEGURA) ---
@@ -203,7 +206,7 @@ Sub CriarRelatorioCorrigido(caminhoWord As String, paginaPrincipal As Long, nova
     maxLinhasTbl = tabela.Rows.Count
     maxColsTbl = tabela.Columns.Count
     
-    ' G1. Larguras (Loop Seguro)
+    ' G1. Formatação Larguras 
     Call Log("Formatando Larguras...")
     For j = 1 To maxColsTbl
         Dim cabecalho As String, larguraCm As Double
