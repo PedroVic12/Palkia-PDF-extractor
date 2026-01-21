@@ -1,10 +1,10 @@
 '==============================================================================
-' GERADOR DE RELATÓRIOS PERDAS DUPLAS ETL V6 - Versão Final Estável (14/01/2026)
+' GERADOR DE RELATÓRIOS PERDAS DUPLAS ETL V6 - Versão Final (21/01/2026)
 '==============================================================================
 
 
 ' Controle de versão:
-' V3: 16/12/2025
+' V3: 11/12/2025
 ' - [x] Configuração de formatação do relatório por variáveis globais
 ' - [x] Implementação da função de log
 ' - [x] Implementação da função de erro
@@ -18,12 +18,13 @@
 ' V6: 13/01/2026
 ' - [x] Implementação da função que pega as informações da aba Modificações do excel
 ' - [x] Implementação da funcao que coloca a revisão e data correta no relatório
-' - [ ] Formatacao da tabela principal corretamente sem texto negrito e altura das linhas corretamente pelo tamanho do texto
-' - [ ] Formtação correta da aba Modificações para aparecer corretamente no relatório como Seção do documento
+' V6: 14/01/2026
+' - [x] Correção da aba modificações e altura das linhas corretamente pelo tamanho do texto. 3 graficos na mesma planilha
 
-
-' 14/01/2026 - Correção da aba modificações e altura das linhas corretamente pelo tamanho do texto. 3 graficos na mesma planilha
-
+' V6: 21/01/2026
+' - [x] Formatacao da tabela principal corretamente sem texto negrito e altura das linhas corretamente pelo tamanho do texto
+' - [x] Formtação correta da aba Modificações para aparecer corretamente no relatório como Seção do documento (ExcluirAnterior = False)
+' - [ ] Teste da função da aba Modificações com parametro True ou False para retirar a antiga e colocar a nova no formato correto
 
 Option Explicit
 
@@ -36,7 +37,7 @@ Public Const URL_SHAREPOINT_TEMPLATE As String = "https://onsbr.sharepoint.com/s
 
 ' --- DADOS VARIÁVEIS (Capa) ---
 Public Const TAG_DATA_ANTIGA As String = "DEZEMBRO 2025"
-Public Const TEXTO_DATA_NOVO As String = "JANEIRO 2026 - 14/01/2026"
+Public Const TEXTO_DATA_NOVO As String = "JANEIRO 2026 - 21/01/2026"
 
 Public Const TAG_REVISAO_ANTIGA As String = "REVISÃO 9"
 
@@ -52,7 +53,7 @@ Public Const FONTE_CABECALHO As String = "Calibri"
 Public Const TAMANHO_CABECALHO As Integer = 16
 Public Const FONTE_DADOS As String = "Calibri"
 Public Const TAMANHO_DADOS As Integer = 10
-Public Const ALTURA_LINHA As Integer = 16
+Public Const ALTURA_LINHA As Integer = 15
 Public Const ESPESSURA_BORDA As Integer = 1
 
 ' Cores
@@ -64,10 +65,10 @@ Public Const COR_TEXTO_PRETO As Long = 0
 
 ' Larguras (cm)
 Public Const LARGURA_VOLUME As Double = 2.5
-Public Const LARGURA_AREA As Double = 8.0
-Public Const LARGURA_CONTINGENCIA As Double = 12.0
-Public Const LARGURA_HORIZONTE As Double = 4.0
-Public Const LARGURA_PADRAO As Double = 5.0
+Public Const LARGURA_AREA As Double = 8#
+Public Const LARGURA_CONTINGENCIA As Double = 12#
+Public Const LARGURA_HORIZONTE As Double = 4#
+Public Const LARGURA_PADRAO As Double = 5#
 
 ' ==============================================================================
 ' [MÓDULO 1] Função Principal
@@ -91,6 +92,7 @@ Sub GerarRelatorioPerdasDuplasETL()
     End If
     
     ' 2. DOWNLOAD DO WORD NO SHAREPOINT
+    Call Log("Baixando template Word do Sharepoint...")
     caminhoTemplate = BaixarTemplateDoSharePoint()
     If caminhoTemplate = "" Then Exit Sub
     
@@ -101,14 +103,14 @@ Sub GerarRelatorioPerdasDuplasETL()
     pagina = CLng(respostaPagina)
     If pagina < 1 Then pagina = 1
     
-    ' 4. EXECUTAR PARA CRIAR O RELATÓRIO 
+    ' 4. EXECUTAR PARA CRIAR O RELATÓRIO
     Call CriarRelatorioCorrigido(caminhoTemplate, pagina, txtRevisaoNova, CONVERTER_PDF)
     
     Exit Sub
     
 ErroHandler:
     Call LogErro(Err.Description, Err.Number)
-    MsgBox "❌ ERRO FATAL: " & Err.Description, vbCritical
+    MsgBox "? ERRO FATAL: " & Err.Description, vbCritical
 End Sub
 
 ' ==============================================================================
@@ -166,7 +168,8 @@ Sub CriarRelatorioCorrigido(caminhoWord As String, paginaPrincipal As Long, nova
     
     ' TODO 21/01 AQUI
     Call Log("Inserindo Informações na Aba de Modificações...")
-    Call InserirTabelaModificacoes(wordDoc, wordApp)
+    'Call InserirTabelaModificacoes(wordDoc, wordApp)
+    Call InserirAbaModificacoesComoLista(wordDoc, wordApp, False)
     
     ' --- F. INSERIR TABELA PRINCIPAL (NAVEGAÇÃO SEGURA) ---
     Call Log("Navegando para página " & paginaPrincipal)
@@ -206,7 +209,7 @@ Sub CriarRelatorioCorrigido(caminhoWord As String, paginaPrincipal As Long, nova
     maxLinhasTbl = tabela.Rows.Count
     maxColsTbl = tabela.Columns.Count
     
-    ' G1. Formatação Larguras 
+    ' G1. Formatação Larguras
     Call Log("Formatando Larguras...")
     For j = 1 To maxColsTbl
         Dim cabecalho As String, larguraCm As Double
@@ -277,8 +280,10 @@ Sub CriarRelatorioCorrigido(caminhoWord As String, paginaPrincipal As Long, nova
     wordDoc.SaveAs2 caminhoSalvar
     If converterPDF Then wordDoc.SaveAs2 Left(caminhoSalvar, InStrRev(caminhoSalvar, ".")) & "pdf", 17
     
+    Call Log("Relatório gerado com sucesso!")
+    
     sucesso = True
-    MsgBox "✅ Relatório gerado com sucesso!", vbInformation
+    MsgBox "? Relatório Word gerado com sucesso!", vbInformation
     
 Limpeza:
     On Error Resume Next
@@ -291,7 +296,7 @@ Limpeza:
 ErroHandler:
     sucesso = False
     Call LogErro(Err.Description, Err.Number)
-    MsgBox "❌ ERRO: " & Err.Description, vbCritical
+    MsgBox "? ERRO: " & Err.Description, vbCritical
     Resume Limpeza
 End Sub
 
@@ -304,14 +309,14 @@ Function BaixarTemplateDoSharePoint() As String
     Dim caminhoLocal As String, nomeArquivo As String
     On Error GoTo ErroDownload
     
-    nomeArquivo = "word_template_" & Format(Date, "yy_mm_dd") & ".docx"
+    nomeArquivo = "Relatorio_perdas_duplas_template_" & Format(Date, "dd_mm_yy") & ".docx"
     caminhoLocal = Environ("USERPROFILE") & "\Downloads\" & nomeArquivo
     If Dir(caminhoLocal) <> "" Then Kill caminhoLocal
     
     Set wordApp = CreateObject("Word.Application")
     wordApp.Visible = False
-    Set wordDoc = wordApp.Documents.Open(FileName:=Replace(URL_SHAREPOINT_TEMPLATE, "?web=1", ""), ReadOnly:=True, Visible:=False)
-    wordDoc.SaveAs2 FileName:=caminhoLocal, FileFormat:=16
+    Set wordDoc = wordApp.Documents.Open(Filename:=Replace(URL_SHAREPOINT_TEMPLATE, "?web=1", ""), ReadOnly:=True, Visible:=False)
+    wordDoc.SaveAs2 Filename:=caminhoLocal, FileFormat:=16
     wordDoc.Close False: wordApp.Quit
     BaixarTemplateDoSharePoint = caminhoLocal
     Set wordDoc = Nothing: Set wordApp = Nothing
@@ -338,6 +343,7 @@ Sub SubstituirTextoNoWord(doc As Object, antigo As String, novo As String)
     Dim rng As Object: Set rng = doc.Content
     With rng.Find: .ClearFormatting: .Text = antigo: .Replacement.Text = novo: .Forward = True: .Wrap = 1: .Execute Replace:=2: End With
 End Sub
+
 
 Sub InserirTabelaModificacoes(doc As Object, app As Object)
     Dim ws As Worksheet, tbl As Object
@@ -368,12 +374,132 @@ Sub InserirTabelaModificacoes(doc As Object, app As Object)
     app.Selection.EndKey Unit:=6
 End Sub
 
+' ======================
+' FUNÇÃO DA ABA MODIFICAÇÕES - PROCURA A SEÇÃO DE REVISÕES DO RELATÓRIO E INSERE A ABA MODIFICAÇÕES EM LISTA
+' ======================
+' ======================
+' FUNÇÃO - ADICIONA APÓS A TABELA EXISTENTE
+' ======================
+Sub InserirAbaModificacoesComoLista(doc As Object, app As Object, Optional excluirAnterior As Boolean = False)
+    Dim ws As Worksheet
+    Dim ultL As Long, i As Long
+    Dim textoItem As String
+    Dim contador As Long
+    
+    ' OBTER DADOS
+    Set ws = ThisWorkbook.Worksheets("Modificações")
+    If ws Is Nothing Then Exit Sub
+    
+    ultL = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    If ultL < 2 Then Exit Sub
+    
+    ' IR PARA O INÍCIO
+    app.Selection.HomeKey Unit:=6
+    
+    ' PROCURAR "REVISÕES DO RELATÓRIO"
+    With app.Selection.Find
+        .ClearFormatting
+        .Text = "Revisões do relatório"
+        .Forward = True
+        .Wrap = 0
+        If Not .Execute Then
+            ' Não encontrou - criar no final
+            app.Selection.EndKey Unit:=6
+            app.Selection.TypeText vbCrLf & vbCrLf & "Revisões do relatório" & vbCrLf & vbCrLf
+        End If
+    End With
+    
+    ' AGORA ESTAMOS NO "REVISÕES DO RELATÓRIO"
+    ' PRECISAMOS IR PARA O FINAL DA TABELA EXISTENTE
+    
+    ' Mover para baixo 7 vezes (título + linha da tabela com "2")
+    ' Isso nos coloca APÓS a última linha da tabela
+    For i = 1 To 7
+        app.Selection.MoveDown Unit:=5, Count:=1
+    Next i
+    
+    ' SE EXCLUIRANTERIOR = TRUE, APAGAR TUDO DAQUI EM DIANTE
+    If excluirAnterior Then
+        Dim inicio As Long
+        inicio = app.Selection.Start
+        doc.Range(inicio, doc.Content.End).Delete
+        app.Selection.Start = inicio
+    End If
+    
+    ' ADICIONAR SEPARADOR (sempre)
+    app.Selection.TypeText vbCrLf & "---" & vbCrLf & vbCrLf
+    
+    ' INSERIR ITENS (começando do 1)
+    contador = 1
+    For i = 2 To ultL
+        textoItem = Trim(ws.Cells(i, 1).Value)
+        If textoItem <> "" Then
+            app.Selection.TypeText contador & ". " & textoItem & vbCrLf
+            contador = contador + 1
+        End If
+    Next i
+    
+    ' ADICIONAR SEPARADOR FINAL E DATA
+    app.Selection.TypeText vbCrLf & "---" & vbCrLf
+    app.Selection.TypeText "Atualizado em: " & Format(Date, "dd/mm/yyyy") & vbCrLf
+    
+    MsgBox "Dados inseridos após a tabela existente!", vbInformation
+End Sub
+
+' ======================
+' FUNÇÃO AUXILIAR PARA CONTAR ITENS EXISTENTES
+' ======================
+Function ContarItensLista(textoLista As String) As Long
+    ' Conta quantos itens já existem na lista (linhas que começam com número e ponto)
+    
+    Dim linhas() As String
+    Dim i As Long, contador As Long
+    Dim linha As String
+    Dim partes() As String
+    
+    If Len(Trim(textoLista)) = 0 Then
+        ContarItensLista = 0
+        Exit Function
+    End If
+    
+    linhas = Split(textoLista, vbCrLf)
+    contador = 0
+    
+    For i = 0 To UBound(linhas)
+        linha = Trim(linhas(i))
+        
+        ' Ignorar linhas vazias ou separadores
+        If linha <> "" And linha <> "---" Then
+            ' Verificar se linha começa com número seguido de ponto e espaço
+            If Len(linha) > 2 Then
+                partes = Split(linha, ".")
+                If UBound(partes) >= 1 Then
+                    If IsNumeric(Trim(partes(0))) Then
+                        contador = contador + 1
+                    End If
+                End If
+            End If
+        End If
+    Next i
+    
+    ContarItensLista = contador
+End Function
+
+
+' ======================
+' FUNÇÃO PARA FORMATAR CÉLULA HORIZONTE
+' ======================
 Private Sub FormatarCelulaHorizonte(celula As Object, valor As String)
     On Error Resume Next: Dim h As String: h = LCase(Trim(valor))
     celula.Range.ParagraphFormat.Alignment = 1: celula.Range.Bold = True
     If h = "curto prazo" Then celula.Range.Font.Color = COR_VERDE_CURTO
     If InStr(h, "médio") > 0 Or InStr(h, "medio") > 0 Then celula.Range.Font.Color = COR_LARANJA_MEDIO
 End Sub
+
+
+' ======================
+' FUNÇÃO PARA LOG
+' ======================
 
 Private Sub Log(msg As String)
     Debug.Print "[" & Format(Now, "hh:mm:ss") & "] " & msg
@@ -383,3 +509,5 @@ End Sub
 Private Sub LogErro(erroDesc As String, Optional erroNum As Long = 0)
     Log "ERRO " & erroNum & ": " & erroDesc
 End Sub
+
+
