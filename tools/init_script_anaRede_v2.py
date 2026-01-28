@@ -49,6 +49,19 @@ except ImportError:
 
 console = Console()
 
+"""
+Arquitetura da automação:
+CLI (seleção)
+   ↓
+Memória explícita (casos_selecionados)
+   ↓
+run_automation()
+   ↓
+AnaRedeDeckBuilder
+   ↓
+PyAutoGUI (cliques e digitação com teclado e mouse)
+"""
+
 
 # ============================================================================
 # CLASSE CONFIGURACOES (Original mantida)
@@ -172,34 +185,123 @@ class AnaRedeDeckBuilder:
     def __init__(self, assistant: C3POGeminiAssistant):
         self.assistant = assistant
         
-        # Coordenadas (serão calibradas depois)
+        # Hash table de coordenadas (key: label_snake_case, value: (x, y))
         self.coordenadas = {
+            # Menu principal AnaREDE
             'menu_caso': (50, 35),
-            'abrir_caso': (100, 70),
-            'salvar_caso': (100, 95),
+            'menu_abrir_caso': (100, 70),
+            'menu_salvar_caso': (100, 95),
             'menu_exibir': (106, 35),
             'menu_dados': (165, 35),
             'menu_analise': (248, 35),
-            'executar_fluxo': (300, 100),
+            'menu_ferramentas': (350, 35),
+            
+            # Botões de ação
+            'botao_executar_fluxo': (300, 100),
+            'botao_calcular': (320, 120),
+            
+            # Campos de entrada
+            'campo_caminho_arquivo': (400, 300),
+            
+            # Organon
+            'organon_menu_arquivo': (100, 50),
+            'organon_abrir_diagrama': (130, 180),
+            
+            # EditCepel
+            'editcepel_centro_editor': (500, 400),
         }
+
+    def carregar_caso_completo(self, casos: dict):
+        """
+        Abre o AnaREDE e carrega:
+        - Caso .SAV
+        - Diagrama .LST
+        - Deck (.dat / .pdw / .txt)
+        """
+        self.carregar_save_case(casos['sav'])
+        self.carregar_diagrama(casos['lst'])
+        self.colar_deck_editcepel(casos['deck'])
+        self.executar_fluxo()
+        self.salvar_caso()
+        self.salvar_diagrama()
+        self.salvar_deck()
+        self.salvar_caso_completo()
+        self.salvar_diagrama_completo()
+        self.salvar_deck_completo()
+
     
     def carregar_save_case(self, caminho_arquivo):
         """Carrega um arquivo .SAV no AnaREDE - ORIGINAL"""
         self.assistant.falar("Carregando caso do fluxo de potência.")
         time.sleep(2)
         
-        # Simulação de cliques (ajustar coordenadas conforme tela)
-        pyautogui.click(x=100, y=50)  # menu principal (Arquivo)
+        # Clicar no menu Caso usando coordenadas da hash table
+        console.print(f"[cyan]Clicando em Menu Caso: {self.coordenadas['menu_caso']}[/cyan]")
+        pyautogui.click(*self.coordenadas['menu_caso'])
         time.sleep(1)
-        pyautogui.click(x=120, y=150)  # opção "Abrir Caso"
+        
+        # Clicar em Abrir Caso
+        console.print(f"[cyan]Clicando em Abrir Caso: {self.coordenadas['menu_abrir_caso']}[/cyan]")
+        pyautogui.click(*self.coordenadas['menu_abrir_caso'])
         time.sleep(2)
         
         # Digita o caminho do arquivo e pressiona Enter
-        pyautogui.write(caminho_arquivo)
+        console.print(f"[cyan]Digitando caminho: {caminho_arquivo}[/cyan]")
+        pyautogui.write(caminho_arquivo, interval=0.01)
+        time.sleep(0.5)
         pyautogui.press('enter')
         time.sleep(3)
         
         console.print(f"[green]✅ Caso {os.path.basename(caminho_arquivo)} carregado no AnaREDE.[/green]")
+    
+    def abrir_editcepel_com_arquivo(self, caminho_arquivo: str):
+        """Abre EditCepel e carrega arquivo"""
+        self.assistant.falar("Abrindo EditCepel com arquivo")
+        
+        # Abrir EditCepel
+        self.assistant.abrir_programa("EditCepel")
+        time.sleep(3)
+        
+        # Ctrl+O para abrir arquivo
+        pyautogui.hotkey('ctrl', 'o')
+        time.sleep(2)
+        
+        # Digitar caminho
+        pyautogui.write(caminho_arquivo, interval=0.01)
+        pyautogui.press('enter')
+        time.sleep(2)
+        
+        console.print(f"[green]✅ EditCepel aberto com {os.path.basename(caminho_arquivo)}[/green]")
+    
+    def inserir_regua_editcepel(self):
+        """Insere régua de comandos no EditCepel - Atalho Ctrl+*"""
+        pyautogui.hotkey('ctrl', 'shift', '8')  # ctrl+*
+        time.sleep(0.5)
+        console.print("[green]✓ Régua inserida[/green]")
+    
+    def colar_deck_editcepel(self, caminho_deck: str):
+        """Lê deck e cola no EditCepel usando Ctrl+V"""
+        try:
+            # Ler arquivo
+            with open(caminho_deck, 'r', encoding='utf-8') as f:
+                conteudo = f.read()
+            
+            # Copiar para clipboard
+            import pyperclip
+            pyperclip.copy(conteudo)
+            
+            # Clicar no centro do editor
+            pyautogui.click(*self.coordenadas['editcepel_centro_editor'])
+            time.sleep(0.3)
+            
+            # Colar com Ctrl+V
+            pyautogui.hotkey('ctrl', 'v')
+            time.sleep(0.5)
+            
+            console.print(f"[green]✓ Deck colado: {os.path.basename(caminho_deck)}[/green]")
+        
+        except Exception as e:
+            console.print(f"[red]✗ Erro ao colar deck: {e}[/red]")
     
     def abrirEditCepel(self):
         """Abre o menu Edit -> Cepel - ORIGINAL"""
@@ -210,11 +312,19 @@ class AnaRedeDeckBuilder:
         self.assistant.falar("Carregando diagrama elétrico no Organon.")
         time.sleep(2)
         
-        pyautogui.click(x=100, y=50)  # menu principal
+        # Clicar no menu Arquivo do Organon
+        console.print(f"[cyan]Clicando em Menu Arquivo: {self.coordenadas['organon_menu_arquivo']}[/cyan]")
+        pyautogui.click(*self.coordenadas['organon_menu_arquivo'])
         time.sleep(1)
-        pyautogui.click(x=130, y=180)  # opção "Abrir Diagrama"
+        
+        # Clicar em Abrir Diagrama
+        console.print(f"[cyan]Clicando em Abrir Diagrama: {self.coordenadas['organon_abrir_diagrama']}[/cyan]")
+        pyautogui.click(*self.coordenadas['organon_abrir_diagrama'])
         time.sleep(2)
-        pyautogui.write(caminho_arquivo)
+        
+        # Digitar caminho
+        console.print(f"[cyan]Digitando caminho: {caminho_arquivo}[/cyan]")
+        pyautogui.write(caminho_arquivo, interval=0.01)
         pyautogui.press('enter')
         time.sleep(3)
         
@@ -235,9 +345,43 @@ class AnaRedeDeckBuilder:
     def executar_fluxo(self):
         """Executa cálculo de fluxo de potência"""
         self.assistant.falar("Executando cálculo de fluxo")
-        pyautogui.press('f5')
+        pyautogui.press('ctrl', 'f5')
         time.sleep(3)
         console.print("[green]✅ Fluxo executado[/green]")
+    
+    def adicionar_coordenada(self, label: str, x: int, y: int):
+        """Adiciona nova coordenada à hash table"""
+        self.coordenadas[label] = (x, y)
+        console.print(f"[green]✓ Coordenada '{label}' adicionada: ({x}, {y})[/green]")
+    
+    def mostrar_coordenadas(self):
+        """Mostra todas as coordenadas cadastradas"""
+        table = Table(title="📍 Coordenadas Cadastradas", box=box.ROUNDED)
+        table.add_column("Label", style="cyan")
+        table.add_column("X", style="green", justify="right")
+        table.add_column("Y", style="green", justify="right")
+        
+        for label, (x, y) in sorted(self.coordenadas.items()):
+            table.add_row(label, str(x), str(y))
+        
+        console.print(table)
+    
+    def salvar_coordenadas(self, arquivo: str = "coordenadas.json"):
+        """Salva coordenadas em arquivo JSON"""
+        with open(arquivo, 'w', encoding='utf-8') as f:
+            json.dump(self.coordenadas, f, indent=2, ensure_ascii=False)
+        console.print(f"[green]✓ Coordenadas salvas em {arquivo}[/green]")
+    
+    def carregar_coordenadas(self, arquivo: str = "coordenadas.json"):
+        """Carrega coordenadas de arquivo JSON"""
+        try:
+            with open(arquivo, 'r', encoding='utf-8') as f:
+                coords = json.load(f)
+                # Converter listas para tuplas
+                self.coordenadas = {k: tuple(v) for k, v in coords.items()}
+            console.print(f"[green]✓ Coordenadas carregadas de {arquivo}[/green]")
+        except FileNotFoundError:
+            console.print(f"[yellow]⚠️  Arquivo {arquivo} não encontrado[/yellow]")
 
 
 # ============================================================================
@@ -259,11 +403,8 @@ class MouseTracker:
         start_time = time.time()
         
         try:
-            import keyboard
             while self.tracking and (time.time() - start_time) < duration:
-                if keyboard.is_pressed('esc'):
-                    break
-                
+   
                 x, y = pyautogui.position()
                 timestamp = time.time() - start_time
                 
@@ -414,58 +555,6 @@ class FileExplorer:
 
 
 # ============================================================================
-# CLASSE EditCepelAutomation (Nova - atalhos EditCepel)
-# ============================================================================
-class EditCepelAutomation:
-    """Automação específica para EditCepel"""
-    
-    ATALHOS = {
-        'novo': 'ctrl+n',
-        'abrir': 'ctrl+o',
-        'regua': 'ctrl+*',
-        'colar': 'ctrl+v',
-        'salvar': 'ctrl+s',
-        'fechar': 'ctrl+w'
-    }
-    
-    def __init__(self, assistente: C3POGeminiAssistant):
-        self.assistente = assistente
-    
-    def abrir_arquivo(self, caminho: str, delay: float = 2.0):
-        """Abre arquivo PWF ou DAT no EditCepel"""
-        self.assistente.falar("Abrindo arquivo no EditCepel")
-        
-        pyautogui.hotkey('ctrl', 'o')
-        time.sleep(delay)
-        
-        pyautogui.write(caminho, interval=0.05)
-        time.sleep(0.5)
-        
-        pyautogui.press('enter')
-        time.sleep(delay)
-        
-        console.print(f"[green]✓ Arquivo aberto: {Path(caminho).name}[/green]")
-    
-    def inserir_regua(self):
-        """Insere régua de comandos"""
-        self.assistente.falar("Inserindo régua de comandos")
-        pyautogui.hotkey('ctrl', 'shift', '8')  # ctrl+*
-        time.sleep(0.5)
-        console.print("[green]✓ Régua inserida[/green]")
-    
-    def mostrar_atalhos(self):
-        """Exibe tabela de atalhos"""
-        table = Table(title="⌨️  Atalhos EditCepel", box=box.ROUNDED)
-        table.add_column("Ação", style="cyan")
-        table.add_column("Atalho", style="yellow")
-        
-        for acao, atalho in self.ATALHOS.items():
-            table.add_row(acao.title(), atalho)
-        
-        console.print(table)
-
-
-# ============================================================================
 # CLASSE CLIMenu (Integração com CLI Launcher)
 # ============================================================================
 class CLIMenu:
@@ -476,7 +565,6 @@ class CLIMenu:
         self.assistant = assistant
         self.deck_builder = AnaRedeDeckBuilder(assistant)
         self.mouse_tracker = MouseTracker()
-        self.editcepel = EditCepelAutomation(assistant)
         
         # Explorador de arquivos
         self.explorer = FileExplorer(config.caminho_decks_anaRede)
@@ -493,9 +581,9 @@ class CLIMenu:
         console.clear()
         banner = """
         ╔═══════════════════════════════════════════════╗
-        ║   ⚡ AUTOMAÇÃO SEP - AnaREDE & Organon       ║
-        ║   Sistema Elétrico de Potência - ONS          ║
-        ║   Integrado com CLI via terminal              ║
+        ║   ⚡ AUTOMAÇÃO SEP - AnaREDE & Organon      ║
+        ║   Sistema Elétrico de Potência - ONS         ║
+        ║   Integrado com CLI Launcher                 ║
         ╚═══════════════════════════════════════════════╝
         """
         console.print(Panel(banner, style="bold blue"))
@@ -512,10 +600,13 @@ class CLIMenu:
             ("3", "▶️  Executar automação AnaREDE (anaRedeScript)"),
             ("4", "▶️  Executar automação Organon (OrganonScript)"),
             ("5", "🔄 Executar workflow completo (run_automation)"),
-            ("6", "⌨️  Atalhos EditCepel"),
-            ("7", "🖱️  Rastrear posição do mouse"),
-            ("8", "📍 Diagnosticar posição do mouse (original)"),
-            ("9", "🔊 Toggle voz"),
+            ("6", "📍 Ver coordenadas cadastradas"),
+            ("7", "➕ Adicionar nova coordenada"),
+            ("8", "🖱️  Rastrear posição do mouse"),
+            ("9", "📍 Diagnosticar posição do mouse (original)"),
+            ("s", "💾 Salvar coordenadas"),
+            ("l", "📂 Carregar coordenadas"),
+            ("v", "🔊 Toggle voz"),
             ("0", "🚪 Sair")
         ]
         
@@ -532,14 +623,17 @@ class CLIMenu:
         return escolha
     
     def explorar_arquivos(self):
-        """Explora estrutura de arquivos"""
+        """Explora estrutura de arquivos - LIMPA TELA A CADA VEZ"""
         console.clear()
         console.print("[bold cyan]📂 Estrutura de Diretórios[/bold cyan]\n")
         
         self.explorer.mostrar_tree(max_depth=3)
         
+        console.print()  # Espaço
+        
         if Confirm.ask("\nMostrar detalhes em tabela?"):
-            console.print()
+            console.clear()  # Limpar antes da tabela
+            console.print("[bold cyan]📂 Arquivos Detalhados[/bold cyan]\n")
             self.explorer.mostrar_tabela()
         
         Prompt.ask("\n[dim]Pressione Enter para voltar[/dim]")
@@ -609,19 +703,36 @@ class CLIMenu:
                 self.run_automation()
             
             elif escolha == "6":
-                self.editcepel.mostrar_atalhos()
+                console.clear()
+                self.deck_builder.mostrar_coordenadas()
                 Prompt.ask("\n[dim]Pressione Enter para continuar[/dim]")
             
             elif escolha == "7":
+                self.adicionar_coordenada_interativa()
+            
+            elif escolha == "8":
+                console.clear()
                 duracao = int(Prompt.ask("Duração do rastreamento (segundos)", default="10"))
                 self.mouse_tracker.start_tracking(duration=duracao)
                 Prompt.ask("\n[dim]Pressione Enter para continuar[/dim]")
             
-            elif escolha == "8":
+            elif escolha == "9":
                 self.deck_builder.diagnosticar_posicao_mouse()
                 Prompt.ask("\n[dim]Pressione Enter para continuar[/dim]")
             
-            elif escolha == "9":
+            elif escolha == "s":
+                console.clear()
+                arquivo = Prompt.ask("Nome do arquivo", default="coordenadas.json")
+                self.deck_builder.salvar_coordenadas(arquivo)
+                Prompt.ask("\n[dim]Pressione Enter para continuar[/dim]")
+            
+            elif escolha == "l":
+                console.clear()
+                arquivo = Prompt.ask("Nome do arquivo", default="coordenadas.json")
+                self.deck_builder.carregar_coordenadas(arquivo)
+                Prompt.ask("\n[dim]Pressione Enter para continuar[/dim]")
+            
+            elif escolha == "v":
                 self.assistant.voice_enabled = not self.assistant.voice_enabled
                 status = "ativada" if self.assistant.voice_enabled else "desativada"
                 console.print(f"[yellow]Voz {status}[/yellow]")
@@ -631,6 +742,25 @@ class CLIMenu:
                 if Confirm.ask("Deseja realmente sair?"):
                     console.print("[yellow]Até logo! ⚡[/yellow]")
                     break
+    
+    def adicionar_coordenada_interativa(self):
+        """Adiciona coordenada interativamente"""
+        console.clear()
+        console.print("[bold cyan]➕ Adicionar Nova Coordenada[/bold cyan]\n")
+        
+        label = Prompt.ask("Label (snake_case, ex: botao_salvar)")
+        
+        console.print(f"\n[yellow]Posicione o mouse e aguarde 3 segundos...[/yellow]")
+        time.sleep(3)
+        
+        x, y = pyautogui.position()
+        
+        self.deck_builder.adicionar_coordenada(label, x, y)
+        
+        if Confirm.ask("\nSalvar coordenadas agora?", default=True):
+            self.deck_builder.salvar_coordenadas()
+        
+        Prompt.ask("\n[dim]Pressione Enter para continuar[/dim]")
     
     def executar_anarede_script(self):
         """Executa anaRedeScript original"""
@@ -689,9 +819,33 @@ class CLIMenu:
 # FUNÇÕES ORIGINAIS (mantidas exatamente como estavam)
 # ============================================================================
 
+casos = {
+  'sav': Path(...),
+  'diagrama': Path(...),
+  'deck': Path(...)   # ainda é diretório, depois vira .dat/.pdw/.txt
+}
+
+
+
 def anaRedeScript(assistant: C3POGeminiAssistant, deck_builder: AnaRedeDeckBuilder, 
                   casos: dict):
-    """Script original de automação AnaREDE"""
+    """Script original de automação AnaREDE
+    
+    Fluxo operacional (engenharia SEP)
+
+    O workflow reflete a realidade do estudo elétrico:
+
+    Seleciona caso (.SAV)
+
+    Seleciona diagrama (.LST)
+
+    Carrega simulador
+
+    Executa ações determinísticas
+
+    Repete para múltiplos cenários
+
+    """
     console.print("[green]🟢 Iniciando script de automação AnaREDE...[/green]")
     
     assistant.abrir_programa("Anarede 12")
@@ -727,6 +881,61 @@ def run_automation(assistant: C3POGeminiAssistant, deck_builder: AnaRedeDeckBuil
     
     assistant.falar("Rotina finalizada com sucesso.")
     console.print("[green]✅ Automação concluída.[/green]")
+
+
+
+def run_automation_real(assistant: C3POGeminiAssistant,
+                        deck_builder: AnaRedeDeckBuilder,
+                        casos: dict):
+    """
+    Rotina REAL de automação AnaREDE
+    Usa APENAS código que executa no mundo físico (GUI)
+    """
+
+    console.print("[bold green]🟢 Iniciando automação REAL AnaREDE[/bold green]")
+
+    # ===============================
+    # 1. Validação dura (sem mentira)
+    # ===============================
+    if not casos.get('sav'):
+        console.print("[red]❌ Nenhum arquivo .SAV selecionado[/red]")
+        console.print("[yellow]👉 Use a opção 2 do menu para selecionar o caso[/yellow]")
+        return
+
+    sav_path = str(casos['sav'])
+
+    # ===============================
+    # 2. Abrir AnaREDE DE VERDADE
+    # ===============================
+    assistant.falar("Abrindo o AnaREDE")
+    assistant.abrir_programa("Anarede 12")
+
+    # Tempo real de carga (SEP não é web app)
+    time.sleep(8)
+
+    # Forçar foco da janela
+    pyautogui.click(200, 200)
+    time.sleep(1)
+
+    console.print("[green]✓ AnaREDE aberto e em foco[/green]")
+
+    # ===============================
+    # 3. Carregar caso .SAV
+    # ===============================
+    console.print(f"[cyan]📂 Carregando caso: {os.path.basename(sav_path)}[/cyan]")
+    deck_builder.carregar_save_case(sav_path)
+
+    # ===============================
+    # 4. (Opcional) Executar fluxo
+    # ===============================
+    assistant.falar("Executando fluxo de potência")
+    deck_builder.executar_fluxo()
+
+    # ===============================
+    # 5. Finalização honesta
+    # ===============================
+    assistant.falar("Automação concluída com sucesso")
+    console.print("[bold green]✅ Automação REAL finalizada[/bold green]")
 
 
 # ============================================================================
