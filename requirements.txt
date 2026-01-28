@@ -1,3 +1,14 @@
+
+PySide6
+PymuPDF
+rich
+pandas
+openpyxl
+camelot-py
+pyodbc
+PyPDF2
+
+
 # Requirements para script_inicial_anaRede.py
 # Sistema de Automação AnaREDE e Organon
 
