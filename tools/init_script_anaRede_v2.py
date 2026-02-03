@@ -820,9 +820,9 @@ class CLIMenu:
 # ============================================================================
 
 casos = {
-  'sav': Path(...),
-  'diagrama': Path(...),
-  'deck': Path(...)   # ainda é diretório, depois vira .dat/.pdw/.txt
+  'sav': Path(''),
+  'diagrama': Path(''),
+  'deck': Path('')   # ainda é diretório, depois vira .dat/.pdw/.txt
 }
 
 
