@@ -638,6 +638,46 @@ class CLIMenu:
         
         Prompt.ask("\n[dim]Pressione Enter para voltar[/dim]")
     
+    def _selecionar_arquivo_deck(self, current_path: Path) -> Optional[Path]:
+        """Permite a seleção de arquivos .PWF ou .DAT dentro de um diretório, navegando por subdiretórios."""
+        
+        while True:
+            console.print(f"\n[cyan]📂 Caminho atual: {current_path}[/cyan]")
+            items = self.explorer.mostrar_tabela(current_path)
+
+            if not items:
+                console.print(f"[yellow]⚠️ Nenhum item encontrado em {current_path}[/yellow]")
+                return None
+            
+            escolha = Prompt.ask("Selecione um item (número), '..' para voltar, ou Enter para pular", default="")
+
+            if escolha == "..":
+                if current_path == Path(self.config.caminho_decks_anaRede):
+                    console.print("[yellow]Você já está no diretório raiz dos decks.[/yellow]")
+                else:
+                    return None # Isso sinaliza para a chamada anterior que deve voltar
+            elif escolha.isdigit():
+                idx = int(escolha) - 1
+                if 0 <= idx < len(items):
+                    item_selecionado = items[idx]
+                    
+                    if item_selecionado.is_dir():
+                        # Entrar no subdiretório
+                        selected_file = self._selecionar_arquivo_deck(item_selecionado)
+                        if selected_file:
+                            return selected_file # Retorna o arquivo se selecionado em subdiretório
+                        # Se selected_file for None, significa que o usuário voltou do subdiretório, então continua no loop atual
+                    elif item_selecionado.suffix.lower() in ['.pwf', '.dat']:
+                        return item_selecionado
+                    else:
+                        console.print("[red]Tipo de arquivo inválido. Selecione um diretório ou um arquivo .PWF/.DAT.[/red]")
+                else:
+                    console.print("[red]Número inválido.[/red]")
+            elif not escolha: # Usuário pulou a seleção
+                return None
+            else:
+                console.print("[red]Opção inválida.[/red]")
+
     def selecionar_casos(self):
         """Seleção interativa de casos"""
         console.clear()
@@ -657,19 +697,28 @@ class CLIMenu:
                 continue
             
             console.print(f"\n[cyan]═══ {tipo.upper()} ═══[/cyan]")
-            items = self.explorer.mostrar_tabela(dir_path)
             
-            if items:
-                idx = Prompt.ask(
-                    f"Selecione {tipo} (número) ou [dim]Enter para pular[/dim]",
-                    default=""
-                )
+            if tipo == 'deck':
+                deck_file = self._selecionar_arquivo_deck(dir_path)
+                if deck_file:
+                    self.casos_selecionados['deck'] = deck_file
+                    console.print(f"✓ Selecionado: [green]{deck_file.name}[/green]")
+                else:
+                    console.print("[yellow]Pular seleção de deck.[/yellow]")
+            else:
+                items = self.explorer.mostrar_tabela(dir_path)
                 
-                if idx.isdigit():
-                    idx = int(idx) - 1
-                    if 0 <= idx < len(items):
-                        self.casos_selecionados[tipo] = items[idx]
-                        console.print(f"[green]✓ Selecionado: {items[idx].name}[/green]")
+                if items:
+                    idx = Prompt.ask(
+                        f"Selecione {tipo} (número) ou [dim]Enter para pular[/dim]",
+                        default=""
+                    )
+                    
+                    if idx.isdigit():
+                        idx = int(idx) - 1
+                        if 0 <= idx < len(items):
+                            self.casos_selecionados[tipo] = items[idx]
+                            console.print(f"[green]✓ Selecionado: {items[idx].name}[/green]")
         
         # Mostrar resumo
         console.print("\n[bold]📊 Casos Selecionados:[/bold]")
