@@ -26,6 +26,9 @@
 ' - [x] Formtação correta da aba Modificações para aparecer corretamente no relatório como Seção do documento (ExcluirAnterior = False)
 ' - [ ] Teste da função da aba Modificações com parametro True ou False para retirar a antiga e colocar a nova no formato correto
 
+
+' V6: ultimo Update: 04/02/2026
+
 Option Explicit
 
 ' ======================
