@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.figure import Figure
 from PySide6.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QComboBox, QListWidget, QListWidgetItem, QPushButton,
     QTabWidget, QTableWidget, QTableWidgetItem, QHeaderView,
     QGroupBox, QSplitter, QTextEdit, QMessageBox, QFrame, QStackedLayout,
