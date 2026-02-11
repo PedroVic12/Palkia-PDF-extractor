@@ -3,6 +3,8 @@ Sistema Integrado de Visualização de Decks anaRede com PySide6
 Combina funcionalidades de parsing de arquivos .PWF com visualização gráfica
 """
 
+# pip install pandas numpy Pyside6 matplotlib pandapower
+
 import sys
 import os
 import pandas as pd
