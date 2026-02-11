@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevPrompts - Sua Biblioteca de Prompts</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        // Configuração dos Temas Light e Dracula para Tailwind
+        tailwind.config = {
+          darkMode: 'class',
+          theme: {
+            extend: {
+              colors: {
+                light: {
+                  background: '#f8f9fa',
+                  secondary: '#ffffff',
+                  foreground: '#212529',
+                  comment: '#6c757d',
+                  purple: '#6f42c1',
+                  cyan: '#0d6efd',
+                  pink: '#d63384',
+                },
+                dracula: {
+                  background: '#282a36',
+                  'current-line': '#44475a',
+                  foreground: '#f8f8f2',
+                  comment: '#6272a4',
+                  cyan: '#8be9fd',
+                  green: '#50fa7b',
+                  orange: '#ffb86c',
+                  pink: '#ff79c6',
+                  purple: '#bd93f9',
+                  red: '#ff5555',
+                  yellow: '#f1fa8c',
+                }
+              }
+            }
+          }
+        }
+    </script>
+   
+   
+   
+   <style>
+
+        /* Estilos Globais e Efeitos */
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Scrollbar */
+        :root {
+            --scrollbar-track: #f1f5f9;
+            --scrollbar-thumb: #cbd5e1;
+            --scrollbar-thumb-hover: #94a3b8;
+        }
+        html.dark {
+             --scrollbar-track: #282a36;
+            --scrollbar-thumb: #44475a;
+            --scrollbar-thumb-hover: #6272a4;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+        ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+
+        /* Efeito de hover para os cards */
+        .prompt-card, .plan-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .prompt-card:hover, .plan-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        html.dark .prompt-card:hover, html.dark .plan-card:hover {
+             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Animações do Modal */
+        .modal.open { animation: fadeIn 0.3s ease-out forwards; }
+        .modal-content.open { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Transições para o menu lateral */
+        .collapsible-content {
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .collapsible-content.collapsed {
+            max-height: 0;
+        }
+        .collapsible-trigger .chevron-icon {
+            transition: transform 0.3s ease;
+        }
+        .collapsible-trigger.collapsed .chevron-icon {
+            transform: rotate(-90deg);
+        }
+    </style>
+
+
+
+</head>
+<body class="bg-light-background dark:bg-dracula-background text-light-foreground dark:text-dracula-foreground">
+
+    <!-- Container principal da aplicação -->
+    <div class="min-h-screen flex flex-col">
+        <!-- Header Fixo com Navegação -->
+        <header class="bg-light-secondary/80 dark:bg-dracula-background/80 backdrop-blur-sm border-b border-black/5 dark:border-dracula-current-line sticky top-0 z-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-4">
+                        <i data-lucide="brain-circuit" class="text-light-purple dark:text-dracula-purple"></i>
+                        <h1 class="text-xl font-bold">DevPrompts</h1>
+                    </div>
+                    <nav class="hidden md:flex items-center space-x-6">
+                        <a href="#prompts" data-log="navigate-to-prompts" class="text-sm font-medium text-light-comment dark:text-dracula-foreground hover:text-light-cyan dark:hover:text-dracula-cyan transition-colors">Prompts</a>
+                        <a href="#planos" data-log="navigate-to-plans" class="text-sm font-medium text-light-comment dark:text-dracula-foreground hover:text-light-cyan dark:hover:text-dracula-cyan transition-colors">Planos</a>
+                        <a href="#background-generator" data-log="navigate-to-background-generator" class="text-sm font-medium text-light-comment dark:text-dracula-foreground hover:text-light-cyan dark:hover:text-dracula-cyan transition-colors">Fundo Mágico</a>
+                        <a href="#" data-log="navigate-to-about" class="text-sm font-medium text-light-comment dark:text-dracula-foreground hover:text-light-cyan dark:hover:text-dracula-cyan transition-colors">Sobre</a>
+                    </nav>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-light-comment dark:text-dracula-comment"></i>
+                            <input type="text" placeholder="Pesquisar..." data-log="search-input" class="bg-black/5 dark:bg-dracula-current-line border border-black/10 dark:border-dracula-comment/50 rounded-lg py-2 pl-10 pr-4 w-48 sm:w-64 focus:outline-none focus:ring-2 focus:ring-light-pink dark:focus:ring-dracula-pink">
+                        </div>
+                        <button id="theme-toggle" data-log="theme-toggle" class="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-dracula-current-line">
+                            <span id="theme-icon-sun"><i data-lucide="sun" class="w-5 h-5"></i></span>
+                            <span id="theme-icon-moon"><i data-lucide="moon" class="w-5 h-5"></i></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Conteúdo Principal com as seções/rotas -->
+        <main>
+            <!-- Rota/Seção: Biblioteca de Prompts -->
+            <section id="prompts" class="container mx-auto px-4 sm:px-6 lg:px-8 flex">
+                 <aside class="w-64 flex-shrink-0 py-8 pr-8 hidden md:block">
+                    <div class="space-y-6">
+                        <div>
+                            <div class="collapsible-trigger flex justify-between items-center mb-4 cursor-pointer" data-collapsible="categories-content">
+                                <h2 class="text-lg font-semibold text-light-cyan dark:text-dracula-cyan">Categorias</h2>
+                                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5"></i>
+                            </div>
+                            <div id="categories-content" class="collapsible-content">
+                                <ul id="category-list" class="space-y-2"></ul>
+                            </div>
+                        </div>
+                        <div>
+                           <div class="collapsible-trigger flex justify-between items-center mb-4 cursor-pointer" data-collapsible="types-content">
+                                <h2 class="text-lg font-semibold text-light-cyan dark:text-dracula-cyan">Tipo de Conteúdo</h2>
+                                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5"></i>
+                            </div>
+                           <div id="types-content" class="collapsible-content">
+                                <ul class="space-y-2 text-light-comment dark:text-dracula-foreground">
+                                    <li><label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" data-log="filter-type-educativo" data-type="Educativo" class="filter-checkbox bg-black/5 dark:bg-dracula-current-line border-black/10 dark:border-dracula-comment rounded"><span>Educativo</span></label></li>
+                                    <li><label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" data-log="filter-type-tecnico" data-type="Técnico" class="filter-checkbox bg-black/5 dark:bg-dracula-current-line border-black/10 dark:border-dracula-comment rounded"><span>Técnico</span></label></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <div class="flex-1 py-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h1 class="text-3xl font-bold">Biblioteca de Prompts para IA</h1>
+                            <p id="prompt-count" class="text-light-comment dark:text-dracula-comment mt-1"></p>
+                        </div>
+                    </div>
+                    <div id="prompt-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+            </section>
+            
+            <!-- Rota/Seção: Planos de Assinatura -->
+            <section id="planos" class="py-20 bg-light-background/50 dark:bg-dracula-background/50">
+                 <div class="w-full max-w-6xl mx-auto p-4 sm:p-6 lg:px-8">
+                    <header class="text-center mb-10">
+                        <h1 class="text-3xl sm:text-4xl font-bold mb-4">Faça upgrade do seu plano</h1>
+                    </header>
+                    <main id="plans-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Cards de Planos serão inseridos aqui pelo JS -->
+                    </main>
+                </div>
+            </section>
+
+            <!-- Rota/Seção: Gerador de Fundo Mágico -->
+            <section id="background-generator" class="py-20">
+                <div class="w-full max-w-6xl mx-auto p-4 sm:p-6 lg:px-8">
+                    <header class="text-center mb-10">
+                        <h1 class="text-3xl sm:text-4xl font-bold mb-4">Fundo Mágico</h1>
+                        <p class="text-light-comment dark:text-dracula-comment">Transforme suas ideias em fundos incríveis com IA.</p>
+                    </header>
+            
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Coluna de Input e Preview -->
+                        <div class="space-y-8">
+                            <div class="bg-light-secondary dark:bg-dracula-current-line/50 rounded-2xl p-8 border border-black/10 dark:border-dracula-comment/50">
+                                <h2 class="text-xl font-semibold mb-2">Descreva o que você imagina</h2>
+                                <p class="text-light-comment dark:text-dracula-comment mb-6">Crie fundos incríveis com IA generativa. Descreva e veja a magia acontecer.</p>
+                                <form id="bg-generator-form">
+                                    <textarea id="bg-description" rows="5" class="w-full bg-black/5 dark:bg-dracula-background border border-black/10 dark:border-dracula-comment/50 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-light-pink dark:focus:ring-dracula-pink" placeholder="Exemplo: Um gradiente azul suave que vai do azul claro para o azul escuro"></textarea>
+                                    <button type="submit" id="generate-bg-btn" data-log="generate-magic-background" class="w-full mt-4 bg-light-purple dark:bg-dracula-purple hover:bg-opacity-80 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center space-x-2">
+                                        <i data-lucide="wand-2" class="w-5 h-5"></i>
+                                        <span>Gerar Background Mágico!</span>
+                                    </button>
+                                </form>
+                            </div>
+            
+                            <div class="bg-light-secondary dark:bg-dracula-current-line/50 rounded-2xl p-8 border border-black/10 dark:border-dracula-comment/50">
+                                 <h2 class="text-xl font-semibold mb-4">Preview</h2>
+                                 <div id="bg-preview" class="w-full h-64 rounded-lg bg-black/5 dark:bg-dracula-background flex items-center justify-center border border-black/10 dark:border-dracula-comment/50">
+                                    <span class="text-light-comment dark:text-dracula-comment">O fundo gerado será exibido aqui</span>
+                                 </div>
+                            </div>
+                        </div>
+            
+                        <!-- Coluna de Output de Código -->
+                        <div class="bg-light-secondary dark:bg-dracula-current-line/50 rounded-2xl p-8 border border-black/10 dark:border-dracula-comment/50 h-full flex flex-col">
+                            <h3 class="text-xl font-semibold mb-4">Código Gerado</h3>
+                            <div class="space-y-4 flex-grow flex flex-col">
+                                <div class="flex-1 flex flex-col">
+                                     <label class="text-sm font-medium mb-2 text-light-comment dark:text-dracula-comment">CSS</label>
+                                     <pre class="text-sm p-4 rounded-lg bg-black/5 dark:bg-dracula-background h-full overflow-auto flex-grow relative"><code id="css-code">/* O código CSS aparecerá aqui */</code><button data-log="copy-css-code" class="copy-code-btn absolute top-2 right-2 p-1.5 rounded-md bg-black/10 dark:bg-dracula-background hover:bg-black/20 dark:hover:bg-dracula-background/50"><i data-lucide="copy" class="w-4 h-4"></i></button></pre>
+                                </div>
+                                 <div class="flex-1 flex flex-col">
+                                     <label class="text-sm font-medium mb-2 text-light-comment dark:text-dracula-comment">HTML</label>
+                                     <pre class="text-sm p-4 rounded-lg bg-black/5 dark:bg-dracula-background h-full overflow-auto flex-grow relative"><code id="html-code">&lt;!-- O código HTML aparecerá aqui --&gt;</code><button data-log="copy-html-code" class="copy-code-btn absolute top-2 right-2 p-1.5 rounded-md bg-black/10 dark:bg-dracula-background hover:bg-black/20 dark:hover:bg-dracula-background/50"><i data-lucide="copy" class="w-4 h-4"></i></button></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Modal para personalização de prompt -->
+    <div id="prompt-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden">
+        <div id="modal-content" class="bg-light-secondary dark:bg-dracula-background rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border border-black/10 dark:border-dracula-current-line">
+            <header class="flex items-center justify-between p-6 border-b border-black/5 dark:border-dracula-current-line">
+                <h2 id="modal-title" class="text-2xl font-bold"></h2>
+                <button id="close-modal-btn" data-log="close-modal" class="text-light-comment dark:text-dracula-comment hover:text-light-foreground dark:hover:text-dracula-foreground"><i data-lucide="x"></i></button>
+            </header>
+            <div class="p-8 overflow-y-auto space-y-8">
+                <div>
+                    <h3 class="font-semibold text-lg mb-2 text-light-cyan dark:text-dracula-cyan">Descrição do Prompt</h3>
+                    <p id="modal-description-template" class="text-light-comment dark:text-dracula-comment bg-black/5 dark:bg-dracula-current-line/50 p-4 rounded-lg font-mono text-sm"></p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg mb-2 text-light-cyan dark:text-dracula-cyan">Personalize seu prompt</h3>
+                    <label id="modal-input-label" for="modal-input" class="text-sm text-light-comment dark:text-dracula-foreground"></label>
+                    <input id="modal-input" type="text" data-log="modal-input" class="w-full mt-2 bg-black/5 dark:bg-dracula-current-line border border-black/10 dark:border-dracula-comment/50 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-light-pink dark:focus:ring-dracula-pink">
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg mb-2 text-light-cyan dark:text-dracula-cyan">Exemplos de Uso</h3>
+                    <div id="modal-examples" class="bg-black/5 dark:bg-dracula-current-line/50 p-4 rounded-lg font-mono text-sm text-light-comment dark:text-dracula-comment space-y-2"></div>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg mb-2 text-light-cyan dark:text-dracula-cyan">Considerações</h3>
+                    <p id="modal-considerations" class="text-light-comment dark:text-dracula-comment"></p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg mb-2 text-light-cyan dark:text-dracula-cyan">Resultados Esperados</h3>
+                    <p id="modal-expected-results" class="text-light-comment dark:text-dracula-comment"></p>
+                </div>
+                <div id="gemini-response-container" class="hidden">
+                     <h3 class="font-semibold text-lg mb-2 text-light-cyan dark:text-dracula-cyan">Resposta da IA</h3>
+                     <div id="gemini-response-content" class="bg-black/5 dark:bg-dracula-current-line/50 p-4 rounded-lg space-y-4 whitespace-pre-wrap"></div>
+                     <button id="copy-response-btn" data-log="copy-gemini-response" class="mt-4 flex items-center space-x-2 bg-black/10 dark:bg-dracula-current-line hover:bg-black/20 dark:hover:bg-dracula-comment px-4 py-2 rounded-lg text-sm font-semibold">
+                         <i data-lucide="copy" class="w-4 h-4"></i>
+                         <span>Copiar Resposta</span>
+                     </button>
+                </div>
+            </div>
+            <footer class="p-6 border-t border-black/5 dark:border-dracula-current-line mt-auto">
+                <button id="generate-btn" data-log="generate-gemini-response" class="w-full bg-light-pink dark:bg-dracula-pink hover:bg-opacity-80 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center space-x-2">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                    <span>Gerar Resposta</span>
+                </button>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- LÓGICA DO TEMA DARK/LIGHT ---
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const sunIconWrapper = document.getElementById('theme-icon-sun');
+            const moonIconWrapper = document.getElementById('theme-icon-moon');
+
+            const applyTheme = (theme) => {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    sunIconWrapper.style.display = 'block';
+                    moonIconWrapper.style.display = 'none';
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    sunIconWrapper.style.display = 'none';
+                    moonIconWrapper.style.display = 'block';
+                }
+            };
+            
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            applyTheme(currentTheme);
+
+            themeToggleBtn.addEventListener('click', () => {
+                const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+            });
+
+
+            // --- DADOS ---
+            const prompts = [
+                { id: 1, title: 'Explicador de Conceitos', description: 'Explica conceitos de programação de forma didática para iniciantes, com exemplos práticos.', category: 'Programação', type: 'Educativo', prompt_template: 'Explique o conceito de [conceito] em programação como se eu tivesse 10 anos. Use uma analogia e um exemplo simples em Python.', placeholder: 'Ex: Funções, Variáveis, Loops...', input_label: 'Qual conceito você quer aprender?', considerations: 'Seja específico no conceito desejado para uma melhor explicação.', expected_results: 'Uma explicação clara e simples, ideal para quem está começando a programar.' },
+                { id: 2, title: 'Guia 80/20 de Tecnologias', description: 'Descubra os 20% de conhecimento essencial que geram 80% dos resultados para conseguir um emprego.', category: 'Estudos', type: 'Educativo', prompt_template: 'Qual o 80/20 para eu aprender sobre [tecnologia] para meu primeiro emprego como programador?', placeholder: 'Ex: React, Python, Node.js...', input_label: 'Qual tecnologia você quer aprender?', considerations: 'Substitua [tecnologia] pela linguagem, framework ou área que deseja focar.', expected_results: 'Identificar os fundamentos essenciais de uma tecnologia para acelerar o aprendizado focado no mercado de trabalho.' },
+                { id: 3, title: 'Debug de Erros de Código', description: 'Identifica e resolve erros em código, com explicação detalhada da causa e solução.', category: 'Programação', type: 'Técnico', prompt_template: `Atue como um programador sênior. Analise este código [linguagem] e identifique o erro. Forneça a correção e explique a causa raiz do problema. Código:\n\`\`\`\n[código]\n\`\`\``, placeholder: 'Cole seu código aqui...', input_label: 'Qual o código com erro?', considerations: 'Forneça o máximo de contexto possível, incluindo a linguagem e a mensagem de erro, se houver.', expected_results: 'Uma análise precisa do erro, o código corrigido e uma explicação clara do que estava errado.' },
+                { id: 4, title: 'Gerador de Componentes React', description: 'Cria componentes React completos com TypeScript, Tailwind CSS e documentação.', category: 'Programação', type: 'Técnico', prompt_template: 'Crie um componente React funcional chamado [nome_componente] usando TypeScript e Tailwind CSS. O componente deve [descrição_funcionalidade]. Inclua JSDoc para as props.', placeholder: 'Ex: "Botão de Login que aceita um onClick"', input_label: 'Descreva o componente', considerations: 'Seja claro na funcionalidade desejada para o componente.', expected_results: 'Um arquivo .tsx completo com o código do componente React, pronto para ser usado.' },
+                { id: 5, title: 'Revisor de Código IA', description: 'Análise completa de código com sugestões de melhoria em performance, legibilidade e segurança.', category: 'Análise', type: 'Técnico', prompt_template: `Faça uma revisão completa deste trecho de código em [linguagem]. Avalie a legibilidade, performance, segurança e boas práticas. Forneça sugestões de melhoria com exemplos. Código:\n\`\`\`\n[código]\n\`\`\``, placeholder: 'Cole seu código para revisão...', input_label: 'Qual o código a ser revisado?', considerations: 'Quanto maior o trecho de código, mais tempo a análise pode levar.', expected_results: 'Um relatório de revisão de código com pontos fortes e fracos, e sugestões práticas para refatoração.' },
+                { id: 6, title: 'Ideias de Projeto', description: 'Gera ideias inovadoras para projetos de software baseados em uma tecnologia ou problema.', category: 'Produtividade', type: 'Educativo', prompt_template: 'Liste 5 ideias de projetos de software para um desenvolvedor júnior praticar [tecnologia]. Para cada ideia, descreva o conceito principal e as funcionalidades essenciais.', placeholder: 'Ex: Python com Django, React...', input_label: 'Qual tecnologia você quer usar?', considerations: 'Especifique o nível de dificuldade desejado (júnior, pleno, sênior) para ideias mais adequadas.', expected_results: 'Uma lista de ideias de projetos criativos e viáveis para construir um portfólio.' },
+            ];
+            const plans = [
+                { name: 'Grátis', price: '$0', description: 'Inteligência para tarefas do dia a dia', buttonText: 'Seu plano atual', buttonClass: 'bg-slate-800 dark:bg-dracula-foreground text-white dark:text-dracula-background', features: ['Acesso ao GPT-5', 'Carregamento de arquivos limitado', 'Geração de imagens mais lenta', 'Memória e contexto limitados'], popular: false, iconColor: 'text-light-comment dark:text-dracula-comment' },
+                { name: 'Plus', price: '$20', description: 'Mais acesso à inteligência avançada', buttonText: 'Assinar Plus', buttonClass: 'bg-light-purple dark:bg-dracula-purple text-white', features: ['GPT-5 com reflexão avançada', 'Mais mensagens e carregamentos', 'Criação de imagens com maior velocidade', 'Mais memória e contexto', 'Projetos e tarefas personalizados'], popular: true, iconColor: 'text-light-purple dark:text-dracula-purple' },
+                { name: 'Pro', price: '$200', description: 'Acesso completo ao melhor do ChatGPT', buttonText: 'Assinar Pro', buttonClass: 'bg-slate-900 dark:bg-dracula-current-line text-white', features: ['GPT-5 com reflexão pro', 'Mensagens e carregamentos ilimitados', 'Criação de imagens ilimitada e rápida', 'O máximo de memória e contexto', 'Prévia experimental de novos recursos'], popular: false, iconColor: 'text-light-cyan dark:text-dracula-cyan' }
+            ];
+
+            // --- ELEMENTOS DO DOM ---
+            const promptGrid = document.getElementById('prompt-grid');
+            const plansGrid = document.getElementById('plans-grid');
+            const modal = document.getElementById('prompt-modal');
+            let currentPrompt = null;
+
+            // --- INICIALIZAÇÃO ---
+            function initializeApp() {
+                lucide.createIcons();
+                renderCategories();
+                applyFilters();
+                renderPlans();
+                setupCollapsibles();
+                setupLogging();
+                setupBgGenerator();
+            }
+
+             // --- LÓGICA DE LOGGING ---
+            function setupLogging() {
+                document.body.addEventListener('click', (event) => {
+                    const logElement = event.target.closest('[data-log]');
+                    if (logElement) {
+                        console.log(`ACTION: User clicked on '${logElement.dataset.log}'`);
+                    }
+                });
+            }
+
+            // --- LÓGICA DO MENU LATERAL COLAPSÁVEL ---
+            function setupCollapsibles() {
+                document.querySelectorAll('.collapsible-trigger').forEach(trigger => {
+                    const contentId = trigger.dataset.collapsible;
+                    const content = document.getElementById(contentId);
+                    trigger.addEventListener('click', () => {
+                        content.classList.toggle('collapsed');
+                        trigger.classList.toggle('collapsed');
+                    });
+                });
+            }
+
+            // --- LÓGICA DA PÁGINA DE PROMPTS ---
+            function renderCategories() {
+                const categoryList = document.getElementById('category-list');
+                const counts = prompts.reduce((acc, p) => ({ ...acc, [p.category]: (acc[p.category] || 0) + 1 }), {});
+                categoryList.innerHTML = `<li class="w-full"><a href="#" data-category="all" data-log="filter-category-all" class="category-link active flex justify-between items-center text-light-purple dark:text-dracula-foreground bg-light-purple/10 dark:bg-dracula-purple/20 px-3 py-2 rounded-lg"><span>Todos</span> <span class="bg-black/5 dark:bg-dracula-current-line text-xs px-2 py-0.5 rounded-full">${prompts.length}</span></a></li>` +
+                Object.entries(counts).map(([cat, count]) => `
+                    <li class="w-full"><a href="#" data-category="${cat}" data-log="filter-category-${cat.toLowerCase()}" class="category-link flex justify-between items-center text-light-comment dark:text-dracula-foreground hover:bg-black/5 dark:hover:bg-dracula-current-line px-3 py-2 rounded-lg"><span>${cat}</span> <span class="bg-black/5 dark:bg-dracula-current-line text-xs px-2 py-0.5 rounded-full">${count}</span></a></li>
+                `).join('');
+                document.querySelectorAll('.category-link').forEach(link => link.addEventListener('click', handleCategoryClick));
+            }
+            
+            function renderPrompts(promptsToRender) {
+                promptGrid.innerHTML = promptsToRender.map(p => `
+                    <div class="prompt-card bg-light-secondary dark:bg-dracula-current-line/50 hover:border-light-purple dark:hover:border-dracula-purple transition-colors duration-300 rounded-2xl p-6 border border-black/10 dark:border-dracula-comment/50 cursor-pointer flex flex-col" data-id="${p.id}" data-log="open-prompt-${p.id}">
+                        <h3 class="text-xl font-bold mb-2 flex-grow">${p.title}</h3>
+                        <p class="text-light-comment dark:text-dracula-comment text-sm mb-4 flex-grow">${p.description}</p>
+                        <div class="flex items-center space-x-2 text-xs text-light-cyan dark:text-dracula-cyan bg-light-cyan/10 dark:bg-dracula-cyan/10 px-3 py-1 rounded-full self-start">
+                            <i data-lucide="tag" class="w-3 h-3"></i><span>${p.type}</span>
+                        </div>
+                    </div>`).join('');
+                document.getElementById('prompt-count').textContent = `Exibindo ${promptsToRender.length} de ${prompts.length} prompts.`;
+                lucide.createIcons();
+                document.querySelectorAll('.prompt-card').forEach(card => card.addEventListener('click', () => openModal(card.dataset.id)));
+            }
+
+            let activeFilters = { categories: new Set(), types: new Set() };
+            function applyFilters() {
+                const filtered = prompts.filter(p => (activeFilters.categories.size === 0 || activeFilters.categories.has(p.category)) && (activeFilters.types.size === 0 || activeFilters.types.has(p.type)));
+                renderPrompts(filtered);
+            }
+
+            function handleCategoryClick(e) {
+                e.preventDefault();
+                document.querySelector('.category-link.active')?.classList.remove('active', 'text-light-purple', 'dark:text-dracula-foreground', 'bg-light-purple/10', 'dark:bg-dracula-purple/20');
+                e.currentTarget.classList.add('active', 'text-light-purple', 'dark:text-dracula-foreground', 'bg-light-purple/10', 'dark:bg-dracula-purple/20');
+                const category = e.currentTarget.dataset.category;
+                activeFilters.categories.clear();
+                if (category !== 'all') activeFilters.categories.add(category);
+                applyFilters();
+            }
+            document.querySelectorAll('.filter-checkbox').forEach(cb => cb.addEventListener('change', () => {
+                if (cb.checked) activeFilters.types.add(cb.dataset.type);
+                else activeFilters.types.delete(cb.dataset.type);
+                applyFilters();
+            }));
+
+
+            // --- LÓGICA DA PÁGINA DE PLANOS ---
+            function renderPlans() {
+                plansGrid.innerHTML = plans.map(plan => `
+                    <div class="plan-card bg-light-secondary dark:bg-dracula-current-line/50 rounded-2xl p-8 border ${plan.popular ? 'border-light-purple dark:border-dracula-purple' : 'border-black/10 dark:border-dracula-comment/50'} flex flex-col">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-2xl font-semibold">${plan.name}</h2>
+                            ${plan.popular ? `<span class="bg-light-purple/10 dark:bg-dracula-purple/20 text-light-purple dark:text-dracula-purple font-semibold px-3 py-1 text-xs rounded-full">POPULAR</span>` : ''}
+                        </div>
+                        <div class="mt-4">
+                            <span class="text-5xl font-bold">${plan.price}</span>
+                            <span class="text-light-comment dark:text-dracula-comment">USD / mês</span>
+                        </div>
+                        <p class="mt-2 text-light-comment dark:text-dracula-comment">${plan.description}</p>
+                        <button class="w-full mt-6 py-3 rounded-lg font-semibold transition-colors ${plan.buttonClass} hover:opacity-90" data-log="subscribe-plan-${plan.name.toLowerCase()}">${plan.buttonText}</button>
+                        <ul class="mt-8 space-y-4 text-light-comment dark:text-dracula-foreground flex-grow">
+                            ${plan.features.map(f => `
+                                <li class="flex items-start">
+                                    <i data-lucide="check-circle-2" class="w-5 h-5 ${plan.iconColor} mr-3 flex-shrink-0"></i>
+                                    <span>${f}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `).join('');
+                lucide.createIcons();
+            }
+
+            // --- LÓGICA DO MODAL (PROMPTS) ---
+            function openModal(id) {
+                currentPrompt = prompts.find(p => p.id == id);
+                if (!currentPrompt) return;
+                document.getElementById('modal-title').textContent = currentPrompt.title;
+                document.getElementById('modal-description-template').textContent = currentPrompt.prompt_template;
+                document.getElementById('modal-input-label').textContent = currentPrompt.input_label;
+                document.getElementById('modal-input').placeholder = currentPrompt.placeholder;
+                document.getElementById('modal-input').value = '';
+                document.getElementById('modal-considerations').textContent = currentPrompt.considerations;
+                document.getElementById('modal-expected-results').textContent = currentPrompt.expected_results;
+                updateExamples('');
+                document.getElementById('gemini-response-container').classList.add('hidden');
+                modal.classList.remove('hidden');
+                modal.classList.add('open');
+                document.getElementById('modal-content').classList.add('open');
+            }
+            function closeModal() {
+                modal.classList.add('hidden');
+                modal.classList.remove('open');
+                document.getElementById('modal-content').classList.remove('open');
+                currentPrompt = null;
+            }
+            function updateExamples(value) {
+                const placeholderRegex = /\[(\w+)\]/;
+                const match = currentPrompt.prompt_template.match(placeholderRegex);
+                if (!match) return;
+                const key = match[1];
+                let example1Text = currentPrompt.prompt_template.replace(placeholderRegex, value || `[${key}]`);
+                let example2Text = currentPrompt.prompt_template.replace(placeholderRegex, currentPrompt.placeholder.split(',')[1]?.trim() || 'Exemplo 2');
+                document.getElementById('modal-examples').innerHTML = `<p>'${example1Text}'</p><p>'${example2Text}'</p>`;
+            }
+            document.getElementById('modal-input').addEventListener('input', (e) => updateExamples(e.target.value));
+            document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+
+            // --- LÓGICA DA API GEMINI ---
+            async function callGeminiAPI(promptText, isJson = false) {
+                const apiKey = "AIzaSyAdt2aLEfxxEUWYYKl1gUwvwsiaXDRC51Y";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                
+                const payload = {
+                    contents: [{ parts: [{ text: promptText }] }],
+                    ...(isJson && {
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                        }
+                    })
+                };
+
+                try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error?.message || 'Erro na API.');
+                    }
+                    const data = await response.json();
+                    return data.candidates[0].content.parts[0].text;
+                } catch (error) {
+                    console.error("Erro na API Gemini:", error);
+                    return null;
+                }
+            }
+            
+            document.getElementById('generate-btn').addEventListener('click', async () => {
+                const inputValue = document.getElementById('modal-input').value;
+                if (!inputValue.trim() || !currentPrompt) return alert("Preencha o campo de personalização.");
+                const finalPrompt = currentPrompt.prompt_template.replace(/\[(\w+)\]/, inputValue);
+                const responseContainer = document.getElementById('gemini-response-container');
+                const responseContent = document.getElementById('gemini-response-content');
+                responseContent.innerHTML = `<div class="flex justify-center p-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-light-purple dark:border-dracula-purple"></div></div>`;
+                responseContainer.classList.remove('hidden');
+                const resultText = await callGeminiAPI(finalPrompt);
+                responseContent.textContent = resultText || "Falha ao gerar resposta.";
+            });
+            
+            document.getElementById('copy-response-btn').addEventListener('click', () => {
+                const text = document.getElementById('gemini-response-content').innerText;
+                navigator.clipboard.writeText(text).then(() => {
+                    const btn = document.getElementById('copy-response-btn').querySelector('span');
+                    btn.textContent = 'Copiado!';
+                    setTimeout(() => { btn.textContent = 'Copiar Resposta'; }, 2000);
+                });
+            });
+
+            // --- LÓGICA DO GERADOR DE FUNDO MÁGICO ---
+            function setupBgGenerator() {
+                const form = document.getElementById('bg-generator-form');
+                form.addEventListener('submit', handleBgGeneration);
+
+                document.querySelectorAll('.copy-code-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const pre = e.currentTarget.previousElementSibling;
+                        const code = pre.querySelector('code').innerText;
+                        navigator.clipboard.writeText(code).then(() => {
+                           const icon = e.currentTarget.querySelector('i');
+                           e.currentTarget.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-dracula-green"></i>`;
+                           lucide.createIcons();
+                           setTimeout(() => {
+                               e.currentTarget.innerHTML = `<i data-lucide="copy" class="w-4 h-4"></i>`;
+                               lucide.createIcons();
+                           }, 2000);
+                        });
+                    });
+                });
+            }
+
+            async function handleBgGeneration(event) {
+                event.preventDefault();
+                const description = document.getElementById('bg-description').value;
+                if (!description.trim()) {
+                    alert("Por favor, descreva o fundo que você deseja.");
+                    return;
+                }
+
+                const preview = document.getElementById('bg-preview');
+                const cssCodeEl = document.querySelector('#css-code');
+                const htmlCodeEl = document.querySelector('#html-code');
+                const btn = document.getElementById('generate-bg-btn');
+
+                // Show loading state
+                btn.disabled = true;
+                btn.querySelector('span').textContent = 'Gerando...';
+                preview.innerHTML = `<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-light-purple dark:border-dracula-purple"></div>`;
+                cssCodeEl.textContent = '/* Gerando... */';
+                htmlCodeEl.textContent = '<!-- Gerando... -->';
+
+                const promptForBg = `
+                    Você é um assistente de IA especialista em CSS. Gere código para um fundo de site com base na seguinte descrição: "${description}".
+                    Responda APENAS com um objeto JSON válido, com a seguinte estrutura:
+                    {
+                      "html": "<div class='magic-background'></div>",
+                      "css": "/* Seu código CSS aqui */"
+                    }
+                    O seletor principal no CSS deve ser a classe '.magic-background' para que possa ser aplicado a uma div. O CSS deve ser completo e autônomo.
+                `;
+
+                const resultJson = await callGeminiAPI(promptForBg, true);
+                
+                btn.disabled = false;
+                btn.querySelector('span').textContent = 'Gerar Background Mágico!';
+
+                if (resultJson) {
+                    try {
+                        const generatedCode = JSON.parse(resultJson);
+                        let styleTag = document.getElementById('magic-bg-style');
+                        if (!styleTag) {
+                            styleTag = document.createElement('style');
+                            styleTag.id = 'magic-bg-style';
+                            document.head.appendChild(styleTag);
+                        }
+                        
+                        // Scopes the CSS to the preview div by replacing the class with an ID selector
+                        const scopedCss = generatedCode.css.replace('.magic-background', '#bg-preview');
+                        styleTag.innerHTML = scopedCss;
+
+                        preview.innerHTML = '';
+                        cssCodeEl.textContent = generatedCode.css;
+                        htmlCodeEl.textContent = generatedCode.html;
+                        lucide.createIcons(); // Re-render copy icons if they got wiped
+                    } catch(e) {
+                         preview.innerHTML = `<span class="text-sm text-red-500">Erro ao processar a resposta da IA.</span>`;
+                         cssCodeEl.textContent = `/* ${resultJson} */`;
+                         htmlCodeEl.textContent = `<!-- Erro -->`;
+                    }
+                } else {
+                     preview.innerHTML = `<span class="text-sm text-red-500">Falha ao gerar o fundo. Tente novamente.</span>`;
+                     cssCodeEl.textContent = '/* Erro */';
+                     htmlCodeEl.textContent = '<!-- Erro -->';
+                }
+            }
+
+
+            // --- INICIALIZAÇÃO ---
+            initializeApp();
+        });
+    </script>
+</body>
+</html>
+
