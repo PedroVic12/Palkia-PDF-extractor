@@ -66,7 +66,7 @@ PROGRAMS: Dict[str, Dict[str, str]] = {
     "organizador": {
         "name": "File Organizer Project",
         "script": "organizador_arquivos.py",
-        "work_dir": ".",
+        "work_dir": "run/init_tools_OS",
         "requirements": None,
     },
 }
