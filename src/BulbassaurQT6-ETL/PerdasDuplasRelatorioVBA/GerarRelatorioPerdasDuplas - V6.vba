@@ -5,7 +5,7 @@
 
 ' Controle de versão:
 ' V3: 11/12/2025
-' - [x] Configuração de formatação do relatório por variáveis globais
+' - [x] Configuração de formatação do relatório por variáveis globais   1'2
 ' - [x] Implementação da função de log
 ' - [x] Implementação da função de erro
 ' - [x] Implementação da função de teste rápido
@@ -29,6 +29,8 @@
 
 ' V6: ultimo Update: 04/02/2026
 
+' V6.1: Testes e correções na aba modificações
+
 Option Explicit
 
 ' ======================
@@ -39,6 +41,7 @@ Option Explicit
 Public Const URL_SHAREPOINT_TEMPLATE As String = "https://onsbr.sharepoint.com/sites/soumaisons/OnsIntranetCentralArquivos/PL/19%20Diretrizes%20para%20Opera%C3%A7%C3%A3o/00%20Padroniza%C3%A7%C3%A3o/Lista%20de%20Conting%C3%AAncias%20Duplas%20Analisadas_Modelo.docx"
 
 ' --- DADOS VARIÁVEIS (Capa) ---
+' Verifique essas váriáveis se estão iguais no Word Template
 Public Const TAG_DATA_ANTIGA As String = "DEZEMBRO 2025"
 Public Const TEXTO_DATA_NOVO As String = "JANEIRO 2026 - 21/01/2026"
 
