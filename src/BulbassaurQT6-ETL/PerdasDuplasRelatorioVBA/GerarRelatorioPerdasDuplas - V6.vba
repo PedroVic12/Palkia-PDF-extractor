@@ -43,7 +43,7 @@ Public Const URL_SHAREPOINT_TEMPLATE As String = "https://onsbr.sharepoint.com/s
 ' --- DADOS VARIÁVEIS (Capa) ---
 ' Verifique essas váriáveis se estão iguais no Word Template
 Public Const TAG_DATA_ANTIGA As String = "DEZEMBRO 2025"
-Public Const TEXTO_DATA_NOVO As String = "JANEIRO 2026 - 21/01/2026"
+Public Const TEXTO_DATA_NOVO As String = "MARÇO 2026"
 
 Public Const TAG_REVISAO_ANTIGA As String = "REVISÃO 9"
 
@@ -386,6 +386,7 @@ End Sub
 ' ======================
 ' FUNÇÃO - ADICIONA APÓS A TABELA EXISTENTE
 ' ======================
+' debug here
 Sub InserirAbaModificacoesComoLista(doc As Object, app As Object, Optional excluirAnterior As Boolean = False)
     Dim ws As Worksheet
     Dim ultL As Long, i As Long
@@ -415,11 +416,9 @@ Sub InserirAbaModificacoesComoLista(doc As Object, app As Object, Optional exclu
         End If
     End With
     
-    ' AGORA ESTAMOS NO "REVISÕES DO RELATÓRIO"
-    ' PRECISAMOS IR PARA O FINAL DA TABELA EXISTENTE
+    ' NO "REVISÕES DO RELATÓRIO" MOVER O CURSOR PARA O FINAL DA TABELA EXISTENTE OU NÃO
     
-    ' Mover para baixo 7 vezes (título + linha da tabela com "2")
-    ' Isso nos coloca APÓS a última linha da tabela
+    ' Mover para baixo 7 vezes (título + linha da tabela com "2")  Isso nos coloca APÓS a última linha da tabela
     For i = 1 To 7
         app.Selection.MoveDown Unit:=5, Count:=1
     Next i

@@ -62,27 +62,13 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 
 # GUI
-try:
-    from PySide6.QtWidgets import (
+
+from PySide6.QtWidgets import (
         QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
         QPushButton, QFileDialog, QTextEdit, QComboBox, QMessageBox, QCheckBox
     )
-    from PySide6.QtCore import Qt
-except Exception:
-    # Permite que o arquivo seja importado sem ter PySide6 instalado
-    QApplication = object  # type: ignore
-    QWidget = object  # type: ignore
-    QVBoxLayout = object  # type: ignore
-    QHBoxLayout = object  # type: ignore
-    QLabel = object  # type: ignore
-    QLineEdit = object  # type: ignore
-    QPushButton = object  # type: ignore
-    QFileDialog = object  # type: ignore
-    QTextEdit = object  # type: ignore
-    QComboBox = object  # type: ignore
-    QMessageBox = object  # type: ignore
-    QCheckBox = object  # type: ignore
-    Qt = object  # type: ignore
+from PySide6.QtCore import Qt
+
 
 
 # ----------------------------- Utils & Config ----------------------------- #
